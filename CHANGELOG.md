@@ -4,7 +4,11 @@ All notable changes to this integration are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/), bumped by the Release workflow.
 
-Describe each change under `## [Unreleased]` as you make it. The Release
+Describe each change under `## [Unreleased]
+
+## [0.0.1] - 2026-10-10
+
+` as you make it. The Release
 workflow moves that section under the version it ships, and the section becomes
 the notes of the version's GitHub Release.
 
@@ -32,4 +36,5 @@ the notes of the version's GitHub Release.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/commits/main
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/prohand/gladys-dyson/releases/tag/v0.0.1
