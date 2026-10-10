@@ -1,0 +1,371 @@
+// -----------------------------------------------------------------------------
+// Device type: DYSON FAN / PURIFIER (every supported product).
+//
+// One Gladys device per Dyson product, keyed on its serial number. The
+// features depend on the model (src/dyson/models.js): a heater gets the
+// heating switch and target temperature, a humidifier the humidification
+// switch, the 2018+ models the particulate / NO2 / VOC sensors.
+//
+// Controls have `has_feedback: true`: a command only SENDS the change, and the
+// STATE-CHANGE the device answers with is what Gladys displays. A command the
+// device refused never shows as done.
+// -----------------------------------------------------------------------------
+
+import {
+  DEVICE_FEATURE_CATEGORIES as CATEGORIES,
+  DEVICE_FEATURE_TYPES as TYPES,
+  DEVICE_FEATURE_UNITS as UNITS,
+} from '@gladysassistant/integration-sdk';
+import {
+  celsiusToKelvinTenths,
+  kelvinTenthsToCelsius,
+  pad4,
+  readNumber,
+} from '../dyson/protocol.js';
+
+// "fan" + serial: the external id of a device, forever (see CLAUDE.md).
+export const DEVICE_TYPE = 'fan';
+
+// Feature keys are part of the external ids: never rename one.
+export const FEATURES = {
+  POWER: 'power',
+  SPEED: 'speed',
+  AUTO: 'auto',
+  OSCILLATION: 'oscillation',
+  NIGHT_MODE: 'night-mode',
+  HEATING: 'heating',
+  TARGET_TEMPERATURE: 'target-temperature',
+  HUMIDIFICATION: 'humidification',
+  TEMPERATURE: 'temperature',
+  HUMIDITY: 'humidity',
+  PM25: 'pm25',
+  PM10: 'pm10',
+  VOC: 'voc',
+  NO2: 'no2',
+  FORMALDEHYDE: 'formaldehyde',
+  HEPA_FILTER: 'hepa-filter',
+  CARBON_FILTER: 'carbon-filter',
+  FILTER: 'filter',
+};
+
+export const SPEED_MIN = 1;
+export const SPEED_MAX = 10;
+export const TARGET_TEMPERATURE_MIN = 1;
+export const TARGET_TEMPERATURE_MAX = 37;
+
+const control = (name, category, type, min, max, extra = {}) => ({
+  name,
+  category,
+  type,
+  min,
+  max,
+  read_only: false,
+  has_feedback: true,
+  keep_history: true,
+  ...extra,
+});
+
+const sensor = (name, category, type, unit, min, max) => ({
+  name,
+  category,
+  type,
+  ...(unit ? { unit } : {}),
+  min,
+  max,
+  read_only: true,
+  has_feedback: false,
+  keep_history: true,
+});
+
+const binary = (name) => control(name, CATEGORIES.SWITCH, TYPES.SWITCH.BINARY, 0, 1);
+
+// Every feature declares min/max: Gladys stores them NOT NULL.
+const DEFINITIONS = {
+  [FEATURES.POWER]: () => binary('Power'),
+  [FEATURES.SPEED]: () =>
+    control('Fan speed', CATEGORIES.FAN, TYPES.FAN.SPEED, SPEED_MIN, SPEED_MAX, { step: 1 }),
+  [FEATURES.AUTO]: () => binary('Auto mode'),
+  [FEATURES.OSCILLATION]: () => binary('Oscillation'),
+  [FEATURES.NIGHT_MODE]: () => binary('Night mode'),
+  [FEATURES.HEATING]: () => binary('Heating'),
+  [FEATURES.TARGET_TEMPERATURE]: () =>
+    control(
+      'Target temperature',
+      CATEGORIES.THERMOSTAT,
+      TYPES.THERMOSTAT.TARGET_TEMPERATURE,
+      TARGET_TEMPERATURE_MIN,
+      TARGET_TEMPERATURE_MAX,
+      { unit: UNITS.CELSIUS, step: 1 },
+    ),
+  [FEATURES.HUMIDIFICATION]: () => binary('Humidification'),
+  [FEATURES.TEMPERATURE]: () =>
+    sensor(
+      'Temperature',
+      CATEGORIES.TEMPERATURE_SENSOR,
+      TYPES.SENSOR.DECIMAL,
+      UNITS.CELSIUS,
+      -20,
+      60,
+    ),
+  [FEATURES.HUMIDITY]: () =>
+    sensor('Humidity', CATEGORIES.HUMIDITY_SENSOR, TYPES.SENSOR.INTEGER, UNITS.PERCENT, 0, 100),
+  [FEATURES.PM25]: () =>
+    sensor(
+      'PM2.5',
+      CATEGORIES.PM25_SENSOR,
+      TYPES.SENSOR.INTEGER,
+      UNITS.MICROGRAM_PER_CUBIC_METER,
+      0,
+      1000,
+    ),
+  [FEATURES.PM10]: () =>
+    sensor(
+      'PM10',
+      CATEGORIES.PM10_SENSOR,
+      TYPES.SENSOR.INTEGER,
+      UNITS.MICROGRAM_PER_CUBIC_METER,
+      0,
+      1000,
+    ),
+  // VOC and NO2: Dyson indexes from 0 (clean) to 10, not concentrations.
+  [FEATURES.VOC]: () =>
+    sensor('VOC index', CATEGORIES.VOC_INDEX_SENSOR, TYPES.VOC_INDEX_SENSOR.INTEGER, null, 0, 10),
+  [FEATURES.NO2]: () =>
+    sensor('NO2 index', CATEGORIES.NO2_SENSOR, TYPES.SENSOR.DECIMAL, null, 0, 10),
+  [FEATURES.FORMALDEHYDE]: () =>
+    sensor(
+      'Formaldehyde',
+      CATEGORIES.FORMALDEHYD_SENSOR,
+      TYPES.SENSOR.DECIMAL,
+      UNITS.MILLIGRAM_PER_CUBIC_METER,
+      0,
+      10,
+    ),
+  [FEATURES.HEPA_FILTER]: () =>
+    sensor(
+      'HEPA filter life',
+      CATEGORIES.MAINTENANCE,
+      TYPES.MAINTENANCE.LIFE_REMAINING,
+      UNITS.PERCENT,
+      0,
+      100,
+    ),
+  [FEATURES.CARBON_FILTER]: () =>
+    sensor(
+      'Carbon filter life',
+      CATEGORIES.MAINTENANCE,
+      TYPES.MAINTENANCE.LIFE_REMAINING,
+      UNITS.PERCENT,
+      0,
+      100,
+    ),
+  // The Link models count the filter life in hours (4300 when new).
+  [FEATURES.FILTER]: () =>
+    sensor(
+      'Filter life',
+      CATEGORIES.MAINTENANCE,
+      TYPES.MAINTENANCE.LIFE_REMAINING,
+      UNITS.HOURS,
+      0,
+      10000,
+    ),
+};
+
+/**
+ * The features a model has, in display order.
+ * @param {ReturnType<import('../dyson/models.js').describeModel>} model
+ * @returns {string[]}
+ */
+export function featureKeys(model) {
+  const keys = [FEATURES.POWER, FEATURES.SPEED, FEATURES.AUTO, FEATURES.OSCILLATION];
+  keys.push(FEATURES.NIGHT_MODE);
+  if (model.heater) {
+    keys.push(FEATURES.HEATING, FEATURES.TARGET_TEMPERATURE);
+  }
+  if (model.humidifier) {
+    keys.push(FEATURES.HUMIDIFICATION);
+  }
+  keys.push(FEATURES.TEMPERATURE, FEATURES.HUMIDITY);
+  if (model.protocol === 'pure') {
+    keys.push(FEATURES.PM25, FEATURES.PM10, FEATURES.VOC, FEATURES.NO2);
+  } else {
+    keys.push(FEATURES.VOC);
+  }
+  if (model.formaldehyde) {
+    keys.push(FEATURES.FORMALDEHYDE);
+  }
+  if (model.protocol === 'pure') {
+    keys.push(FEATURES.HEPA_FILTER, FEATURES.CARBON_FILTER);
+  } else {
+    keys.push(FEATURES.FILTER);
+  }
+  return keys;
+}
+
+export function deviceIds(gladys, serial) {
+  return gladys.externalIds(DEVICE_TYPE, serial);
+}
+
+/**
+ * The Gladys device of a Dyson product.
+ * @param {object} gladys SDK instance
+ * @param {{serial: string, name: string|null, productType: string}} dysonDevice
+ * @param {ReturnType<import('../dyson/models.js').describeModel>} model
+ */
+export function buildDevice(gladys, dysonDevice, model) {
+  const ids = deviceIds(gladys, dysonDevice.serial);
+  return {
+    name: dysonDevice.name ?? `Dyson ${model.name}`,
+    external_id: ids.device,
+    // No Gladys polling: the device pushes its state changes, and the link
+    // asks for the sensor data at the configured interval.
+    should_poll: false,
+    params: [
+      { name: 'DYSON_SERIAL', value: dysonDevice.serial },
+      { name: 'DYSON_PRODUCT_TYPE', value: model.productType },
+      { name: 'DYSON_MODEL', value: model.name },
+    ],
+    features: featureKeys(model).map((key) => ({
+      ...DEFINITIONS[key](),
+      external_id: ids.feature(key),
+    })),
+  };
+}
+
+/**
+ * Which feature of the device an external id designates.
+ * @returns {string|null} a FEATURES value
+ */
+export function featureKeyOf(gladys, serial, featureExternalId) {
+  const ids = deviceIds(gladys, serial);
+  return Object.values(FEATURES).find((key) => ids.feature(key) === featureExternalId) ?? null;
+}
+
+const onOff = (value) => (value === 'ON' ? 1 : value === 'OFF' ? 0 : null);
+
+/**
+ * Feature values carried by a product state message.
+ * @param {object} model
+ * @param {object} values flat product state (`fpwr`, `fnsp`...)
+ * @returns {Array<{key: string, value: number}>}
+ */
+export function statesFromProductState(model, values) {
+  const states = [];
+  const add = (key, value) => {
+    if (value !== null && value !== undefined && !Number.isNaN(value)) {
+      states.push({ key, value });
+    }
+  };
+
+  if (model.protocol === 'link') {
+    if (values.fmod !== undefined) {
+      add(FEATURES.POWER, values.fmod === 'OFF' ? 0 : 1);
+      add(FEATURES.AUTO, values.fmod === 'AUTO' ? 1 : 0);
+    }
+    add(FEATURES.FILTER, readNumber(values.filf));
+  } else {
+    add(FEATURES.POWER, onOff(values.fpwr));
+    add(FEATURES.AUTO, onOff(values.auto));
+    add(FEATURES.HEPA_FILTER, readNumber(values.hflr));
+    add(FEATURES.CARBON_FILTER, readNumber(values.cflr));
+  }
+  // "AUTO" while the auto mode drives the fan: no speed to show.
+  add(FEATURES.SPEED, readNumber(values.fnsp));
+  // The 2021+ models say OION / OIOF instead of ON / OFF.
+  add(
+    FEATURES.OSCILLATION,
+    values.oson === 'ON' || values.oson === 'OION'
+      ? 1
+      : values.oson === 'OFF' || values.oson === 'OIOF'
+        ? 0
+        : null,
+  );
+  add(FEATURES.NIGHT_MODE, onOff(values.nmod));
+  if (model.heater) {
+    add(FEATURES.HEATING, values.hmod === 'HEAT' ? 1 : values.hmod === 'OFF' ? 0 : null);
+    add(FEATURES.TARGET_TEMPERATURE, kelvinTenthsToCelsius(values.hmax));
+  }
+  if (model.humidifier) {
+    add(FEATURES.HUMIDIFICATION, values.hume === 'HUMD' ? 1 : values.hume === 'OFF' ? 0 : null);
+  }
+  return states;
+}
+
+/**
+ * Feature values carried by a sensor data message.
+ * @returns {Array<{key: string, value: number}>}
+ */
+export function statesFromEnvironment(model, values) {
+  const readings = [
+    [FEATURES.TEMPERATURE, kelvinTenthsToCelsius(values.tact)],
+    [FEATURES.HUMIDITY, readNumber(values.hact)],
+  ];
+  if (model.protocol === 'pure') {
+    readings.push(
+      [FEATURES.PM25, readNumber(values.pm25)],
+      [FEATURES.PM10, readNumber(values.pm10)],
+      [FEATURES.VOC, readNumber(values.va10, 10)],
+      [FEATURES.NO2, readNumber(values.noxl, 10)],
+    );
+  } else {
+    readings.push([FEATURES.VOC, readNumber(values.vact)]);
+  }
+  if (model.formaldehyde) {
+    readings.push([FEATURES.FORMALDEHYDE, readNumber(values.hcho, 1000)]);
+  }
+  return readings.filter(([, value]) => value !== null).map(([key, value]) => ({ key, value }));
+}
+
+/**
+ * The STATE-SET data for a Gladys command.
+ * @param {object} model
+ * @param {string} key a FEATURES value
+ * @param {number} value value sent by Gladys
+ * @param {object} [current] last product state known (to speak the device's dialect)
+ * @returns {object} STATE-SET `data`
+ */
+export function commandFor(model, key, value, current = {}) {
+  const on = Number(value) > 0;
+  const link = model.protocol === 'link';
+
+  switch (key) {
+    case FEATURES.POWER:
+      return link ? { fmod: on ? 'FAN' : 'OFF' } : { fpwr: on ? 'ON' : 'OFF' };
+    case FEATURES.AUTO:
+      return link ? { fmod: on ? 'AUTO' : 'FAN' } : { auto: on ? 'ON' : 'OFF' };
+    case FEATURES.SPEED: {
+      // Choosing a speed means "this speed, now": power on, auto mode off.
+      const speed = pad4(Math.min(SPEED_MAX, Math.max(SPEED_MIN, Math.round(Number(value)))));
+      return link ? { fmod: 'FAN', fnsp: speed } : { fpwr: 'ON', auto: 'OFF', fnsp: speed };
+    }
+    case FEATURES.OSCILLATION:
+      if (current.oson === 'OION' || current.oson === 'OIOF') {
+        return { oson: on ? 'OION' : 'OIOF' };
+      }
+      return { oson: on ? 'ON' : 'OFF' };
+    case FEATURES.NIGHT_MODE:
+      return { nmod: on ? 'ON' : 'OFF' };
+    case FEATURES.HEATING:
+      if (model.heater) {
+        return { hmod: on ? 'HEAT' : 'OFF' };
+      }
+      break;
+    case FEATURES.TARGET_TEMPERATURE:
+      if (model.heater) {
+        const celsius = Math.min(
+          TARGET_TEMPERATURE_MAX,
+          Math.max(TARGET_TEMPERATURE_MIN, Number(value)),
+        );
+        return { hmax: celsiusToKelvinTenths(celsius) };
+      }
+      break;
+    case FEATURES.HUMIDIFICATION:
+      if (model.humidifier) {
+        return { hume: on ? 'HUMD' : 'OFF' };
+      }
+      break;
+    default:
+      break;
+  }
+  throw new Error(`The feature "${key}" of a ${model.name} cannot be controlled`);
+}

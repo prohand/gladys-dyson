@@ -1,0 +1,485 @@
+// -----------------------------------------------------------------------------
+// The Dyson side of the integration, in one place: the account (sign-in with
+// the e-mailed code, device list), one MQTT link per device created in Gladys, and the states and transport
+// badges published back to Gladys.
+//
+// index.js only wires the SDK handlers to the methods below.
+// -----------------------------------------------------------------------------
+
+import { createLogger } from '@gladysassistant/integration-sdk';
+import { normalizeConfig } from '../config.js';
+import { createDysonCloud, DysonCloudError } from './cloud.js';
+import { DeviceLink, defaultMqttConnect } from './link.js';
+import { describeModel } from './models.js';
+import {
+  buildDevice,
+  commandFor,
+  deviceIds,
+  featureKeyOf,
+  statesFromEnvironment,
+  statesFromProductState,
+} from '../devices/fan.js';
+
+const logger = createLogger({ name: 'dyson' });
+
+// A code e-mailed by Dyson is valid for a short while only.
+const CHALLENGE_TTL_MS = 30 * 60 * 1000;
+
+const STATUS_MESSAGES = {
+  noAccount: {
+    en: 'Enter the e-mail and password of your Dyson account, save, then use "Receive a code".',
+    fr: "Renseignez l'e-mail et le mot de passe de votre compte Dyson, enregistrez, puis utilisez « Recevoir un code ».",
+  },
+  noToken: {
+    en: 'Not signed in yet: use "Receive a code", then "Validate the code".',
+    fr: 'Pas encore connecté : utilisez « Recevoir un code », puis « Valider le code ».',
+  },
+  tokenRejected: {
+    en: 'The Dyson session has expired: sign in again with a new code.',
+    fr: 'La session Dyson a expiré : reconnectez-vous avec un nouveau code.',
+  },
+};
+
+/**
+ * @param {object} options
+ * @param {object} options.gladys SDK instance
+ * @param {ReturnType<import('./store.js').createAccountStore>} options.store
+ * @param {Function} [options.cloudFactory] injectable createDysonCloud (tests)
+ * @param {Function} [options.mqttConnect] injectable mqtt.connect (tests)
+ * @param {object} [options.timers] injectable timers (tests)
+ * @param {() => number} [options.now]
+ */
+export function createDysonManager({
+  gladys,
+  store,
+  cloudFactory = createDysonCloud,
+  mqttConnect = defaultMqttConnect,
+  timers = globalThis,
+  now = Date.now,
+}) {
+  let config = normalizeConfig();
+  let cloud = cloudFactory({ country: config.country });
+  // { email, token, tokenRejected, challengeId, challengeAt, devices }
+  let account = { devices: [] };
+  let loaded = false;
+
+  /** serial -> { link, model, dysonDevice } */
+  const links = new Map();
+  /** serial -> last product state (flat), to speak the device's dialect */
+  const productStates = new Map();
+  /** feature external id -> last value published (only changes are sent) */
+  const published = new Map();
+
+  // --- account -------------------------------------------------------------
+
+  async function load() {
+    if (!loaded) {
+      const saved = await store.load();
+      account = { devices: [], ...saved };
+      loaded = true;
+    }
+  }
+
+  async function save() {
+    await store.save(account);
+  }
+
+  function supportedDevices() {
+    return (account.devices ?? [])
+      .map((dysonDevice) => ({ dysonDevice, model: describeModel(dysonDevice.productType) }))
+      .filter(({ model }) => model !== null);
+  }
+
+  /** Refresh the device list from the account; keep the cached one when the cloud is down. */
+  async function refreshDevices() {
+    if (!account.token) {
+      return;
+    }
+    try {
+      account.devices = await cloud.listDevices(account.token);
+      account.tokenRejected = false;
+      await save();
+      const ignored = account.devices.filter((d) => describeModel(d.productType) === null);
+      for (const device of ignored) {
+        logger.info(`Product ${device.productType} (${device.serial}) is not a supported fan`);
+      }
+    } catch (err) {
+      if (err instanceof DysonCloudError && err.code === 'unauthorized') {
+        logger.warn('The Dyson account token was refused');
+        account.token = null;
+        account.tokenRejected = true;
+        await save();
+        return;
+      }
+      logger.warn(`Device list not refreshed, keeping the cached one: ${err.message}`);
+    }
+  }
+
+  async function reportStatus() {
+    let connected = true;
+    let message;
+    if (!account.token) {
+      connected = false;
+      if (account.tokenRejected) {
+        message = STATUS_MESSAGES.tokenRejected;
+      } else if (!config.email || !config.password) {
+        message = STATUS_MESSAGES.noAccount;
+      } else {
+        message = STATUS_MESSAGES.noToken;
+      }
+    }
+    await gladys.setConnectionStatus(connected, message);
+  }
+
+  // --- network addresses ---------------------------------------------------
+
+  // Typed by the user. Dyson products announce themselves over mDNS
+  // (`_dyson_mqtt._tcp`), but the store refuses that service name in the
+  // manifest `network_discovery` (no "_" allowed inside it), so the mediated
+  // scan cannot be declared: without an address, the cloud is the path.
+  function hostOf(serial) {
+    return config.hosts.get(serial) ?? null;
+  }
+
+  // --- links ---------------------------------------------------------------
+
+  function isCreated(serial) {
+    const externalId = deviceIds(gladys, serial).device;
+    return (gladys.devices ?? []).some((device) => device.external_id === externalId);
+  }
+
+  function forgetPublished(serial) {
+    const prefix = deviceIds(gladys, serial).device;
+    for (const key of published.keys()) {
+      if (key.startsWith(`${prefix}:`)) {
+        published.delete(key);
+      }
+    }
+  }
+
+  async function publish(serial, states) {
+    const ids = deviceIds(gladys, serial);
+    const created = (gladys.devices ?? []).find((device) => device.external_id === ids.device);
+    const known = new Set((created?.features ?? []).map((feature) => feature.external_id));
+    const batch = states
+      .map(({ key, value }) => ({ device_feature_external_id: ids.feature(key), state: value }))
+      // A feature the user's device does not have (created before a model
+      // update) would be refused: send only what Gladys knows.
+      .filter((state) => known.has(state.device_feature_external_id))
+      .filter((state) => published.get(state.device_feature_external_id) !== state.state);
+    if (batch.length === 0) {
+      return;
+    }
+    for (const state of batch) {
+      published.set(state.device_feature_external_id, state.state);
+    }
+    try {
+      await gladys.publishStates(batch);
+    } catch (err) {
+      // Publish again at the next reading rather than never.
+      for (const state of batch) {
+        published.delete(state.device_feature_external_id);
+      }
+      logger.warn(`States of ${serial} not published: ${err.message}`);
+    }
+  }
+
+  async function publishTransport(serial, status) {
+    try {
+      await gladys.publishTransports([transportEntry(serial, status)]);
+    } catch (err) {
+      logger.debug(`Transport of ${serial} not published: ${err.message}`);
+    }
+  }
+
+  function transportEntry(serial, status) {
+    const entry = { external_id: deviceIds(gladys, serial).device, transport: status.transport };
+    if (status.degraded) {
+      entry.degraded = true;
+      entry.message = status.message;
+    }
+    return entry;
+  }
+
+  function createLink(dysonDevice, model) {
+    const link = new DeviceLink({
+      device: dysonDevice,
+      hostOf: () => hostOf(dysonDevice.serial),
+      cloud: {
+        available: () => Boolean(account.token),
+        credentials: (serial) => cloud.iotCredentials(account.token, serial),
+      },
+      preferLocal: config.preferLocal,
+      refreshIntervalSeconds: config.refresh_interval,
+      mqttConnect,
+      timers,
+    });
+    const { serial } = dysonDevice;
+
+    link.on('state', (values) => {
+      productStates.set(serial, { ...productStates.get(serial), ...values });
+      return publish(serial, statesFromProductState(model, values));
+    });
+    link.on('environment', (values) => publish(serial, statesFromEnvironment(model, values)));
+    link.on('transport', (status) => publishTransport(serial, status));
+    return link;
+  }
+
+  /**
+   * One link per device both in the account and created in Gladys: start the
+   * missing ones, stop the ones whose device is gone.
+   */
+  async function syncLinks() {
+    const wanted = new Map(
+      supportedDevices()
+        .filter(({ dysonDevice }) => isCreated(dysonDevice.serial))
+        .map((entry) => [entry.dysonDevice.serial, entry]),
+    );
+
+    for (const [serial, entry] of links) {
+      const next = wanted.get(serial);
+      // A device that left the account, was deleted in Gladys, or whose
+      // local password changed (device reset) gets a fresh link.
+      if (!next || next.dysonDevice.localPassword !== entry.dysonDevice.localPassword) {
+        entry.link.stop();
+        links.delete(serial);
+        productStates.delete(serial);
+      }
+    }
+
+    const starting = [];
+    for (const [serial, { dysonDevice, model }] of wanted) {
+      if (!links.has(serial)) {
+        forgetPublished(serial);
+        const link = createLink(dysonDevice, model);
+        links.set(serial, { link, model, dysonDevice });
+        starting.push(link.start());
+      }
+    }
+    await Promise.all(starting);
+  }
+
+  function stopLinks() {
+    for (const { link } of links.values()) {
+      link.stop();
+    }
+    links.clear();
+    productStates.clear();
+  }
+
+  function findLinkByDevice(device) {
+    for (const [serial, entry] of links) {
+      if (deviceIds(gladys, serial).device === device.external_id) {
+        return { serial, ...entry };
+      }
+    }
+    return null;
+  }
+
+  // --- public API ------------------------------------------------------------
+
+  return {
+    /** (Re)initialize after every connection to Gladys. */
+    async start(rawConfig) {
+      await load();
+      await this.updateConfig(rawConfig, { initial: true });
+      await refreshDevices();
+      published.clear();
+      await syncLinks();
+      await gladys.publishTransports(this.transportEntries()).catch(() => {});
+      await reportStatus();
+    },
+
+    async updateConfig(rawConfig, { initial = false } = {}) {
+      await load();
+      const previous = config;
+      config = normalizeConfig(rawConfig);
+
+      if (config.country !== previous.country) {
+        cloud = cloudFactory({ country: config.country });
+      }
+      // The token belongs to one account: a new e-mail signs out.
+      if (account.email && config.email && account.email !== config.email) {
+        logger.info('Dyson account changed: signing out');
+        stopLinks();
+        account = { devices: [] };
+        await save();
+      }
+      if (initial) {
+        return;
+      }
+
+      for (const { link, dysonDevice } of links.values()) {
+        link.setRefreshInterval(config.refresh_interval);
+        const routeChanged =
+          link.preferLocal !== config.preferLocal ||
+          previous.hosts.get(dysonDevice.serial) !== config.hosts.get(dysonDevice.serial);
+        link.setPreferLocal(config.preferLocal);
+        if (routeChanged) {
+          await link.reconnect();
+        }
+      }
+      await reportStatus();
+    },
+
+    /** Action "Receive a code": Dyson e-mails a one-time code. */
+    async requestCode() {
+      await load();
+      if (!config.email) {
+        return STATUS_MESSAGES.noAccount;
+      }
+      const challengeId = await cloud.requestCode(config.email, config.culture);
+      account.email = config.email;
+      account.challengeId = challengeId;
+      account.challengeAt = now();
+      await save();
+      return {
+        en: `A code was sent to ${config.email}. Type it in "Validate the code" within a few minutes.`,
+        fr: `Un code a été envoyé à ${config.email}. Saisissez-le dans « Valider le code » dans les minutes qui suivent.`,
+      };
+    },
+
+    /** Action "Validate the code": code + password -> account token. */
+    async verifyCode(code) {
+      await load();
+      const otpCode = String(code ?? '').trim();
+      if (
+        !account.challengeId ||
+        account.email !== config.email ||
+        now() - (account.challengeAt ?? 0) > CHALLENGE_TTL_MS
+      ) {
+        return {
+          en: 'No code pending for this e-mail: use "Receive a code" first.',
+          fr: "Aucun code en attente pour cet e-mail : utilisez d'abord « Recevoir un code ».",
+        };
+      }
+      if (!config.password) {
+        return STATUS_MESSAGES.noAccount;
+      }
+
+      let token;
+      try {
+        token = await cloud.verifyCode({
+          email: config.email,
+          password: config.password,
+          challengeId: account.challengeId,
+          otpCode,
+        });
+      } catch (err) {
+        if (err instanceof DysonCloudError && err.code !== 'unreachable') {
+          return {
+            en: 'Dyson refused the code or the password. Check them, or ask for a new code.',
+            fr: 'Dyson a refusé le code ou le mot de passe. Vérifiez-les, ou demandez un nouveau code.',
+          };
+        }
+        throw err;
+      }
+
+      account.token = token;
+      account.tokenRejected = false;
+      account.challengeId = null;
+      account.challengeAt = null;
+      await save();
+      await refreshDevices();
+      await gladys.publishDiscoveredDevices(this.discoveredDevices());
+      await syncLinks();
+      await reportStatus();
+
+      const count = supportedDevices().length;
+      return {
+        en: `Signed in: ${count} Dyson device(s) found. Add them from the Discover tab.`,
+        fr: `Connecté : ${count} appareil(s) Dyson trouvé(s). Ajoutez-les depuis l'onglet Découverte.`,
+      };
+    },
+
+    /** Action "Sign out": forget the token and the device list. */
+    async forgetAccount() {
+      await load();
+      stopLinks();
+      account = { devices: [] };
+      await store.clear();
+      await reportStatus();
+      return {
+        en: 'Signed out: the Dyson token and device list were deleted.',
+        fr: 'Déconnecté : le jeton et la liste des appareils Dyson ont été supprimés.',
+      };
+    },
+
+    /** Action "Test the connection": one line per device. */
+    async testConnection() {
+      await load();
+      if (!account.token) {
+        return account.tokenRejected ? STATUS_MESSAGES.tokenRejected : STATUS_MESSAGES.noToken;
+      }
+      await refreshDevices();
+      await reportStatus();
+      if (!account.token) {
+        return STATUS_MESSAGES.tokenRejected;
+      }
+      await syncLinks();
+
+      const devices = supportedDevices();
+      if (devices.length === 0) {
+        return {
+          en: 'Signed in, but the account has no supported Dyson fan or purifier.',
+          fr: 'Connecté, mais le compte ne contient aucun ventilateur ou purificateur Dyson pris en charge.',
+        };
+      }
+      const lines = { en: [], fr: [] };
+      for (const { dysonDevice, model } of devices) {
+        const name = dysonDevice.name ?? model.name;
+        const entry = links.get(dysonDevice.serial);
+        if (!entry) {
+          lines.en.push(`${name}: not added in Gladys`);
+          lines.fr.push(`${name} : pas ajouté dans Gladys`);
+          continue;
+        }
+        const { transport, degraded } = entry.link.status;
+        const label = {
+          local: { en: 'local', fr: 'local' },
+          cloud: { en: 'Dyson cloud', fr: 'cloud Dyson' },
+          unreachable: { en: 'unreachable', fr: 'injoignable' },
+        }[transport];
+        lines.en.push(`${name}: ${label.en}${degraded ? ' (fallback)' : ''}`);
+        lines.fr.push(`${name} : ${label.fr}${degraded ? ' (secours)' : ''}`);
+      }
+      return { en: lines.en.join(' · '), fr: lines.fr.join(' · ') };
+    },
+
+    /** Gladys asks for the device list (Discover tab). */
+    async scan() {
+      await load();
+      await refreshDevices();
+      await gladys.publishDiscoveredDevices(this.discoveredDevices());
+      await reportStatus();
+    },
+
+    discoveredDevices() {
+      return supportedDevices().map(({ dysonDevice, model }) =>
+        buildDevice(gladys, dysonDevice, model),
+      );
+    },
+
+    async setValue(device, feature, value) {
+      const entry = findLinkByDevice(device);
+      if (!entry) {
+        throw new Error(`Unknown Dyson device ${device.external_id}`);
+      }
+      const key = featureKeyOf(gladys, entry.serial, feature.external_id);
+      const data = commandFor(entry.model, key, value, productStates.get(entry.serial));
+      logger.info(`${entry.serial} <- ${JSON.stringify(data)}`);
+      await entry.link.send(data);
+    },
+
+    /** Devices created or deleted in Gladys. */
+    syncLinks,
+
+    transportEntries() {
+      return [...links.entries()].map(([serial, { link }]) => transportEntry(serial, link.status));
+    },
+
+    stop() {
+      stopLinks();
+    },
+  };
+}

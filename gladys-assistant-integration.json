@@ -1,0 +1,123 @@
+{
+  "manifest_version": 1,
+  "type": "device",
+  "name": "Dyson",
+  "description": {
+    "en": "Control Dyson purifiers, fans and heaters, and read their air quality sensors.",
+    "fr": "Pilotez purificateurs, ventilateurs et chauffages Dyson, et lisez la qualité de l'air."
+  },
+  "version": "0.0.0",
+  "docker_image": "ghcr.io/prohand/gladys-dyson:0.0.0",
+  "gladys_version": ">=5.1.0",
+  "cover_image": "https://raw.githubusercontent.com/prohand/gladys-dyson/main/cover.png",
+  "categories": ["climate", "environment", "appliances"],
+  "transports": ["local", "cloud"],
+  "config_schema": [
+    {
+      "key": "intro",
+      "type": "section",
+      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "description": {
+        "en": "1. Enter the e-mail, password and country of your MyDyson account, then save. 2. Click \"Receive a code\": Dyson e-mails you a code. 3. Type it in \"Validate the code\". 4. Add your devices from the Discover tab. To drive a device on your local network, give its address below; otherwise it goes through the Dyson cloud.",
+        "fr": "1. Saisissez l'e-mail, le mot de passe et le pays de votre compte MyDyson, puis enregistrez. 2. Cliquez sur « Recevoir un code » : Dyson vous envoie un code par e-mail. 3. Saisissez-le dans « Valider le code ». 4. Ajoutez vos appareils depuis l'onglet Découverte. Pour piloter un appareil sur votre réseau local, donnez son adresse ci-dessous ; sinon il passe par le cloud Dyson."
+      }
+    },
+    {
+      "key": "email",
+      "type": "string",
+      "label": { "en": "MyDyson e-mail", "fr": "E-mail MyDyson" },
+      "placeholder": { "en": "you@example.com", "fr": "vous@exemple.fr" },
+      "required": true,
+      "default": ""
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": { "en": "MyDyson password", "fr": "Mot de passe MyDyson" },
+      "description": {
+        "en": "Only sent to Dyson, with the e-mailed code, to sign in.",
+        "fr": "Envoyé uniquement à Dyson, avec le code reçu par e-mail, pour la connexion."
+      },
+      "required": true
+    },
+    {
+      "key": "country",
+      "type": "string",
+      "label": { "en": "Account country", "fr": "Pays du compte" },
+      "description": {
+        "en": "Two-letter code of the country of the MyDyson account (FR, BE, CH, GB, US...).",
+        "fr": "Code à deux lettres du pays du compte MyDyson (FR, BE, CH, GB, US...)."
+      },
+      "placeholder": { "en": "e.g. GB", "fr": "ex. FR" },
+      "required": true,
+      "default": "FR"
+    },
+    {
+      "key": "device_hosts",
+      "type": "string",
+      "label": { "en": "Device addresses (local)", "fr": "Adresses des appareils (local)" },
+      "description": {
+        "en": "For the local connection: serial=IP of each device, separated by commas. Without it: Dyson cloud.",
+        "fr": "Pour la connexion locale : numéro de série=IP de chaque appareil, séparés par des virgules. Sans : cloud Dyson."
+      },
+      "placeholder": {
+        "en": "e.g. NK6-EU-MHA0000A=192.168.1.20",
+        "fr": "ex. NK6-EU-MHA0000A=192.168.1.20"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "refresh_interval",
+      "type": "number",
+      "label": { "en": "Sensor refresh (s)", "fr": "Rafraîchissement des capteurs (s)" },
+      "description": {
+        "en": "How often the air quality sensors are read, in seconds.",
+        "fr": "Fréquence de lecture des capteurs de qualité de l'air, en secondes."
+      },
+      "required": false,
+      "default": 60,
+      "min": 15,
+      "max": 3600
+    }
+  ],
+  "actions": [
+    {
+      "key": "request_code",
+      "label": { "en": "Receive a code", "fr": "Recevoir un code" },
+      "description": {
+        "en": "Dyson e-mails a one-time code to the account (save the form first).",
+        "fr": "Dyson envoie un code à usage unique par e-mail (enregistrez le formulaire avant)."
+      },
+      "timeout_seconds": 30
+    },
+    {
+      "key": "verify_code",
+      "label": { "en": "Validate the code", "fr": "Valider le code" },
+      "timeout_seconds": 60,
+      "fields": [
+        {
+          "key": "code",
+          "type": "string",
+          "label": { "en": "Code received by e-mail", "fr": "Code reçu par e-mail" },
+          "placeholder": { "en": "e.g. 123456", "fr": "ex. 123456" },
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "test_connection",
+      "label": { "en": "Test the connection", "fr": "Tester la connexion" },
+      "timeout_seconds": 60
+    },
+    {
+      "key": "sign_out",
+      "label": { "en": "Sign out", "fr": "Se déconnecter" },
+      "description": {
+        "en": "Deletes the Dyson token and the device list kept by the integration.",
+        "fr": "Supprime le jeton Dyson et la liste des appareils gardés par l'intégration."
+      },
+      "timeout_seconds": 15
+    }
+  ]
+}
