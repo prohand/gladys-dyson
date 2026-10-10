@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-10
+
 ### Added
 
 - Scene triggers (Gladys 5.1): air quality changed, filter to replace soon,
@@ -49,5 +51,6 @@ becomes the notes of the version's GitHub Release.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/prohand/gladys-dyson/compare/v0.0.1...v1.0.0
 [0.0.1]: https://github.com/prohand/gladys-dyson/releases/tag/v0.0.1
