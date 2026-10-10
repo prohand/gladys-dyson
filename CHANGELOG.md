@@ -10,6 +10,12 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Fixed
+
+- The GitHub Release of a new version gets its changelog section as notes: the
+  workflow read the changelog of the commit before the version bump. A manual
+  run with `refresh-notes` rewrites the notes of the existing releases.
+
 ## [1.0.0] - 2026-10-10
 
 ### Added

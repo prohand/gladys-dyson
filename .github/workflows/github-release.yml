@@ -11,7 +11,13 @@
 # with the default GITHUB_TOKEN triggers no workflow on its own.
 #
 # The notes are the version's section of CHANGELOG.md when there is one, the
-# pull requests GitHub lists since the previous tag otherwise.
+# pull requests GitHub lists since the previous tag otherwise. The changelog is
+# read from the tip of main, not from the checkout: called by release.yml, the
+# checkout is the commit BEFORE the bump, whose changelog has no section for
+# the new version yet.
+#
+# A manual run with `refresh-notes` also rewrites the notes of the releases
+# that already exist, from the current changelog.
 # -----------------------------------------------------------------------------
 name: GitHub releases
 
@@ -19,6 +25,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      refresh-notes:
+        description: 'Also rewrite the notes of the existing releases from CHANGELOG.md'
+        type: boolean
+        default: false
   workflow_call:
 
 concurrency:
@@ -39,28 +50,43 @@ jobs:
       - name: Create the missing releases
         env:
           GH_TOKEN: ${{ github.token }}
+          REFRESH_NOTES: ${{ inputs.refresh-notes || false }}
         run: |
           set -euo pipefail
           git fetch --force --tags origin
+          git fetch --force origin main
+          git show origin/main:CHANGELOG.md > "$RUNNER_TEMP/CHANGELOG.md" 2>/dev/null \
+            || cp CHANGELOG.md "$RUNNER_TEMP/CHANGELOG.md" 2>/dev/null || true
+          changelog="$RUNNER_TEMP/CHANGELOG.md"
 
           existing="$(gh release list --limit 1000 --json tagName --jq '.[].tagName')"
           latest="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)"
 
           for tag in $(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=v:refname); do
-            if grep -qxF "$tag" <<<"$existing"; then
+            exists=false
+            grep -qxF "$tag" <<<"$existing" && exists=true
+            if [ "$exists" = true ] && [ "$REFRESH_NOTES" != true ]; then
               continue
             fi
             version="${tag#v}"
 
             notes=""
-            if [ -f CHANGELOG.md ]; then
+            if [ -f "$changelog" ]; then
               # The lines between "## [X.Y.Z]" (or "## X.Y.Z") and the next "## ", read
               # from the current changelog: it also covers the versions tagged
               # before the file existed.
               notes="$(awk -v v="$version" '
                 /^## / { if (found) exit; if (index($0, "[" v "]") || $2 == v) { found = 1; next } }
                 found { print }
-              ' CHANGELOG.md || true)"
+              ' "$changelog" || true)"
+            fi
+
+            if [ "$exists" = true ]; then
+              if [ -n "$(tr -d '[:space:]' <<<"$notes")" ]; then
+                gh release edit "$tag" --notes "$notes"
+                echo "Refreshed the notes of $tag"
+              fi
+              continue
             fi
 
             is_latest=false
