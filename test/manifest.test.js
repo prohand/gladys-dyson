@@ -9,6 +9,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/config.js';
+import { SCENE_ACTIONS } from '../src/capabilities/scenes.js';
+import { SCENE_TRIGGERS, createTriggerTracker } from '../src/capabilities/triggers.js';
+import { AIR_WIDGET } from '../src/capabilities/widget.js';
+import { describeModel } from '../src/dyson/models.js';
+import { createFakeGladys } from './helpers/fakeGladys.js';
 
 const manifest = JSON.parse(
   await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
@@ -19,6 +24,9 @@ const indexSource = await readFile(new URL('../index.js', import.meta.url), 'utf
 const allFields = [
   ...manifest.config_schema,
   ...(manifest.actions ?? []).flatMap((action) => action.fields ?? []),
+  ...(manifest.scene_triggers ?? []).flatMap((trigger) => trigger.fields ?? []),
+  ...(manifest.scene_actions ?? []).flatMap((action) => action.fields ?? []),
+  ...(manifest.widgets ?? []).flatMap((widget) => widget.settings ?? []),
 ];
 
 // The store schema is the admission authority: a field type outside this
@@ -75,7 +83,16 @@ test('field placeholders are multi-language objects, on text and number fields o
 });
 
 test('every text is in English and French', () => {
-  for (const field of [...allFields, ...(manifest.actions ?? [])]) {
+  const declarations = [
+    ...allFields,
+    ...(manifest.actions ?? []),
+    ...(manifest.scene_triggers ?? []),
+    ...(manifest.scene_triggers ?? []).flatMap((trigger) => trigger.variables ?? []),
+    ...(manifest.scene_actions ?? []),
+    ...(manifest.scene_actions ?? []).flatMap((action) => action.outputs ?? []),
+    ...(manifest.widgets ?? []),
+  ];
+  for (const field of declarations) {
     for (const text of ['label', 'description', 'placeholder']) {
       if (field[text] !== undefined) {
         assert.ok(field[text].en && field[text].fr, `"${field.key}".${text} needs en and fr`);
@@ -146,4 +163,64 @@ test('the manifest version is the package version, and the image is tagged with 
   // hand, and Gladys would offer a version whose image is another one.
   assert.equal(manifest.version, pkg.version, 'manifest version must match package.json');
   assert.equal(manifest.docker_image, `ghcr.io/prohand/gladys-dyson:${manifest.version}`);
+});
+
+test('every scene action has a handler, and every handler a declaration', () => {
+  assert.deepEqual(
+    (manifest.scene_actions ?? []).map((action) => action.key).sort(),
+    Object.keys(SCENE_ACTIONS).sort(),
+  );
+  assert.match(indexSource, /onSceneAction\(actionKey/);
+  for (const action of manifest.scene_actions) {
+    assert.deepEqual(
+      action.outputs.map((output) => output.key).sort(),
+      ['sent', 'transport'],
+      `"${action.key}" outputs are what the handlers return`,
+    );
+  }
+});
+
+test('the scene triggers the code fires are the declared ones, with declared data', async () => {
+  const declared = Object.fromEntries(
+    (manifest.scene_triggers ?? []).map((trigger) => [
+      trigger.key,
+      new Set([
+        ...(trigger.fields ?? []).map((field) => field.key),
+        ...(trigger.variables ?? []).map((variable) => variable.key),
+      ]),
+    ]),
+  );
+  assert.deepEqual(Object.keys(declared).sort(), Object.values(SCENE_TRIGGERS).sort());
+
+  // Fire each trigger once and check every data key is declared: an
+  // undeclared key is silently dropped by the core.
+  const gladys = createFakeGladys();
+  const tracker = createTriggerTracker(gladys);
+  const device = { serial: 'S', externalId: 'ext:dyson:fan:S' };
+  const model = describeModel('438K');
+  await tracker.onEnvironment(device, model, { pm25: '0001' });
+  await tracker.onEnvironment(device, model, { pm25: '0099' });
+  await tracker.onProductState(device, { hflr: '0050' });
+  await tracker.onProductState(device, { hflr: '0005' });
+  await tracker.onTransport(device, { transport: 'local', degraded: false });
+  await tracker.onTransport(device, { transport: 'cloud', degraded: true });
+
+  assert.deepEqual(
+    gladys.sceneEvents.map((event) => event.key).sort(),
+    Object.values(SCENE_TRIGGERS).sort(),
+  );
+  for (const { key, data } of gladys.sceneEvents) {
+    for (const dataKey of Object.keys(data)) {
+      assert.ok(declared[key].has(dataKey), `${key}: "${dataKey}" is not declared`);
+    }
+  }
+});
+
+test('the widget is declared with the key the code serves', () => {
+  assert.deepEqual(
+    manifest.widgets.map((widget) => widget.key),
+    [AIR_WIDGET],
+  );
+  assert.match(indexSource, /onWidgetGet\(AIR_WIDGET/);
+  assert.match(indexSource, /onWidgetAction\(AIR_WIDGET/);
 });

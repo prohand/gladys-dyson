@@ -24,6 +24,17 @@ User documentation: [English](./docs/en.md) · [Français](./docs/fr.md).
 Air quality sensors: temperature, humidity, PM2.5, PM10, VOC and NO2 indexes,
 formaldehyde on the `K` models, filter life.
 
+Gladys 5.1 capabilities:
+
+| Kind          | Key                   | What                                                       |
+| ------------- | --------------------- | ---------------------------------------------------------- |
+| Scene trigger | `air_quality_changed` | air quality level changed (good / fair / poor / very poor) |
+| Scene trigger | `filter_low`          | a filter went under 10 % (400 h on Link models)            |
+| Scene trigger | `connection_changed`  | a device went local / cloud / unreachable                  |
+| Scene action  | `apply_settings`      | power, mode, speed, oscillation, night mode in one order   |
+| Scene action  | `set_sleep_timer`     | the device turns itself off after N minutes                |
+| Widget        | `dyson_air`           | live air tiles, status, on/off, auto and refresh buttons   |
+
 ## Local and cloud
 
 The manifest declares both transports (`"transports": ["local", "cloud"]`):
@@ -55,7 +66,8 @@ local MQTT password. Sign-in uses the one-time code Dyson e-mails.
 │  │  ├─ protocol.js              # Dyson MQTT messages
 │  │  ├─ models.js                # ProductType -> capabilities
 │  │  └─ store.js                 # /data/dyson-account.json
-│  └─ devices/fan.js              # Gladys device + features, value mapping
+│  ├─ devices/fan.js              # Gladys device + features, value mapping
+│  └─ capabilities/               # Gladys 5.1: scene triggers, scene actions, widget
 ├─ docs/en.md, docs/fr.md         # user documentation (re-hosted by Gladys)
 ├─ test/                          # unit tests (`node --test`), no network
 ├─ gladys-assistant-integration.json # manifest

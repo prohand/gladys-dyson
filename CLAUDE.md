@@ -43,6 +43,9 @@ src/dyson/protocol.js     Dyson MQTT messages: topics, decoding, STATE-SET, unit
 src/dyson/models.js       ProductType -> protocol dialect (link / pure), heater, humidifier...
 src/dyson/store.js        /data/dyson-account.json (token, device list, addresses), 0600
 src/devices/fan.js        Gladys device + features of a model, states <-> Dyson values
+src/capabilities/triggers.js  scene triggers: air quality level, filter low, connection
+src/capabilities/scenes.js    scene actions: apply_settings, set_sleep_timer
+src/capabilities/widget.js    dashboard widget dyson_air (content + refresh action)
 gladys-assistant-integration.json  manifest: config_schema, actions, transports
 docs/en.md, docs/fr.md    user documentation, re-hosted by Gladys (mandatory)
 test/                     node --test; helpers fake Gladys, MQTT, timers and the Dyson API
@@ -76,13 +79,23 @@ test/                     node --test; helpers fake Gladys, MQTT, timers and the
   tenths of kelvin.
 - **Feedback**: controls have `has_feedback: true`; a command only sends a
   STATE-SET, the STATE-CHANGE the device answers is what gets published.
+- **Scene triggers** fire once per transition; the first value after a start
+  (or a new link) is only the reference, so a restart never re-runs scenes.
+  Event data keys must be declared in the trigger `fields`/`variables`
+  (`test/manifest.test.js` fires each one and checks).
+- **Scene actions** never throw on an unreachable device: they return
+  `{ sent: false, transport }`.
+- **Widget budget**: 8 components at most (4 tiles + status + 3 buttons);
+  `test/widget.test.js` asserts `validateWidgetContent(content)` is `[]`.
 - Only devices **created in Gladys** get a link; states are published only for
   features the Gladys device has, and only when they change.
 
 ## Rules
 
 - **External ids are forever.** `gladys.externalIds('fan', serial)` and the
-  `FEATURES` keys of `src/devices/fan.js`. Renaming one orphans the user's
+  `FEATURES` keys of `src/devices/fan.js`. Same for the scene trigger, scene
+  action, field, variable, output and widget keys, and the trigger option
+  values (`good`, `hepa`...): scenes and dashboards store them. Renaming one orphans the user's
   device, history, scenes and dashboards. Same for manifest `config_schema` and
   `actions` keys.
 - **Secrets**: never log the MyDyson password, the one-time code, the token or a
@@ -98,7 +111,7 @@ test/                     node --test; helpers fake Gladys, MQTT, timers and the
 - **Manifest.** Texts are `{ "en": ..., "fr": ... }` objects (label,
   description, placeholder). Catalog `description`: 10 to 100 characters per
   language. `transports` stays `["local", "cloud"]`. `test/manifest.test.js`
-  ties the manifest to the code (defaults, action handlers).
+  ties the manifest to the code (defaults, action, scene and widget handlers).
 - **User-facing text** is bilingual (English and French): action messages,
   connection status, transport reasons, manifest texts, `docs/en.md` /
   `docs/fr.md` kept in sync.

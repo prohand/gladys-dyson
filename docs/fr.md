@@ -82,6 +82,48 @@ L'état affiché dans Gladys est celui que l'appareil **confirme** : un ordre
 refusé par l'appareil ne s'affiche pas comme fait. Un changement fait avec la
 télécommande ou l'application Dyson remonte aussi dans Gladys.
 
+## Scènes
+
+### Déclencheurs
+
+Dans l'éditeur de scènes, catégorie **Intégrations** :
+
+- **Qualité de l'air modifiée** : le niveau mesuré par un appareil change.
+  Niveaux : bonne, moyenne, mauvaise, très mauvaise. C'est le pire de PM2.5,
+  PM10, COV et NO2 qui décide, avec les seuils de l'application Dyson
+  (PM2.5 : 35 / 53 / 70 µg/m³ ; PM10 : 50 / 75 / 100 µg/m³ ; COV et NO2 :
+  3 / 6 / 8). Variables : `level`, `previous_level`, `pm25`, `pm10`, `voc`,
+  `no2`.
+- **Filtre bientôt à changer** : un filtre passe sous 10 % (400 heures sur
+  les modèles Link). Variables : `filter` (`hepa`, `carbon`, `combined`),
+  `remaining`.
+- **Connexion modifiée** : un appareil passe en local, en cloud, ou devient
+  injoignable. Variables : `transport`, `previous_transport`, `degraded`.
+
+Chaque déclencheur peut se limiter à un appareil. Un événement part une seule
+fois par changement. Au démarrage, la première valeur sert de référence : un
+redémarrage ne relance pas vos scènes.
+
+### Actions
+
+- **Appliquer des réglages Dyson** : marche, mode (auto / manuel), vitesse,
+  oscillation et mode nuit, en un seul ordre. Un champ vide ne change rien.
+  « Éteint » ignore les autres réglages.
+- **Régler la minuterie** : l'appareil s'éteint seul après N minutes (de 1 à 540) ; 0 annule la minuterie.
+
+Les deux renvoient `sent` (ordre envoyé ou non) et `transport` (connexion
+utilisée). Un appareil injoignable ne fait pas échouer la scène :
+`sent` vaut alors `false`.
+
+## Widget du tableau de bord
+
+Le widget **Qualité de l'air Dyson** affiche un appareil, choisi dans ses
+réglages :
+
+- 4 tuiles en direct : PM2.5, COV, température, humidité (selon le modèle) ;
+- l'état : qualité de l'air, connexion, mode, filtres, minuterie ;
+- des boutons : allumer / éteindre, mode auto, actualiser les relevés.
+
 ## Réglages
 
 - **Adresses des appareils (local)** : l'adresse de chaque appareil sur votre

@@ -3,7 +3,7 @@
 //
 // It reproduces the surface the integration relies on and records every call
 // so tests can assert on them: external ids, states, transports, discovered
-// devices and connection status.
+// devices, connection status, scene events and widget refresh nudges.
 // -----------------------------------------------------------------------------
 
 export function createFakeGladys({ selector = 'dyson' } = {}) {
@@ -13,6 +13,9 @@ export function createFakeGladys({ selector = 'dyson' } = {}) {
     transports: [],
     discovered: [],
     connectionStatuses: [],
+    sceneEvents: [],
+    widgetRefreshes: [],
+    sceneEventError: null,
 
     externalIds(type, platformId) {
       const device = `ext:${selector}:${type}:${platformId}`;
@@ -39,6 +42,19 @@ export function createFakeGladys({ selector = 'dyson' } = {}) {
 
     async setConnectionStatus(connected, message) {
       gladys.connectionStatuses.push({ connected, message });
+    },
+
+    async publishSceneEvent(key, data = {}) {
+      if (gladys.sceneEventError) {
+        throw gladys.sceneEventError;
+      }
+      gladys.sceneEvents.push({ key, data });
+      return { success: true };
+    },
+
+    // Fire-and-forget in the SDK too: synchronous, resolves nothing.
+    requestWidgetRefresh(key) {
+      gladys.widgetRefreshes.push(key);
     },
 
     /** Simulate "the user added these discovered devices in Gladys". */

@@ -16,7 +16,10 @@
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Getting started",
+        "fr": "Pour commencer"
+      },
       "description": {
         "en": "1. Enter the e-mail, password and country of your MyDyson account, then save. 2. Click \"Receive a code\": Dyson e-mails you a code. 3. Type it in \"Validate the code\". 4. Add your devices from the Discover tab. To drive a device on your local network, give its address below; otherwise it goes through the Dyson cloud.",
         "fr": "1. Saisissez l'e-mail, le mot de passe et le pays de votre compte MyDyson, puis enregistrez. 2. Cliquez sur « Recevoir un code » : Dyson vous envoie un code par e-mail. 3. Saisissez-le dans « Valider le code ». 4. Ajoutez vos appareils depuis l'onglet Découverte. Pour piloter un appareil sur votre réseau local, donnez son adresse ci-dessous ; sinon il passe par le cloud Dyson."
@@ -25,15 +28,24 @@
     {
       "key": "email",
       "type": "string",
-      "label": { "en": "MyDyson e-mail", "fr": "E-mail MyDyson" },
-      "placeholder": { "en": "you@example.com", "fr": "vous@exemple.fr" },
+      "label": {
+        "en": "MyDyson e-mail",
+        "fr": "E-mail MyDyson"
+      },
+      "placeholder": {
+        "en": "you@example.com",
+        "fr": "vous@exemple.fr"
+      },
       "required": true,
       "default": ""
     },
     {
       "key": "password",
       "type": "secret",
-      "label": { "en": "MyDyson password", "fr": "Mot de passe MyDyson" },
+      "label": {
+        "en": "MyDyson password",
+        "fr": "Mot de passe MyDyson"
+      },
       "description": {
         "en": "Only sent to Dyson, with the e-mailed code, to sign in.",
         "fr": "Envoyé uniquement à Dyson, avec le code reçu par e-mail, pour la connexion."
@@ -43,19 +55,28 @@
     {
       "key": "country",
       "type": "string",
-      "label": { "en": "Account country", "fr": "Pays du compte" },
+      "label": {
+        "en": "Account country",
+        "fr": "Pays du compte"
+      },
       "description": {
         "en": "Two-letter code of the country of the MyDyson account (FR, BE, CH, GB, US...).",
         "fr": "Code à deux lettres du pays du compte MyDyson (FR, BE, CH, GB, US...)."
       },
-      "placeholder": { "en": "e.g. GB", "fr": "ex. FR" },
+      "placeholder": {
+        "en": "e.g. GB",
+        "fr": "ex. FR"
+      },
       "required": true,
       "default": "FR"
     },
     {
       "key": "device_hosts",
       "type": "string",
-      "label": { "en": "Device addresses (local)", "fr": "Adresses des appareils (local)" },
+      "label": {
+        "en": "Device addresses (local)",
+        "fr": "Adresses des appareils (local)"
+      },
       "description": {
         "en": "For the local connection: serial=IP of each device, separated by commas. Without it: Dyson cloud.",
         "fr": "Pour la connexion locale : numéro de série=IP de chaque appareil, séparés par des virgules. Sans : cloud Dyson."
@@ -70,7 +91,10 @@
     {
       "key": "refresh_interval",
       "type": "number",
-      "label": { "en": "Sensor refresh (s)", "fr": "Rafraîchissement des capteurs (s)" },
+      "label": {
+        "en": "Sensor refresh (s)",
+        "fr": "Rafraîchissement des capteurs (s)"
+      },
       "description": {
         "en": "How often the air quality sensors are read, in seconds.",
         "fr": "Fréquence de lecture des capteurs de qualité de l'air, en secondes."
@@ -84,7 +108,10 @@
   "actions": [
     {
       "key": "request_code",
-      "label": { "en": "Receive a code", "fr": "Recevoir un code" },
+      "label": {
+        "en": "Receive a code",
+        "fr": "Recevoir un code"
+      },
       "description": {
         "en": "Dyson e-mails a one-time code to the account (save the form first).",
         "fr": "Dyson envoie un code à usage unique par e-mail (enregistrez le formulaire avant)."
@@ -93,31 +120,539 @@
     },
     {
       "key": "verify_code",
-      "label": { "en": "Validate the code", "fr": "Valider le code" },
+      "label": {
+        "en": "Validate the code",
+        "fr": "Valider le code"
+      },
       "timeout_seconds": 60,
       "fields": [
         {
           "key": "code",
           "type": "string",
-          "label": { "en": "Code received by e-mail", "fr": "Code reçu par e-mail" },
-          "placeholder": { "en": "e.g. 123456", "fr": "ex. 123456" },
+          "label": {
+            "en": "Code received by e-mail",
+            "fr": "Code reçu par e-mail"
+          },
+          "placeholder": {
+            "en": "e.g. 123456",
+            "fr": "ex. 123456"
+          },
           "required": true
         }
       ]
     },
     {
       "key": "test_connection",
-      "label": { "en": "Test the connection", "fr": "Tester la connexion" },
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion"
+      },
       "timeout_seconds": 60
     },
     {
       "key": "sign_out",
-      "label": { "en": "Sign out", "fr": "Se déconnecter" },
+      "label": {
+        "en": "Sign out",
+        "fr": "Se déconnecter"
+      },
       "description": {
         "en": "Deletes the Dyson token and the device list kept by the integration.",
         "fr": "Supprime le jeton Dyson et la liste des appareils gardés par l'intégration."
       },
       "timeout_seconds": 15
+    }
+  ],
+  "scene_triggers": [
+    {
+      "key": "air_quality_changed",
+      "label": {
+        "en": "Air quality changed",
+        "fr": "Qualité de l'air modifiée"
+      },
+      "description": {
+        "en": "The air quality level measured by a Dyson device changed (worst of PM2.5, PM10, VOC, NO2).",
+        "fr": "Le niveau de qualité de l'air mesuré par un appareil Dyson a changé (le pire de PM2.5, PM10, COV, NO2)."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          }
+        },
+        {
+          "key": "level",
+          "type": "multi_select",
+          "label": {
+            "en": "New level",
+            "fr": "Nouveau niveau"
+          },
+          "options": [
+            {
+              "value": "good",
+              "label": {
+                "en": "Good",
+                "fr": "Bonne"
+              }
+            },
+            {
+              "value": "fair",
+              "label": {
+                "en": "Fair",
+                "fr": "Moyenne"
+              }
+            },
+            {
+              "value": "poor",
+              "label": {
+                "en": "Poor",
+                "fr": "Mauvaise"
+              }
+            },
+            {
+              "value": "very_poor",
+              "label": {
+                "en": "Very poor",
+                "fr": "Très mauvaise"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "level",
+          "type": "string",
+          "label": {
+            "en": "Level",
+            "fr": "Niveau"
+          }
+        },
+        {
+          "key": "previous_level",
+          "type": "string",
+          "label": {
+            "en": "Previous level",
+            "fr": "Niveau précédent"
+          }
+        },
+        {
+          "key": "pm25",
+          "type": "number",
+          "label": {
+            "en": "PM2.5 (µg/m³)",
+            "fr": "PM2.5 (µg/m³)"
+          }
+        },
+        {
+          "key": "pm10",
+          "type": "number",
+          "label": {
+            "en": "PM10 (µg/m³)",
+            "fr": "PM10 (µg/m³)"
+          }
+        },
+        {
+          "key": "voc",
+          "type": "number",
+          "label": {
+            "en": "VOC index",
+            "fr": "Indice COV"
+          }
+        },
+        {
+          "key": "no2",
+          "type": "number",
+          "label": {
+            "en": "NO2 index",
+            "fr": "Indice NO2"
+          }
+        }
+      ]
+    },
+    {
+      "key": "filter_low",
+      "label": {
+        "en": "Filter to replace soon",
+        "fr": "Filtre bientôt à changer"
+      },
+      "description": {
+        "en": "A filter went under 10 % (400 hours on the Link models).",
+        "fr": "Un filtre est passé sous 10 % (400 heures sur les modèles Link)."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          }
+        },
+        {
+          "key": "filter",
+          "type": "select",
+          "label": {
+            "en": "Filter",
+            "fr": "Filtre"
+          },
+          "options": [
+            {
+              "value": "hepa",
+              "label": {
+                "en": "HEPA",
+                "fr": "HEPA"
+              }
+            },
+            {
+              "value": "carbon",
+              "label": {
+                "en": "Carbon",
+                "fr": "Charbon"
+              }
+            },
+            {
+              "value": "combined",
+              "label": {
+                "en": "Combined (Link)",
+                "fr": "Combiné (Link)"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "filter",
+          "type": "string",
+          "label": {
+            "en": "Filter",
+            "fr": "Filtre"
+          }
+        },
+        {
+          "key": "remaining",
+          "type": "number",
+          "label": {
+            "en": "Remaining (% or hours)",
+            "fr": "Restant (% ou heures)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "connection_changed",
+      "label": {
+        "en": "Connection changed",
+        "fr": "Connexion modifiée"
+      },
+      "description": {
+        "en": "A Dyson device switched to local, to the cloud, or became unreachable.",
+        "fr": "Un appareil Dyson est passé en local, en cloud, ou est devenu injoignable."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          }
+        },
+        {
+          "key": "transport",
+          "type": "multi_select",
+          "label": {
+            "en": "New connection",
+            "fr": "Nouvelle connexion"
+          },
+          "options": [
+            {
+              "value": "local",
+              "label": {
+                "en": "Local",
+                "fr": "Locale"
+              }
+            },
+            {
+              "value": "cloud",
+              "label": {
+                "en": "Dyson cloud",
+                "fr": "Cloud Dyson"
+              }
+            },
+            {
+              "value": "unreachable",
+              "label": {
+                "en": "Unreachable",
+                "fr": "Injoignable"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "transport",
+          "type": "string",
+          "label": {
+            "en": "Connection",
+            "fr": "Connexion"
+          }
+        },
+        {
+          "key": "previous_transport",
+          "type": "string",
+          "label": {
+            "en": "Previous connection",
+            "fr": "Connexion précédente"
+          }
+        },
+        {
+          "key": "degraded",
+          "type": "boolean",
+          "label": {
+            "en": "Fallback in use",
+            "fr": "Secours utilisé"
+          }
+        }
+      ]
+    }
+  ],
+  "scene_actions": [
+    {
+      "key": "apply_settings",
+      "label": {
+        "en": "Apply Dyson settings",
+        "fr": "Appliquer des réglages Dyson"
+      },
+      "description": {
+        "en": "Power, mode, speed, oscillation and night mode in one order. Empty = unchanged.",
+        "fr": "Marche, mode, vitesse, oscillation et mode nuit en un seul ordre. Vide = inchangé."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          },
+          "required": true
+        },
+        {
+          "key": "power",
+          "type": "select",
+          "label": {
+            "en": "Power",
+            "fr": "Marche"
+          },
+          "options": [
+            {
+              "value": "on",
+              "label": {
+                "en": "On",
+                "fr": "Allumé"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "fr": "Éteint"
+              }
+            }
+          ]
+        },
+        {
+          "key": "mode",
+          "type": "select",
+          "label": {
+            "en": "Mode",
+            "fr": "Mode"
+          },
+          "options": [
+            {
+              "value": "auto",
+              "label": {
+                "en": "Auto",
+                "fr": "Auto"
+              }
+            },
+            {
+              "value": "manual",
+              "label": {
+                "en": "Manual",
+                "fr": "Manuel"
+              }
+            }
+          ]
+        },
+        {
+          "key": "speed",
+          "type": "number",
+          "label": {
+            "en": "Speed (1-10)",
+            "fr": "Vitesse (1-10)"
+          },
+          "min": 1,
+          "max": 10
+        },
+        {
+          "key": "oscillation",
+          "type": "select",
+          "label": {
+            "en": "Oscillation",
+            "fr": "Oscillation"
+          },
+          "options": [
+            {
+              "value": "on",
+              "label": {
+                "en": "On",
+                "fr": "Activé"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "fr": "Désactivé"
+              }
+            }
+          ]
+        },
+        {
+          "key": "night_mode",
+          "type": "select",
+          "label": {
+            "en": "Night mode",
+            "fr": "Mode nuit"
+          },
+          "options": [
+            {
+              "value": "on",
+              "label": {
+                "en": "On",
+                "fr": "Activé"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "fr": "Désactivé"
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "key": "sent",
+          "type": "boolean",
+          "label": {
+            "en": "Order sent",
+            "fr": "Ordre envoyé"
+          }
+        },
+        {
+          "key": "transport",
+          "type": "string",
+          "label": {
+            "en": "Connection used",
+            "fr": "Connexion utilisée"
+          }
+        }
+      ]
+    },
+    {
+      "key": "set_sleep_timer",
+      "label": {
+        "en": "Set the sleep timer",
+        "fr": "Régler la minuterie"
+      },
+      "description": {
+        "en": "The device turns itself off after this many minutes (0 cancels).",
+        "fr": "L'appareil s'éteint seul après ce nombre de minutes (0 annule)."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          },
+          "required": true
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "Minutes (0-540)",
+            "fr": "Minutes (0-540)"
+          },
+          "min": 0,
+          "max": 540,
+          "required": true,
+          "default": 60
+        }
+      ],
+      "outputs": [
+        {
+          "key": "sent",
+          "type": "boolean",
+          "label": {
+            "en": "Order sent",
+            "fr": "Ordre envoyé"
+          }
+        },
+        {
+          "key": "transport",
+          "type": "string",
+          "label": {
+            "en": "Connection used",
+            "fr": "Connexion utilisée"
+          }
+        }
+      ]
+    }
+  ],
+  "widgets": [
+    {
+      "key": "dyson_air",
+      "label": {
+        "en": "Dyson air quality",
+        "fr": "Qualité de l'air Dyson"
+      },
+      "description": {
+        "en": "Live air readings, mode, connection and filters of a Dyson device.",
+        "fr": "Mesures de l'air en direct, mode, connexion et filtres d'un appareil Dyson."
+      },
+      "icon": "wind",
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          },
+          "required": true
+        }
+      ],
+      "action_timeout_seconds": 15
     }
   ]
 }

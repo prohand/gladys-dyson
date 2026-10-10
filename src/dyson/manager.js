@@ -11,7 +11,9 @@ import { normalizeConfig } from '../config.js';
 import { createDysonCloud, DysonCloudError } from './cloud.js';
 import { DeviceLink, defaultMqttConnect } from './link.js';
 import { describeModel } from './models.js';
+import { createTriggerTracker } from '../capabilities/triggers.js';
 import {
+  FEATURES,
   buildDevice,
   commandFor,
   deviceIds,
@@ -48,6 +50,7 @@ const STATUS_MESSAGES = {
  * @param {Function} [options.mqttConnect] injectable mqtt.connect (tests)
  * @param {object} [options.timers] injectable timers (tests)
  * @param {() => number} [options.now]
+ * @param {() => void} [options.onDeviceChange] something a widget shows changed
  */
 export function createDysonManager({
   gladys,
@@ -56,6 +59,7 @@ export function createDysonManager({
   mqttConnect = defaultMqttConnect,
   timers = globalThis,
   now = Date.now,
+  onDeviceChange = () => {},
 }) {
   let config = normalizeConfig();
   let cloud = cloudFactory({ country: config.country });
@@ -69,6 +73,8 @@ export function createDysonManager({
   const productStates = new Map();
   /** feature external id -> last value published (only changes are sent) */
   const published = new Map();
+  // Scene triggers: air quality, filters, connection (one event per change).
+  const triggers = createTriggerTracker(gladys, { onLevelChange: () => onDeviceChange() });
 
   // --- account -------------------------------------------------------------
 
@@ -215,13 +221,23 @@ export function createDysonManager({
       timers,
     });
     const { serial } = dysonDevice;
+    const device = { serial, externalId: deviceIds(gladys, serial).device };
 
-    link.on('state', (values) => {
+    link.on('state', async (values) => {
       productStates.set(serial, { ...productStates.get(serial), ...values });
-      return publish(serial, statesFromProductState(model, values));
+      onDeviceChange();
+      await publish(serial, statesFromProductState(model, values));
+      await triggers.onProductState(device, values);
     });
-    link.on('environment', (values) => publish(serial, statesFromEnvironment(model, values)));
-    link.on('transport', (status) => publishTransport(serial, status));
+    link.on('environment', async (values) => {
+      await publish(serial, statesFromEnvironment(model, values));
+      await triggers.onEnvironment(device, model, values);
+    });
+    link.on('transport', async (status) => {
+      onDeviceChange();
+      await publishTransport(serial, status);
+      await triggers.onTransport(device, status);
+    });
     return link;
   }
 
@@ -244,6 +260,7 @@ export function createDysonManager({
         entry.link.stop();
         links.delete(serial);
         productStates.delete(serial);
+        triggers.forget(serial);
       }
     }
 
@@ -263,13 +280,20 @@ export function createDysonManager({
     for (const { link } of links.values()) {
       link.stop();
     }
+    for (const serial of links.keys()) {
+      triggers.forget(serial);
+    }
     links.clear();
     productStates.clear();
   }
 
   function findLinkByDevice(device) {
+    return findLink(device.external_id);
+  }
+
+  function findLink(externalId) {
     for (const [serial, entry] of links) {
-      if (deviceIds(gladys, serial).device === device.external_id) {
+      if (deviceIds(gladys, serial).device === externalId) {
         return { serial, ...entry };
       }
     }
@@ -473,6 +497,67 @@ export function createDysonManager({
 
     /** Devices created or deleted in Gladys. */
     syncLinks,
+
+    /**
+     * What the scene actions and the widget need to know about a device
+     * created in Gladys, by its external id. Null for an unknown one.
+     */
+    deviceInfo(externalId) {
+      const entry = findLink(externalId);
+      if (!entry) {
+        return null;
+      }
+      const ids = deviceIds(gladys, entry.serial);
+      const created = (gladys.devices ?? []).find((device) => device.external_id === ids.device);
+      const existing = new Set((created?.features ?? []).map((feature) => feature.external_id));
+      // Only the features the Gladys device has: a tile bound to a missing one
+      // would stay empty.
+      const features = Object.fromEntries(
+        Object.values(FEATURES)
+          .filter((key) => existing.has(ids.feature(key)))
+          .map((key) => [key, ids.feature(key)]),
+      );
+      return {
+        serial: entry.serial,
+        model: entry.model,
+        dysonDevice: entry.dysonDevice,
+        status: entry.link.status,
+        productState: productStates.get(entry.serial) ?? {},
+        level: triggers.levelOf(entry.serial),
+        features,
+      };
+    },
+
+    /**
+     * Send a STATE-SET for a scene action. Never throws on an unreachable
+     * device: the outputs say it.
+     * @returns {Promise<{sent: boolean, transport: string}>}
+     */
+    async sendToDevice(externalId, data) {
+      const entry = findLink(externalId);
+      if (!entry) {
+        return { sent: false, transport: 'unknown' };
+      }
+      try {
+        logger.info(`${entry.serial} <- ${JSON.stringify(data)}`);
+        await entry.link.send(data);
+        return { sent: true, transport: entry.link.status.transport };
+      } catch (err) {
+        logger.warn(`${entry.serial}: order not sent: ${err.message}`);
+        return { sent: false, transport: entry.link.status.transport };
+      }
+    },
+
+    /** Ask the device for its state and sensor data now. */
+    async refreshDevice(externalId) {
+      const entry = findLink(externalId);
+      if (!entry?.link.connected) {
+        return false;
+      }
+      await entry.link.requestState();
+      await entry.link.requestEnvironment();
+      return true;
+    },
 
     transportEntries() {
       return [...links.entries()].map(([serial, { link }]) => transportEntry(serial, link.status));

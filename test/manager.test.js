@@ -27,6 +27,7 @@ function setup({ store = createMemoryStore(), devices, decide, now = () => 1000 
     mqttConnect: mqtt.connect,
     timers,
     now,
+    onDeviceChange: () => gladys.requestWidgetRefresh('dyson_air'),
   });
   return { gladys, cloud, mqtt, timers, store, manager };
 }
@@ -303,4 +304,69 @@ test('scan publishes the devices of the account', async () => {
 
   assert.equal(context.gladys.discovered.length, 1);
   assert.equal(context.gladys.discovered[0].name, 'Bedroom');
+});
+
+test('scene actions and the widget see the created device, its state and level', async () => {
+  const context = setup();
+  await signIn(context, LOCAL_CONFIG);
+  const client = context.mqtt.clients[0];
+  const id = 'ext:dyson:fan:NK6-EU-MHA0000A';
+
+  client.receive({ msg: 'CURRENT-STATE', 'product-state': { fpwr: 'ON', oson: 'OIOF' } });
+  client.receive({ msg: 'ENVIRONMENTAL-CURRENT-SENSOR-DATA', data: { pm25: '0040' } });
+  await flush();
+
+  const info = context.manager.deviceInfo(id);
+  assert.equal(info.serial, 'NK6-EU-MHA0000A');
+  assert.equal(info.status.transport, 'local');
+  assert.equal(info.level, 'fair');
+  assert.deepEqual(info.productState, { fpwr: 'ON', oson: 'OIOF' });
+  assert.equal(info.features[FEATURES.PM25], `${id}:${FEATURES.PM25}`);
+  assert.equal(info.features[FEATURES.FORMALDEHYDE], undefined);
+  assert.equal(context.manager.deviceInfo('ext:dyson:fan:OTHER'), null);
+  assert.ok(context.gladys.widgetRefreshes.length > 0, 'the widget was nudged');
+});
+
+test('a scene order reaches the device; an unreachable one says so', async () => {
+  const context = setup();
+  await signIn(context, LOCAL_CONFIG);
+  const id = 'ext:dyson:fan:NK6-EU-MHA0000A';
+
+  assert.deepEqual(await context.manager.sendToDevice(id, { sltm: '0030' }), {
+    sent: true,
+    transport: 'local',
+  });
+  assert.deepEqual(context.mqtt.clients[0].published.at(-1).payload.data, { sltm: '0030' });
+  assert.equal(await context.manager.refreshDevice(id), true);
+
+  context.mqtt.clients[0].drop();
+  assert.deepEqual(await context.manager.sendToDevice(id, { sltm: '0030' }), {
+    sent: false,
+    transport: 'unreachable',
+  });
+  assert.equal(await context.manager.refreshDevice(id), false);
+  assert.deepEqual(await context.manager.sendToDevice('nope', {}), {
+    sent: false,
+    transport: 'unknown',
+  });
+});
+
+test('a lost connection fires the connection_changed trigger', async () => {
+  const context = setup();
+  await signIn(context, LOCAL_CONFIG);
+
+  context.mqtt.clients[0].drop();
+  await flush();
+
+  assert.deepEqual(context.gladys.sceneEvents, [
+    {
+      key: 'connection_changed',
+      data: {
+        device: 'ext:dyson:fan:NK6-EU-MHA0000A',
+        transport: 'unreachable',
+        previous_transport: 'local',
+        degraded: false,
+      },
+    },
+  ]);
 });

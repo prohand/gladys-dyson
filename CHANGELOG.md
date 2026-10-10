@@ -27,6 +27,12 @@ the notes of the version's GitHub Release.
   order, and each device shows its transport badge, flagged degraded on a
   fallback.
 - "Test the connection" and "Sign out" actions.
+- Scene triggers (Gladys 5.1): air quality changed, filter to replace soon,
+  connection changed.
+- Scene actions: apply Dyson settings (power, mode, speed, oscillation, night
+  mode in one order) and set the sleep timer.
+- "Dyson air quality" dashboard widget: live air tiles, status (air quality,
+  connection, mode, filters, sleep timer), on/off, auto and refresh buttons.
 - User documentation in English and French, `SECURITY.md`, `CLAUDE.md`.
 - CI (format, lint, tests on Node 22 and 24, store checks and image build on
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub

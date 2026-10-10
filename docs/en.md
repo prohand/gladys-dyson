@@ -80,6 +80,45 @@ Gladys shows the state the device **confirms**: an order the device refused
 never shows as done. A change made with the remote or the Dyson app shows up
 in Gladys too.
 
+## Scenes
+
+### Triggers
+
+In the scene editor, **Integrations** category:
+
+- **Air quality changed**: the level measured by a device changes. Levels:
+  good, fair, poor, very poor. The worst of PM2.5, PM10, VOC and NO2 decides,
+  with the bands of the Dyson app (PM2.5: 35 / 53 / 70 µg/m³; PM10: 50 / 75 /
+  100 µg/m³; VOC and NO2: 3 / 6 / 8). Variables: `level`, `previous_level`,
+  `pm25`, `pm10`, `voc`, `no2`.
+- **Filter to replace soon**: a filter goes under 10 % (400 hours on the Link
+  models). Variables: `filter` (`hepa`, `carbon`, `combined`), `remaining`.
+- **Connection changed**: a device switches to local, to the cloud, or
+  becomes unreachable. Variables: `transport`, `previous_transport`,
+  `degraded`.
+
+Each trigger can be limited to one device. One event per change. At startup,
+the first value is the reference: a restart does not run your scenes again.
+
+### Actions
+
+- **Apply Dyson settings**: power, mode (auto / manual), speed, oscillation
+  and night mode, in one order. An empty field changes nothing. "Off" ignores
+  the other settings.
+- **Set the sleep timer**: the device turns itself off after N minutes (1 to
+  540); 0 cancels the timer.
+
+Both return `sent` (order sent or not) and `transport` (connection used). An
+unreachable device does not fail the scene: `sent` is then `false`.
+
+## Dashboard widget
+
+The **Dyson air quality** widget shows one device, chosen in its settings:
+
+- 4 live tiles: PM2.5, VOC, temperature, humidity (depending on the model);
+- the status: air quality, connection, mode, filters, sleep timer;
+- buttons: turn on / off, auto mode, refresh the readings.
+
 ## Settings
 
 - **Device addresses (local)**: the address of each device on your network,
