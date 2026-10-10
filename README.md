@@ -116,7 +116,7 @@ pull requests also run the store checks and build the image.
 
 1. Describe the changes under `## [Unreleased]` in [`CHANGELOG.md`](CHANGELOG.md).
 2. **Actions → Release → Run workflow**, pick `patch`, `minor` or `major`
-   (the first release from `0.0.0`: `minor` gives `0.1.0`, `major` `1.0.0`).
+   (`major` gives the first stable version, `1.0.0`).
 3. The workflow bumps `package.json` and the manifest (`version` +
    `docker_image`), rolls the changelog, tags `vX.Y.Z`, builds the
    `linux/amd64` + `linux/arm64` image to `ghcr.io/prohand/gladys-dyson`, and

@@ -49,3 +49,27 @@ test('a version already rolled is left untouched', () => {
 
   assert.equal(rollChangelog(text, '1.0.0', '2026-10-12'), text);
 });
+
+test('a mention of the Unreleased heading in the introduction is not the heading', () => {
+  const before = [
+    '# Changelog',
+    '',
+    'Describe each change under `## [Unreleased]` as you make it.',
+    '',
+    '## [Unreleased]',
+    '',
+    '- Widget.',
+    '',
+    `[Unreleased]: ${REPO}/compare/v0.0.1...HEAD`,
+    '',
+  ].join('\n');
+
+  const result = rollChangelog(before, '0.0.2', '2026-10-11');
+
+  assert.match(
+    result,
+    /under `## \[Unreleased\]` as you make it\.\n\n## \[Unreleased\]\n\n## \[0\.0\.2\]/,
+  );
+  assert.match(result, /## \[0\.0\.2\] - 2026-10-11\n\n- Widget\./);
+  assert.match(result, /\[0\.0\.2\]: .*compare\/v0\.0\.1\.\.\.v0\.0\.2/);
+});
