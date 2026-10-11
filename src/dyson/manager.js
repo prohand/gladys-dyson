@@ -140,7 +140,7 @@ export function createDysonManager({
 
   function discoveredDevices() {
     return supportedDevices().map(({ dysonDevice, model }) =>
-      buildDevice(gladys, dysonDevice, model),
+      buildDevice(gladys, dysonDevice, model, config.language),
     );
   }
 

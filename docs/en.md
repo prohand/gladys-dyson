@@ -74,6 +74,13 @@ Depending on the model:
 | Formaldehyde (mg/m³)                  | "Formaldehyde" models (K suffix)          |
 | Filter life                           | % (HEPA, carbon), hours on Link models    |
 
+The feature names are in French when the account country is French-speaking
+(France, Belgium, Switzerland, Luxembourg, Monaco), in English otherwise. A
+device already added keeps its names: rename a feature in the device page
+(Integrations → Dyson → Devices). In a "Devices" box, Gladys names a feature
+that is the only one of its kind after its type ("Selection" for the
+oscillation angle): give the row a name of your own in the box settings.
+
 The values are the ones the MyDyson app shows. The VOC and NO2 indexes are
 Dyson's: from 0 (clean air) to 10, as whole numbers like in the app.
 
@@ -142,7 +149,7 @@ Each widget shows one device, chosen in its settings.
   (good), blue (fair), orange (poor), red (very poor), with the thresholds of
   the scenes below;
 - the status: overall air quality (the worst pollutant), formaldehyde on the K
-  models, connection;
+  models, connection, filter life (the filters are what cleans the air);
 - a button to refresh the readings.
 
 Dyson gives no single AQI number: the overall level is computed from the four
@@ -150,10 +157,10 @@ pollutants.
 
 **Dyson controls**:
 
-- three tiles: the fan (off, auto, or a live speed gauge), the air quality
-  level (coloured) and the live PM2.5;
+- one tile: the fan (off, auto, or a live speed gauge). The air readings are
+  in the air quality widget;
 - the status: oscillation (with its angle), night mode, airflow, heating,
-  connection, filters, sleep timer. With the oscillation buttons, the
+  connection, sleep timer. With the oscillation buttons, the
   oscillation and night mode rows are left out: the buttons show them;
 - four buttons, chosen in the widget's **Buttons** setting:
   - **On/off, auto, speed - and +** (default): turn on / off, auto mode (or

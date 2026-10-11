@@ -76,6 +76,14 @@ Selon le modèle :
 | Formaldéhyde (mg/m³)                    | modèles « Formaldehyde » (suffixe K)        |
 | Usure des filtres                       | % (HEPA, charbon), heures sur « Link »      |
 
+Les noms des fonctions sont en français quand le pays du compte est
+francophone (France, Belgique, Suisse, Luxembourg, Monaco), en anglais sinon.
+Un appareil déjà ajouté garde ses noms : renommez une fonction dans la page
+de l'appareil (Intégrations → Dyson → Appareils). Dans une boîte
+« Appareils », Gladys nomme une fonction seule de son genre d'après son type
+(« Sélection » pour l'angle d'oscillation) : donnez à la ligne un nom à vous
+dans les réglages de la boîte.
+
 Les valeurs sont celles de l'application MyDyson. Les indices COV et NO2 sont
 ceux de Dyson : de 0 (air propre) à 10, en nombres entiers comme dans
 l'application.
@@ -149,7 +157,7 @@ Chaque widget affiche un appareil, choisi dans ses réglages.
   vert (bonne), bleu (moyenne), orange (mauvaise), rouge (très mauvaise), avec
   les seuils des scènes ci-dessus ;
 - l'état : qualité de l'air globale (le pire polluant), formaldéhyde sur les
-  modèles K, connexion ;
+  modèles K, connexion, usure des filtres (ce sont eux qui nettoient l'air) ;
 - un bouton pour actualiser les relevés.
 
 Dyson ne donne pas d'indice AQI unique : le niveau global est calculé à partir
@@ -157,10 +165,10 @@ des quatre polluants.
 
 **Commandes Dyson** :
 
-- trois tuiles : le ventilateur (éteint, auto, ou une jauge de vitesse en
-  direct), le niveau de qualité de l'air (en couleur) et le PM2.5 en direct ;
+- une tuile : le ventilateur (éteint, auto, ou une jauge de vitesse en
+  direct). Les relevés de l'air sont dans le widget qualité de l'air ;
 - l'état : oscillation (avec son angle), mode nuit, flux d'air, chauffage,
-  connexion, filtres, minuterie. Avec les boutons d'oscillation, les lignes
+  connexion, minuterie. Avec les boutons d'oscillation, les lignes
   oscillation et mode nuit sont retirées : les boutons les montrent ;
 - quatre boutons, au choix dans le réglage **Boutons** du widget :
   - **Marche, auto, vitesse - et +** (par défaut) : allumer / éteindre, mode
