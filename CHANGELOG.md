@@ -10,6 +10,10 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- New store cover: a darker, cleaner look closer to the Dyson style.
+
 ## [1.2.0] - 2026-10-11
 
 ### Added
