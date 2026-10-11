@@ -6,6 +6,11 @@
 // heating switch and target temperature, a humidifier the humidification
 // switch, the 2018+ models the particulate / NO2 / VOC sensors.
 //
+// The fan controls use the Gladys FAN types, like the Matter fans: the mode
+// list (off / low / medium / high / auto), oscillation as a rock setting,
+// night mode as the "sleep" wind setting, the airflow direction. Gladys draws
+// them with their own icon and labels.
+//
 // Controls have `has_feedback: true`: a command only SENDS the change, and the
 // STATE-CHANGE the device answers with is what Gladys displays. A command the
 // device refused never shows as done.
@@ -46,12 +51,24 @@ export const FEATURES = {
   HEPA_FILTER: 'hepa-filter',
   CARBON_FILTER: 'carbon-filter',
   FILTER: 'filter',
+  FAN_MODE: 'fan-mode',
+  AIRFLOW_DIRECTION: 'airflow-direction',
 };
 
 export const SPEED_MIN = 1;
 export const SPEED_MAX = 10;
 export const TARGET_TEMPERATURE_MIN = 1;
 export const TARGET_TEMPERATURE_MAX = 37;
+
+// Gladys FAN_MODE values (server/utils/constants.js), the Matter fan modes.
+export const FAN_MODES = { OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3, AUTO: 4 };
+// The speed each mode of the list sets, and the speeds each mode shows.
+const MODE_SPEEDS = { [FAN_MODES.LOW]: 1, [FAN_MODES.MEDIUM]: 5, [FAN_MODES.HIGH]: 10 };
+const LOW_MAX_SPEED = 3;
+const MEDIUM_MAX_SPEED = 7;
+
+// Gladys FAN_AIRFLOW_DIRECTION values: forward is the Dyson front airflow.
+export const AIRFLOW = { FORWARD: 0, REVERSE: 1 };
 
 const control = (name, category, type, min, max, extra = {}) => ({
   name,
@@ -78,6 +95,8 @@ const sensor = (name, category, type, unit, min, max) => ({
 });
 
 const binary = (name) => control(name, CATEGORIES.SWITCH, TYPES.SWITCH.BINARY, 0, 1);
+// 0 / 1 like a switch: rock setting 1 is left-right, wind setting 1 is sleep.
+const fanSetting = (name, type) => control(name, CATEGORIES.FAN, type, 0, 1);
 
 // Every feature declares min/max: Gladys stores them NOT NULL.
 const DEFINITIONS = {
@@ -85,8 +104,18 @@ const DEFINITIONS = {
   [FEATURES.SPEED]: () =>
     control('Fan speed', CATEGORIES.FAN, TYPES.FAN.SPEED, SPEED_MIN, SPEED_MAX, { step: 1 }),
   [FEATURES.AUTO]: () => binary('Auto mode'),
-  [FEATURES.OSCILLATION]: () => binary('Oscillation'),
-  [FEATURES.NIGHT_MODE]: () => binary('Night mode'),
+  [FEATURES.FAN_MODE]: () =>
+    control('Mode', CATEGORIES.FAN, TYPES.FAN.MODE, FAN_MODES.OFF, FAN_MODES.AUTO),
+  [FEATURES.OSCILLATION]: () => fanSetting('Oscillation', TYPES.FAN.ROCK_SETTING),
+  [FEATURES.NIGHT_MODE]: () => fanSetting('Night mode', TYPES.FAN.WIND_SETTING),
+  [FEATURES.AIRFLOW_DIRECTION]: () =>
+    control(
+      'Airflow direction',
+      CATEGORIES.FAN,
+      TYPES.FAN.AIRFLOW_DIRECTION,
+      AIRFLOW.FORWARD,
+      AIRFLOW.REVERSE,
+    ),
   [FEATURES.HEATING]: () => binary('Heating'),
   [FEATURES.TARGET_TEMPERATURE]: () =>
     control(
@@ -177,8 +206,11 @@ const DEFINITIONS = {
  * @returns {string[]}
  */
 export function featureKeys(model) {
-  const keys = [FEATURES.POWER, FEATURES.SPEED, FEATURES.AUTO, FEATURES.OSCILLATION];
-  keys.push(FEATURES.NIGHT_MODE);
+  const keys = [FEATURES.POWER, FEATURES.FAN_MODE, FEATURES.SPEED, FEATURES.AUTO];
+  keys.push(FEATURES.OSCILLATION, FEATURES.NIGHT_MODE);
+  if (model.airflow) {
+    keys.push(FEATURES.AIRFLOW_DIRECTION);
+  }
   if (model.heater) {
     keys.push(FEATURES.HEATING, FEATURES.TARGET_TEMPERATURE);
   }
@@ -244,12 +276,54 @@ export function featureKeyOf(gladys, serial, featureExternalId) {
 const onOff = (value) => (value === 'ON' ? 1 : value === 'OFF' ? 0 : null);
 
 /**
+ * The Gladys fan mode of a product state.
+ * @param {object} model
+ * @param {object} state flat product state, as complete as known
+ * @returns {number|null} a FAN_MODES value, null when the state does not say
+ */
+export function fanModeOf(model, state) {
+  if (model.protocol === 'link') {
+    if (state.fmod === 'OFF') {
+      return FAN_MODES.OFF;
+    }
+    if (state.fmod === 'AUTO') {
+      return FAN_MODES.AUTO;
+    }
+    if (state.fmod !== 'FAN') {
+      return null;
+    }
+  } else {
+    if (state.fpwr === 'OFF') {
+      return FAN_MODES.OFF;
+    }
+    if (state.auto === 'ON') {
+      return FAN_MODES.AUTO;
+    }
+    if (state.fpwr !== 'ON') {
+      return null;
+    }
+  }
+  // Manual: the speed picks the entry of the list, so the slider and the
+  // list always agree (1-3 low, 4-7 medium, 8-10 high).
+  const speed = readNumber(state.fnsp);
+  if (speed === null) {
+    return null;
+  }
+  if (speed <= LOW_MAX_SPEED) {
+    return FAN_MODES.LOW;
+  }
+  return speed <= MEDIUM_MAX_SPEED ? FAN_MODES.MEDIUM : FAN_MODES.HIGH;
+}
+
+/**
  * Feature values carried by a product state message.
  * @param {object} model
  * @param {object} values flat product state (`fpwr`, `fnsp`...)
+ * @param {object} [state] every value known so far, `values` included: the
+ *   fan mode depends on several keys a STATE-CHANGE may not all repeat
  * @returns {Array<{key: string, value: number}>}
  */
-export function statesFromProductState(model, values) {
+export function statesFromProductState(model, values, state = values) {
   const states = [];
   const add = (key, value) => {
     if (value !== null && value !== undefined && !Number.isNaN(value)) {
@@ -281,6 +355,13 @@ export function statesFromProductState(model, values) {
         : null,
   );
   add(FEATURES.NIGHT_MODE, onOff(values.nmod));
+  add(FEATURES.FAN_MODE, fanModeOf(model, state));
+  if (model.airflow) {
+    add(
+      FEATURES.AIRFLOW_DIRECTION,
+      values.fdir === 'ON' ? AIRFLOW.FORWARD : values.fdir === 'OFF' ? AIRFLOW.REVERSE : null,
+    );
+  }
   if (model.heater) {
     add(FEATURES.HEATING, values.hmod === 'HEAT' ? 1 : values.hmod === 'OFF' ? 0 : null);
     add(FEATURES.TARGET_TEMPERATURE, kelvinTenthsToCelsius(values.hmax));
@@ -333,6 +414,20 @@ export function commandFor(model, key, value, current = {}) {
       return link ? { fmod: on ? 'FAN' : 'OFF' } : { fpwr: on ? 'ON' : 'OFF' };
     case FEATURES.AUTO:
       return link ? { fmod: on ? 'AUTO' : 'FAN' } : { auto: on ? 'ON' : 'OFF' };
+    case FEATURES.FAN_MODE: {
+      const mode = Math.round(Number(value));
+      if (mode === FAN_MODES.OFF) {
+        return commandFor(model, FEATURES.POWER, 0, current);
+      }
+      if (mode === FAN_MODES.AUTO) {
+        // From off too: the list says "auto", so the device runs.
+        return link ? { fmod: 'AUTO' } : { fpwr: 'ON', auto: 'ON' };
+      }
+      if (MODE_SPEEDS[mode] !== undefined) {
+        return commandFor(model, FEATURES.SPEED, MODE_SPEEDS[mode], current);
+      }
+      break;
+    }
     case FEATURES.SPEED: {
       // Choosing a speed means "this speed, now": power on, auto mode off.
       const speed = pad4(Math.min(SPEED_MAX, Math.max(SPEED_MIN, Math.round(Number(value)))));
@@ -345,6 +440,11 @@ export function commandFor(model, key, value, current = {}) {
       return { oson: on ? 'ON' : 'OFF' };
     case FEATURES.NIGHT_MODE:
       return { nmod: on ? 'ON' : 'OFF' };
+    case FEATURES.AIRFLOW_DIRECTION:
+      if (model.airflow) {
+        return { fdir: Number(value) === AIRFLOW.REVERSE ? 'OFF' : 'ON' };
+      }
+      break;
     case FEATURES.HEATING:
       if (model.heater) {
         return { hmod: on ? 'HEAT' : 'OFF' };

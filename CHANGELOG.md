@@ -10,6 +10,24 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- Mode list like the Matter fans: off, low (speed 1), medium (speed 5), high
+  (speed 10), auto. It follows the speed, so the list and the slider agree.
+- Airflow direction (front / back) on the Pure Cool, Purifier Cool and
+  Hot+Cool models.
+- "Dyson controls" dashboard widget: live speed gauge, mode, oscillation,
+  night mode, airflow, connection, filters, sleep timer, and on/off, auto,
+  speed - and speed + buttons.
+
+### Changed
+
+- Oscillation and night mode use the Gladys fan types: each control gets its
+  own icon. Devices added before: click "Update" in the Discover tab.
+- "Dyson air quality" widget: PM10 and NO2 tiles, each pollutant tile coloured
+  by its level; the on/off and auto buttons moved to "Dyson controls".
+- New cover image: a Dyson tower purifier silhouette.
+
 ### Fixed
 
 - The GitHub Release of a new version gets its changelog section as notes: the

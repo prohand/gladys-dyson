@@ -56,25 +56,37 @@ new code.
 
 Depending on the model:
 
-| Feature               | Models                                   |
-| --------------------- | ---------------------------------------- |
-| On / off              | all                                      |
-| Speed (1 to 10)       | all                                      |
-| Auto mode             | all                                      |
-| Oscillation           | all                                      |
-| Night mode            | all                                      |
-| Heating + target (°C) | Hot+Cool                                 |
-| Humidification        | Humidify+Cool                            |
-| Temperature, humidity | all                                      |
-| PM2.5, PM10 (µg/m³)   | 2018 and later models                    |
-| VOC index, NO2 index  | 2018 and later models (VOC only on Link) |
-| Formaldehyde (mg/m³)  | "Formaldehyde" models (K suffix)         |
-| Filter life           | % (HEPA, carbon), hours on Link models   |
+| Feature                               | Models                                   |
+| ------------------------------------- | ---------------------------------------- |
+| On / off                              | all                                      |
+| Mode list (off, low, medium, high...) | all                                      |
+| Speed (1 to 10)                       | all                                      |
+| Auto mode                             | all                                      |
+| Oscillation                           | all                                      |
+| Night mode                            | all                                      |
+| Airflow direction (front / back)      | Pure Cool, Purifier Cool, Hot+Cool       |
+| Heating + target (°C)                 | Hot+Cool                                 |
+| Humidification                        | Humidify+Cool                            |
+| Temperature, humidity                 | all                                      |
+| PM2.5, PM10 (µg/m³)                   | 2018 and later models                    |
+| VOC index, NO2 index                  | 2018 and later models (VOC only on Link) |
+| Formaldehyde (mg/m³)                  | "Formaldehyde" models (K suffix)         |
+| Filter life                           | % (HEPA, carbon), hours on Link models   |
 
 The VOC and NO2 indexes are Dyson's: from 0 (clean air) to 10.
 
 Choosing a speed turns the device on and the auto mode off, like the remote
 does. In auto mode, no speed is shown.
+
+The **mode list** works like the Matter fans: Off, Low (speed 1), Medium
+(speed 5), High (speed 10) and Auto. It follows the speed, so the list and the
+slider always agree: speeds 1 to 3 show Low, 4 to 7 Medium, 8 to 10 High.
+Oscillation, night mode and the airflow direction are lists too, each with its
+own icon.
+
+**Device added before this version?** Open the **Discover** tab and click
+**Update** on the device to get the mode list and the airflow direction. Its
+history and scenes are kept.
 
 Gladys shows the state the device **confirms**: an order the device refused
 never shows as done. A change made with the remote or the Dyson app shows up
@@ -111,13 +123,29 @@ the first value is the reference: a restart does not run your scenes again.
 Both return `sent` (order sent or not) and `transport` (connection used). An
 unreachable device does not fail the scene: `sent` is then `false`.
 
-## Dashboard widget
+## Dashboard widgets
 
-The **Dyson air quality** widget shows one device, chosen in its settings:
+Each widget shows one device, chosen in its settings.
 
-- 4 live tiles: PM2.5, VOC, temperature, humidity (depending on the model);
-- the status: air quality, connection, mode, filters, sleep timer;
-- buttons: turn on / off, auto mode, refresh the readings.
+**Dyson air quality**:
+
+- up to 6 live tiles: PM2.5, PM10, VOC, NO2, temperature, humidity (depending
+  on the model). Each pollutant tile takes the colour of its level: green
+  (good), blue (fair), orange (poor), red (very poor), with the thresholds of
+  the scenes below;
+- the status: overall air quality (the worst pollutant), formaldehyde on the K
+  models, connection;
+- a button to refresh the readings.
+
+Dyson gives no single AQI number: the overall level is computed from the four
+pollutants.
+
+**Dyson controls**:
+
+- a live speed gauge;
+- the status: mode, oscillation, night mode, airflow, heating, connection,
+  filters, sleep timer;
+- buttons: turn on / off, auto mode, speed - and speed +.
 
 ## Settings
 
@@ -127,6 +155,12 @@ The **Dyson air quality** widget shows one device, chosen in its settings:
   through the Dyson cloud (badge with an orange dot). The serial number is on
   the device label and in the MyDyson app. Give the device a fixed address in
   your router so it does not change.
+
+  To find the address, look at the list of connected devices of your router:
+  the device usually shows up under its serial number. The integration
+  cannot find it on its own yet: Gladys does not allow it to listen to the
+  `_dyson_mqtt._tcp` announcements the devices send.
+
 - **Sensor refresh (s)**: how often the air quality sensors are read, from 15
   to 3600 seconds (60 by default). Power, speed and other changes arrive at
   once, without waiting.

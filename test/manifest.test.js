@@ -11,7 +11,7 @@ import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/config.js';
 import { SCENE_ACTIONS } from '../src/capabilities/scenes.js';
 import { SCENE_TRIGGERS, createTriggerTracker } from '../src/capabilities/triggers.js';
-import { AIR_WIDGET } from '../src/capabilities/widget.js';
+import { WIDGETS, WIDGET_CONTENT } from '../src/capabilities/widget.js';
 import { describeModel } from '../src/dyson/models.js';
 import { createFakeGladys } from './helpers/fakeGladys.js';
 
@@ -216,11 +216,13 @@ test('the scene triggers the code fires are the declared ones, with declared dat
   }
 });
 
-test('the widget is declared with the key the code serves', () => {
+test('the widgets are declared with the keys the code serves', () => {
   assert.deepEqual(
     manifest.widgets.map((widget) => widget.key),
-    [AIR_WIDGET],
+    WIDGETS,
   );
-  assert.match(indexSource, /onWidgetGet\(AIR_WIDGET/);
-  assert.match(indexSource, /onWidgetAction\(AIR_WIDGET/);
+  assert.deepEqual(Object.keys(WIDGET_CONTENT), WIDGETS);
+  assert.match(indexSource, /for \(const key of WIDGETS\)/);
+  assert.match(indexSource, /onWidgetGet\(key/);
+  assert.match(indexSource, /onWidgetAction\(key/);
 });

@@ -180,6 +180,7 @@ test('device states are published once, and only for known features', async () =
   assert.deepEqual(context.gladys.published, [
     { featureExternalId: id(FEATURES.POWER), state: 1 },
     { featureExternalId: id(FEATURES.SPEED), state: 4 },
+    { featureExternalId: id(FEATURES.FAN_MODE), state: 2 },
     { featureExternalId: id(FEATURES.PM25), state: 7 },
   ]);
 });

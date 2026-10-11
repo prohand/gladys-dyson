@@ -4,6 +4,7 @@ import {
   SCENE_TRIGGERS,
   airQualityLevel,
   createTriggerTracker,
+  pollutantLevels,
 } from '../src/capabilities/triggers.js';
 import { describeModel } from '../src/dyson/models.js';
 import { createFakeGladys } from './helpers/fakeGladys.js';
@@ -48,6 +49,29 @@ test('air quality: the first level is a reference, a change fires once', async (
     },
   ]);
   assert.deepEqual(changes, ['S1', 'S1']);
+});
+
+test('each pollutant has its level; one changing nudges the widget, the scenes stay quiet', async () => {
+  assert.deepEqual(pollutantLevels({ pm25: 40, voc: 1, temperature: 30 }), {
+    pm25: 'fair',
+    voc: 'good',
+  });
+
+  const gladys = createFakeGladys();
+  const changes = [];
+  const tracker = createTriggerTracker(gladys, { onLevelChange: (s) => changes.push(s) });
+  await tracker.onEnvironment(DEVICE, PURE, { pm25: '0040', va10: '0010' });
+  await tracker.onEnvironment(DEVICE, PURE, { pm25: '0040', va10: '0040' });
+  await tracker.onEnvironment(DEVICE, PURE, { pm25: '0041', va10: '0041' });
+
+  // fair -> fair overall, but VOC went good -> fair: the tile colour changed.
+  assert.deepEqual(changes, ['S1', 'S1']);
+  assert.deepEqual(gladys.sceneEvents, []);
+  assert.deepEqual(tracker.airOf('S1'), {
+    readings: { pm25: 41, voc: 4.1 },
+    levels: { pm25: 'fair', voc: 'fair' },
+  });
+  assert.deepEqual(tracker.airOf('NOPE'), { readings: {}, levels: {} });
 });
 
 test('filters: an event when a filter crosses its threshold, not on the first reading', async () => {
