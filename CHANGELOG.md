@@ -10,6 +10,33 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- Oscillation angle list on the Pure Cool, Purifier Cool and Hot+Cool towers:
+  45°, 90°, 180° and 350°, like the Dyson app. Choosing one starts the
+  oscillation.
+
+### Changed
+
+- Oscillation and night mode are on/off switches again: their two-entry lists
+  were clumsier than a toggle.
+- "Dyson controls" widget: three tiles (the fan: off, auto or a live speed
+  gauge; the air quality level; the PM2.5) instead of one speed gauge that
+  kept the last speed when the fan was off. The oscillation row gives the
+  angle; with the oscillation buttons, the oscillation and night mode rows
+  are left out.
+- VOC and NO2 indexes are whole numbers, like in the Dyson app.
+
+### Fixed
+
+- PM2.5, PM10 and humidity showed as empty chips in the Discover tab, with no
+  icon on the dashboard: they use the type Gladys knows for these sensors.
+- PM2.5, PM10 and formaldehyde differed from the Dyson app (and from Matter):
+  the integration read older fields of the device, the ones the app shows are
+  now used.
+
+Devices added before: click "Update" in the Discover tab.
+
 ## [1.2.1] - 2026-10-11
 
 ### Changed

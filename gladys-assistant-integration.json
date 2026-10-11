@@ -661,8 +661,8 @@
         "fr": "Commandes Dyson"
       },
       "description": {
-        "en": "A Dyson remote: speed, mode, settings, filters, and on/off, auto, speed or settings buttons.",
-        "fr": "Télécommande Dyson : vitesse, mode, réglages, filtres, et boutons marche, auto, vitesse ou réglages."
+        "en": "A Dyson remote: fan, air quality, PM2.5, settings, and on/off, auto, speed or settings buttons.",
+        "fr": "Télécommande Dyson : ventilateur, qualité de l'air, PM2.5, réglages et boutons au choix."
       },
       "icon": "sliders",
       "settings": [

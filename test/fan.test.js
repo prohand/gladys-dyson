@@ -159,11 +159,42 @@ test('sensor data of a formaldehyde model', () => {
       [FEATURES.HUMIDITY]: 45,
       [FEATURES.PM25]: 4,
       [FEATURES.PM10]: 6,
-      [FEATURES.VOC]: 1.2,
-      [FEATURES.NO2]: 0.3,
+      [FEATURES.VOC]: 1,
+      [FEATURES.NO2]: 0,
       [FEATURES.FORMALDEHYDE]: 0.002,
     },
   );
+});
+
+test('particles and formaldehyde: the fields the Dyson app shows win', () => {
+  // A 438 sends both pairs: p25r / p10r are what the app (and Matter) show,
+  // pm25 / pm10 read differently (here PM2.5 above PM10).
+  assert.deepEqual(
+    byKey(
+      statesFromEnvironment(FORMALDEHYDE, {
+        pm25: '0025',
+        pm10: '0020',
+        p25r: '0024',
+        p10r: '0029',
+        hcho: '0002',
+        hchr: '0005',
+      }),
+    ),
+    {
+      [FEATURES.PM25]: 24,
+      [FEATURES.PM10]: 29,
+      [FEATURES.FORMALDEHYDE]: 0.005,
+    },
+  );
+  // A new field still warming up is no reading, not a reason to fall back.
+  assert.deepEqual(statesFromEnvironment(PURE, { p25r: 'INIT', pm25: '0025' }), []);
+});
+
+test('VOC and NO2: the index of the Dyson app, truncated', () => {
+  assert.deepEqual(byKey(statesFromEnvironment(PURE, { va10: '0004', noxl: '0019' })), {
+    [FEATURES.VOC]: 0,
+    [FEATURES.NO2]: 1,
+  });
 });
 
 test('sensors warming up publish nothing; Link models read vact', () => {
@@ -269,7 +300,7 @@ test('airflow direction: the towers only, front is forward', () => {
   assert.throws(() => commandFor(HUMIDIFY, FEATURES.AIRFLOW_DIRECTION, 1), /cannot be controlled/);
 });
 
-test('fan controls use the Gladys FAN types, drawn with their own icons', () => {
+test('fan lists use the Gladys FAN types, oscillation and night mode are switches', () => {
   const gladys = createFakeGladys();
   const device = buildDevice(gladys, { serial: 'S', name: 'x' }, PURE);
   const typeOf = (key) => {
@@ -278,9 +309,115 @@ test('fan controls use the Gladys FAN types, drawn with their own icons', () => 
   };
 
   assert.equal(typeOf(FEATURES.FAN_MODE), 'fan/mode/0-4');
-  assert.equal(typeOf(FEATURES.OSCILLATION), 'fan/rock-setting/0-1');
-  assert.equal(typeOf(FEATURES.NIGHT_MODE), 'fan/wind-setting/0-1');
+  assert.equal(typeOf(FEATURES.OSCILLATION), 'switch/binary/0-1');
+  assert.equal(typeOf(FEATURES.NIGHT_MODE), 'switch/binary/0-1');
   assert.equal(typeOf(FEATURES.AIRFLOW_DIRECTION), 'fan/airflow-direction/0-1');
+  assert.equal(typeOf(FEATURES.OSCILLATION_ANGLE), 'text/select/0-350');
+});
+
+// The category / type pairs Gladys 5.1 has a label and an icon for: any other
+// shows as an empty chip in the Discover tab.
+const KNOWN_TYPES = new Set([
+  'switch/binary',
+  'fan/mode',
+  'fan/speed',
+  'fan/airflow-direction',
+  'text/select',
+  'thermostat/target-temperature',
+  'temperature-sensor/decimal',
+  'humidity-sensor/decimal',
+  'pm25-sensor/decimal',
+  'pm10-sensor/decimal',
+  'voc-index-sensor/integer',
+  'no2-sensor/decimal',
+  'formaldehyd-sensor/decimal',
+  'maintenance/life-remaining',
+]);
+
+test('every feature has a category / type Gladys labels', () => {
+  const gladys = createFakeGladys();
+  for (const model of [PURE, FORMALDEHYDE, HOT_COOL, HUMIDIFY, LINK_HEATER]) {
+    for (const feature of buildDevice(gladys, { serial: 'S', name: 'x' }, model).features) {
+      const type = `${feature.category}/${feature.type}`;
+      assert.ok(KNOWN_TYPES.has(type), `${feature.name}: ${type}`);
+    }
+  }
+});
+
+test('oscillation angle: the towers only, four options of the Dyson app', () => {
+  const gladys = createFakeGladys();
+  const angle = buildDevice(gladys, { serial: 'S', name: 'x' }, PURE).features.find((f) =>
+    f.external_id.endsWith(':oscillation-angle'),
+  );
+  assert.deepEqual(angle.supported_options, [
+    { value: '45', label: '45°' },
+    { value: '90', label: '90°' },
+    { value: '180', label: '180°' },
+    { value: '350', label: '350°' },
+  ]);
+  assert.equal(angle.keep_history, false);
+  assert.ok(!featureKeys(HUMIDIFY).includes(FEATURES.OSCILLATION_ANGLE));
+  assert.ok(!featureKeys(LINK_HEATER).includes(FEATURES.OSCILLATION_ANGLE));
+  assert.ok(featureKeys(HOT_COOL).includes(FEATURES.OSCILLATION_ANGLE));
+});
+
+test('oscillation angle command: a range of that width around the current centre', () => {
+  // The app's 45° on a 438 centred on 220: 0198-0243.
+  assert.deepEqual(
+    commandFor(PURE, FEATURES.OSCILLATION_ANGLE, '90', { oson: 'ON', osal: '0198', osau: '0243' }),
+    { oson: 'ON', ancp: 'CUST', osal: '0176', osau: '0266' },
+  );
+  // Nothing known: around the front (180).
+  assert.deepEqual(commandFor(PURE, FEATURES.OSCILLATION_ANGLE, '45'), {
+    oson: 'ON',
+    ancp: 'CUST',
+    osal: '0158',
+    osau: '0203',
+  });
+  // Clamped to 5..355, 350 is the whole range; the OION dialect is kept.
+  assert.deepEqual(
+    commandFor(PURE, FEATURES.OSCILLATION_ANGLE, '180', {
+      oson: 'OIOF',
+      osal: '0005',
+      osau: '0050',
+    }),
+    { oson: 'OION', ancp: 'CUST', osal: '0005', osau: '0185' },
+  );
+  assert.deepEqual(commandFor(PURE, FEATURES.OSCILLATION_ANGLE, '350', {}), {
+    oson: 'ON',
+    ancp: 'CUST',
+    osal: '0005',
+    osau: '0355',
+  });
+  assert.throws(() => commandFor(PURE, FEATURES.OSCILLATION_ANGLE, '60'), /cannot be controlled/);
+  assert.throws(
+    () => commandFor(HUMIDIFY, FEATURES.OSCILLATION_ANGLE, '45'),
+    /cannot be controlled/,
+  );
+});
+
+test('oscillation angle read back: the ancp preset wins, else the width', () => {
+  const angleOf = (values) =>
+    statesFromProductState(PURE, values).find((s) => s.key === FEATURES.OSCILLATION_ANGLE);
+
+  // The remote leaves an old range next to its preset.
+  assert.deepEqual(angleOf({ ancp: '0350', osal: '0190', osau: '0235' }), {
+    key: FEATURES.OSCILLATION_ANGLE,
+    text: '350',
+  });
+  assert.equal(angleOf({ ancp: 'CUST', osal: '0198', osau: '0243' }).text, '45');
+  assert.equal(angleOf({ ancp: 'CUST', osal: '0005', osau: '0355' }).text, '350');
+  // Another width: no option to show.
+  assert.equal(angleOf({ ancp: 'CUST', osal: '0100', osau: '0200' }), undefined);
+  // A change that does not touch the range publishes no angle.
+  assert.equal(angleOf({ nmod: 'ON' }), undefined);
+  // The Link models have no range.
+  assert.equal(
+    statesFromProductState(LINK_HEATER, { osal: '0100', osau: '0145' }).some(
+      (s) => s.key === FEATURES.OSCILLATION_ANGLE,
+    ),
+    false,
+  );
 });
 
 test('a sensor, or a control the model lacks, cannot be commanded', () => {

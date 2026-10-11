@@ -68,7 +68,7 @@ test('each pollutant has its level; one changing nudges the widget, the scenes s
   assert.deepEqual(changes, ['S1', 'S1']);
   assert.deepEqual(gladys.sceneEvents, []);
   assert.deepEqual(tracker.airOf('S1'), {
-    readings: { pm25: 41, voc: 4.1 },
+    readings: { pm25: 41, voc: 4 },
     levels: { pm25: 'fair', voc: 'fair' },
   });
   assert.deepEqual(tracker.airOf('NOPE'), { readings: {}, levels: {} });

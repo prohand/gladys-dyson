@@ -24,7 +24,10 @@ export function createFakeGladys({ selector = 'dyson' } = {}) {
 
     async publishStates(states) {
       for (const s of states) {
-        gladys.published.push({ featureExternalId: s.device_feature_external_id, state: s.state });
+        gladys.published.push({
+          featureExternalId: s.device_feature_external_id,
+          ...(s.text === undefined ? { state: s.state } : { text: s.text }),
+        });
       }
     },
 

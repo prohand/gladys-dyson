@@ -86,16 +86,24 @@ test('air widget of a 2018+ device: six live tiles coloured by level — rendere
   );
 });
 
-test('controls widget of a 2018+ device: speed gauge, settings, four buttons', () => {
+test('controls widget of a 2018+ device: fan, air and PM2.5 tiles, settings, four buttons', () => {
   const content = buildControlsContent(dysonWith(PURE_INFO), { settings: { device: ID } });
 
   assert.deepEqual(validateWidgetContent(content), []);
+  assert.equal(content.components.length, 8, 'the whole budget');
   assert.equal(byType(content, 'gauge')[0].device_feature, feature('speed'));
+  assert.deepEqual(
+    byType(content, 'value').map((tile) => [tile.label.en, tile.value, tile.color]),
+    [
+      ['Air quality', { en: 'Poor', fr: 'Mauvaise' }, 'warning'],
+      ['PM2.5', undefined, 'info'],
+    ],
+  );
+  assert.equal(byType(content, 'value')[1].device_feature, feature('pm25'));
   const items = byType(content, 'status')[0].items;
   assert.deepEqual(
     items.map((item) => [item.label.en, item.value]),
     [
-      ['Mode', { en: 'Medium · speed 6', fr: 'Moyen · vitesse 6' }],
       ['Oscillation', { en: 'On', fr: 'Activé' }],
       ['Night mode', { en: 'Off', fr: 'Désactivé' }],
       ['Airflow', { en: 'Back', fr: 'Arrière' }],
@@ -106,7 +114,7 @@ test('controls widget of a 2018+ device: speed gauge, settings, four buttons', (
       ['Sleep timer', '30 min'],
     ],
   );
-  assert.equal(items[6].color, 'warning', 'a filter under 10 % is a warning');
+  assert.equal(items[5].color, 'warning', 'a filter under 10 % is a warning');
   assert.deepEqual(
     byType(content, 'button').map((b) => [b.action.key, b.action.params]),
     [
@@ -119,6 +127,49 @@ test('controls widget of a 2018+ device: speed gauge, settings, four buttons', (
   );
 });
 
+test('controls widget: the fan tile says off or auto, where the speed is the last manual one', () => {
+  const tilesAt = (productState, level = null) =>
+    buildControlsContent(dysonWith({ ...PURE_INFO, productState, level }), {
+      settings: { device: ID },
+    }).components.filter((c) => c.type === 'value' || c.type === 'gauge');
+
+  const off = tilesAt({ fpwr: 'OFF', auto: 'OFF', fnsp: '0003' });
+  assert.deepEqual(off[0], {
+    type: 'value',
+    label: { en: 'Fan', fr: 'Ventilateur' },
+    icon: 'power',
+    value: { en: 'Off', fr: 'Éteint' },
+    color: 'neutral',
+  });
+  assert.equal(off.length, 2, 'no level yet: fan and PM2.5');
+  assert.equal(tilesAt({ fpwr: 'ON', auto: 'ON', fnsp: 'AUTO' })[0].value, 'Auto');
+  assert.deepEqual(tilesAt({ fpwr: 'ON', auto: 'OFF', fnsp: '0003' }, 'very_poor')[1].value, {
+    en: 'Very poor',
+    fr: 'Très mauv.',
+  });
+  for (const level of ['good', 'fair', 'poor', 'very_poor']) {
+    const content = buildControlsContent(dysonWith({ ...PURE_INFO, level }), {
+      settings: { device: ID },
+    });
+    assert.deepEqual(validateWidgetContent(content), [], level);
+  }
+});
+
+test('controls widget: the oscillation row gives the angle', () => {
+  const content = buildControlsContent(
+    dysonWith({
+      ...PURE_INFO,
+      model: describeModel('438'),
+      productState: { fpwr: 'ON', oson: 'ON', ancp: 'CUST', osal: '0198', osau: '0243' },
+    }),
+    { settings: { device: ID } },
+  );
+  assert.deepEqual(byType(content, 'status')[0].items[0].value, {
+    en: 'On · 45°',
+    fr: 'Activé · 45°',
+  });
+});
+
 test('controls widget, "settings" buttons: on/off, oscillation, night mode, airflow', () => {
   const buttonsOf = (info) =>
     byType(
@@ -128,6 +179,17 @@ test('controls widget, "settings" buttons: on/off, oscillation, night mode, airf
 
   const buttons = buttonsOf(PURE_INFO);
   assert.deepEqual(validateWidgetContent({ components: buttons }), []);
+  const content = buildControlsContent(dysonWith(PURE_INFO), {
+    settings: { device: ID, buttons: 'settings' },
+  });
+  assert.deepEqual(validateWidgetContent(content), []);
+  assert.deepEqual(
+    byType(content, 'status')[0]
+      .items.map((item) => item.label.en)
+      .slice(0, 2),
+    ['Airflow', 'Heating'],
+    'the buttons show the oscillation and night mode: no row for them',
+  );
   assert.deepEqual(
     buttons.map((b) => [b.label.fr, b.style, b.action.key, b.action.params.value]),
     [
@@ -201,10 +263,10 @@ test('a Link device that is off, through the cloud fallback', () => {
 
   const controls = buildControlsContent(dysonWith(info), { settings: { device: ID } });
   assert.deepEqual(validateWidgetContent(controls), []);
+  assert.deepEqual(byType(controls, 'value')[0].value, { en: 'Off', fr: 'Éteint' });
   const items = byType(controls, 'status')[0].items;
-  assert.deepEqual(items[0].value, { en: 'Off', fr: 'Éteint' });
-  assert.deepEqual(items[1].value, { en: 'Dyson cloud (fallback)', fr: 'Cloud Dyson (secours)' });
-  assert.equal(items[2].value, '300 h');
+  assert.deepEqual(items[0].value, { en: 'Dyson cloud (fallback)', fr: 'Cloud Dyson (secours)' });
+  assert.equal(items[1].value, '300 h');
   assert.deepEqual(byType(controls, 'button')[0].label, { en: 'Turn on', fr: 'Allumer' });
 });
 

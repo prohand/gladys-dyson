@@ -6,8 +6,9 @@
 //                   PM10, VOC, NO2, temperature, humidity), each coloured by
 //                   its pollutant level, the overall air quality level, and a
 //                   "Refresh" button;
-//   dyson_controls  the fan, as a remote: a live speed gauge, a status list
-//                   (mode, oscillation, night mode, airflow, connection,
+//   dyson_controls  the fan, as a remote: three tiles (the fan: off, auto or
+//                   a live speed gauge; the air quality; the PM2.5), a status
+//                   list (oscillation, night mode, airflow, connection,
 //                   filters, sleep timer) and four buttons, chosen in the
 //                   settings: on/off, auto, speed - and speed +; or on/off,
 //                   oscillation, night mode and airflow.
@@ -24,7 +25,15 @@
 // -----------------------------------------------------------------------------
 
 import { createLogger, WIDGET_COLORS } from '@gladysassistant/integration-sdk';
-import { AIRFLOW, FAN_MODES, FEATURES, SPEED_MAX, SPEED_MIN, fanModeOf } from '../devices/fan.js';
+import {
+  AIRFLOW,
+  FAN_MODES,
+  FEATURES,
+  SPEED_MAX,
+  SPEED_MIN,
+  fanModeOf,
+  oscillationAngleOf,
+} from '../devices/fan.js';
 import { kelvinTenthsToCelsius, readNumber } from '../dyson/protocol.js';
 
 const logger = createLogger({ name: 'widget' });
@@ -73,6 +82,8 @@ const LEVELS = {
   poor: { value: { en: 'Poor', fr: 'Mauvaise' }, color: WIDGET_COLORS.WARNING },
   very_poor: { value: { en: 'Very poor', fr: 'Très mauvaise' }, color: WIDGET_COLORS.DANGER },
 };
+// A tile value holds 12 characters at most.
+const TILE_LEVEL_NAMES = { very_poor: { en: 'Very poor', fr: 'Très mauv.' } };
 
 const TRANSPORTS = {
   local: { value: { en: 'Local', fr: 'Locale' }, color: WIDGET_COLORS.SUCCESS },
@@ -113,22 +124,46 @@ const MODE_NAMES = {
   [FAN_MODES.HIGH]: { en: 'High', fr: 'Fort' },
 };
 
-/** The mode row says what the mode list says, with the speed behind it. */
-function modeStatus(model, state) {
-  if (isOff(model, state)) {
-    return { value: { en: 'Off', fr: 'Éteint' }, color: WIDGET_COLORS.NEUTRAL };
+/**
+ * The first tile: what the fan does. A live gauge while it runs at a manual
+ * speed; a word when it is off or in auto, where the speed feature still
+ * holds the last manual speed (Dyson keeps it, and 0 is out of its range).
+ */
+function fanTile(model, state, features) {
+  const mode = fanModeOf(model, state);
+  const word = (value, icon, color) => ({
+    type: 'value',
+    label: { en: 'Fan', fr: 'Ventilateur' },
+    icon,
+    value,
+    color,
+  });
+  if (mode === FAN_MODES.OFF) {
+    return word({ en: 'Off', fr: 'Éteint' }, 'power', WIDGET_COLORS.NEUTRAL);
   }
-  if (isAuto(model, state)) {
-    return { value: { en: 'Auto', fr: 'Auto' }, color: WIDGET_COLORS.PRIMARY };
+  if (mode === FAN_MODES.AUTO) {
+    return word('Auto', 'zap', WIDGET_COLORS.PRIMARY);
   }
-  const speed = readNumber(state.fnsp);
-  const name = MODE_NAMES[fanModeOf(model, state)];
+  if (MODE_NAMES[mode] && features[FEATURES.SPEED]) {
+    return {
+      type: 'gauge',
+      label: { en: 'Fan speed', fr: 'Vitesse' },
+      device_feature: features[FEATURES.SPEED],
+    };
+  }
+  return null;
+}
+
+function airQualityTile(level) {
+  if (!LEVELS[level]) {
+    return null;
+  }
   return {
-    value:
-      speed === null || !name
-        ? { en: 'On', fr: 'Allumé' }
-        : { en: `${name.en} · speed ${speed}`, fr: `${name.fr} · vitesse ${speed}` },
-    color: WIDGET_COLORS.PRIMARY,
+    type: 'value',
+    label: { en: 'Air quality', fr: "Qualité de l'air" },
+    icon: 'wind',
+    value: TILE_LEVEL_NAMES[level] ?? LEVELS[level].value,
+    color: LEVELS[level].color,
   };
 }
 
@@ -143,17 +178,32 @@ function switchItem(label, icon, value, onValues, offValues) {
   return [];
 }
 
-function settingItems(model, state) {
-  const items = [
-    ...switchItem(
+/**
+ * @param {boolean} withSwitches false when the buttons already show the
+ *   oscillation and night mode (filled when on)
+ */
+function settingItems(model, state, withSwitches = true) {
+  const items = [];
+  if (withSwitches) {
+    const oscillation = switchItem(
       { en: 'Oscillation', fr: 'Oscillation' },
       'refresh-cw',
       state.oson,
       ['ON', 'OION'],
       ['OFF', 'OIOF'],
-    ),
-    ...switchItem({ en: 'Night mode', fr: 'Mode nuit' }, 'moon', state.nmod, ['ON'], ['OFF']),
-  ];
+    );
+    const angle = model.angles ? oscillationAngleOf(state) : null;
+    if (oscillation.length > 0 && oscillation[0].color === ON.color && angle !== null) {
+      oscillation[0] = {
+        ...oscillation[0],
+        value: { en: `On · ${angle}°`, fr: `Activé · ${angle}°` },
+      };
+    }
+    items.push(
+      ...oscillation,
+      ...switchItem({ en: 'Night mode', fr: 'Mode nuit' }, 'moon', state.nmod, ['ON'], ['OFF']),
+    );
+  }
   if (model.airflow && (state.fdir === 'ON' || state.fdir === 'OFF')) {
     items.push({
       label: { en: 'Airflow', fr: "Flux d'air" },
@@ -466,22 +516,32 @@ export function buildControlsContent(dyson, { settings }) {
   if (!device) {
     return content;
   }
-  const { model, productState: state, features, status } = device;
+  const { model, productState: state, features, status, level } = device;
   const reachable = status.transport !== 'unreachable';
+  const settingsButtons = settings.buttons === BUTTON_SETS.SETTINGS;
   const components = [];
 
-  if (features[FEATURES.SPEED]) {
-    components.push({
-      type: 'gauge',
-      label: { en: 'Fan speed', fr: 'Vitesse' },
-      device_feature: features[FEATURES.SPEED],
-    });
+  // Three tiles at most: with the status list and four buttons, the budget
+  // of 8 components is full.
+  if (reachable) {
+    const tiles = [fanTile(model, state, features), airQualityTile(level)];
+    if (features[FEATURES.PM25]) {
+      tiles.push({
+        type: 'value',
+        label: { en: 'PM2.5', fr: 'PM2.5' },
+        icon: 'wind',
+        device_feature: features[FEATURES.PM25],
+        ...(LEVELS[device.levels?.[FEATURES.PM25]]
+          ? { color: LEVELS[device.levels[FEATURES.PM25]].color }
+          : {}),
+      });
+    }
+    components.push(...tiles.filter(Boolean).slice(0, 3));
   }
 
   const items = [];
   if (reachable) {
-    items.push({ label: { en: 'Mode', fr: 'Mode' }, icon: 'sliders', ...modeStatus(model, state) });
-    items.push(...settingItems(model, state));
+    items.push(...settingItems(model, state, !settingsButtons));
   }
   items.push(connectionItem(status));
   if (reachable) {
@@ -490,10 +550,9 @@ export function buildControlsContent(dyson, { settings }) {
   components.push({ type: 'status', items: items.slice(0, 10) });
 
   if (reachable) {
-    const buttons =
-      settings.buttons === BUTTON_SETS.SETTINGS
-        ? settingButtons(model, state, settings.device)
-        : speedButtons(model, state, settings.device);
+    const buttons = settingsButtons
+      ? settingButtons(model, state, settings.device)
+      : speedButtons(model, state, settings.device);
     components.push(...buttons);
   }
 

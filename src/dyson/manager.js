@@ -200,16 +200,22 @@ export function createDysonManager({
     const created = (gladys.devices ?? []).find((device) => device.external_id === ids.device);
     const known = new Set((created?.features ?? []).map((feature) => feature.external_id));
     const batch = states
-      .map(({ key, value }) => ({ device_feature_external_id: ids.feature(key), state: value }))
+      // A text feature (the oscillation angle) takes `text`, the others `state`.
+      .map(({ key, value, text }) => ({
+        device_feature_external_id: ids.feature(key),
+        ...(text === undefined ? { state: value } : { text }),
+      }))
       // A feature the user's device does not have (created before a model
       // update) would be refused: send only what Gladys knows.
       .filter((state) => known.has(state.device_feature_external_id))
-      .filter((state) => published.get(state.device_feature_external_id) !== state.state);
+      .filter(
+        (state) => published.get(state.device_feature_external_id) !== (state.text ?? state.state),
+      );
     if (batch.length === 0) {
       return;
     }
     for (const state of batch) {
-      published.set(state.device_feature_external_id, state.state);
+      published.set(state.device_feature_external_id, state.text ?? state.state);
     }
     try {
       await gladys.publishStates(batch);

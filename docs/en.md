@@ -56,24 +56,26 @@ new code.
 
 Depending on the model:
 
-| Feature                               | Models                                   |
-| ------------------------------------- | ---------------------------------------- |
-| On / off                              | all                                      |
-| Mode list (off, low, medium, high...) | all                                      |
-| Speed (1 to 10)                       | all                                      |
-| Auto mode                             | all                                      |
-| Oscillation                           | all                                      |
-| Night mode                            | all                                      |
-| Airflow direction (front / back)      | Pure Cool, Purifier Cool, Hot+Cool       |
-| Heating + target (°C)                 | Hot+Cool                                 |
-| Humidification                        | Humidify+Cool                            |
-| Temperature, humidity                 | all                                      |
-| PM2.5, PM10 (µg/m³)                   | 2018 and later models                    |
-| VOC index, NO2 index                  | 2018 and later models (VOC only on Link) |
-| Formaldehyde (mg/m³)                  | "Formaldehyde" models (K suffix)         |
-| Filter life                           | % (HEPA, carbon), hours on Link models   |
+| Feature                               | Models                                    |
+| ------------------------------------- | ----------------------------------------- |
+| On / off                              | all                                       |
+| Mode list (off, low, medium, high...) | all                                       |
+| Speed (1 to 10)                       | all                                       |
+| Auto mode                             | all                                       |
+| Oscillation                           | all                                       |
+| Oscillation angle (45°, 90°, 180°...) | Pure Cool, Purifier Cool, Hot+Cool towers |
+| Night mode                            | all                                       |
+| Airflow direction (front / back)      | Pure Cool, Purifier Cool, Hot+Cool        |
+| Heating + target (°C)                 | Hot+Cool                                  |
+| Humidification                        | Humidify+Cool                             |
+| Temperature, humidity                 | all                                       |
+| PM2.5, PM10 (µg/m³)                   | 2018 and later models                     |
+| VOC index, NO2 index                  | 2018 and later models (VOC only on Link)  |
+| Formaldehyde (mg/m³)                  | "Formaldehyde" models (K suffix)          |
+| Filter life                           | % (HEPA, carbon), hours on Link models    |
 
-The VOC and NO2 indexes are Dyson's: from 0 (clean air) to 10.
+The values are the ones the MyDyson app shows. The VOC and NO2 indexes are
+Dyson's: from 0 (clean air) to 10, as whole numbers like in the app.
 
 Choosing a speed turns the device on and the auto mode off, like the remote
 does. In auto mode, no speed is shown.
@@ -81,12 +83,17 @@ does. In auto mode, no speed is shown.
 The **mode list** works like the Matter fans: Off, Low (speed 1), Medium
 (speed 5), High (speed 10) and Auto. It follows the speed, so the list and the
 slider always agree: speeds 1 to 3 show Low, 4 to 6 Medium, 7 to 10 High.
-Oscillation, night mode and the airflow direction are lists too, each with its
-own icon.
+The airflow direction is a list too. Oscillation and night mode are on / off
+switches.
+
+The **oscillation angle** list offers the widths of the Dyson app: 45°, 90°,
+180° and 350°. Choosing one starts the oscillation, around the direction the
+device points to. To stop it, use the Oscillation switch. A width set
+otherwise (another app) shows no entry in the list.
 
 **Device added before this version?** Open the **Discover** tab and click
-**Update** on the device to get the mode list and the airflow direction. Its
-history and scenes are kept. The button shows up as soon as the integration
+**Update** on the device to get the latest features (oscillation angle,
+switches, PM and humidity icons). Its history and scenes are kept. The button shows up as soon as the integration
 has restarted in its new version.
 
 Gladys shows the state the device **confirms**: an order the device refused
@@ -143,9 +150,11 @@ pollutants.
 
 **Dyson controls**:
 
-- a live speed gauge;
-- the status: mode (e.g. "Medium · speed 5"), oscillation, night mode,
-  airflow, heating, connection, filters, sleep timer;
+- three tiles: the fan (off, auto, or a live speed gauge), the air quality
+  level (coloured) and the live PM2.5;
+- the status: oscillation (with its angle), night mode, airflow, heating,
+  connection, filters, sleep timer. With the oscillation buttons, the
+  oscillation and night mode rows are left out: the buttons show them;
 - four buttons, chosen in the widget's **Buttons** setting:
   - **On/off, auto, speed - and +** (default): turn on / off, auto mode (or
     back to manual), speed - and speed +;
