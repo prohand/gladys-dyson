@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-11
+
 ### Added
 
 - Mode list like the Matter fans: off, low (speed 1), medium (speed 5), high
@@ -75,6 +77,7 @@ becomes the notes of the version's GitHub Release.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/prohand/gladys-dyson/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/prohand/gladys-dyson/compare/v0.0.1...v1.0.0
 [0.0.1]: https://github.com/prohand/gladys-dyson/releases/tag/v0.0.1
