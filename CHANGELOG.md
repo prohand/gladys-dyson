@@ -10,6 +10,34 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- "Dyson controls" widget: a "Buttons" setting to pick the four buttons, on/off,
+  auto, speed - and + (default), or on/off, oscillation, night mode and airflow.
+- Device addresses: the IP alone is enough when the account has a single Dyson
+  device.
+- On the cloud after a failed local connection (or the reverse), the
+  integration tries the preferred one again every 4 minutes and goes back to
+  it.
+
+### Changed
+
+- Mode list: Medium covers speeds 4 to 6 and High 7 to 10 (7 already blows
+  hard).
+- "Dyson controls" widget: a click updates the widget as soon as the device
+  answered; the mode row says the mode list entry and the speed ("Medium ·
+  speed 5"); in auto mode, a "Manual mode" button replaces "Auto mode".
+- The fallback message and "Test the connection" give the serial to type in
+  Device addresses.
+
+### Fixed
+
+- The Discover tab showed the features of the previous version, with no
+  "Update" button: the device list is now published at every start.
+- The widgets could stay stale up to 2 minutes after a change (night mode,
+  speed, on/off): Gladys ignores a refresh request sent less than 10 s after
+  the previous one, the integration now holds it and sends it then.
+
 ## [1.1.0] - 2026-10-11
 
 ### Added

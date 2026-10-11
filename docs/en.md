@@ -80,13 +80,14 @@ does. In auto mode, no speed is shown.
 
 The **mode list** works like the Matter fans: Off, Low (speed 1), Medium
 (speed 5), High (speed 10) and Auto. It follows the speed, so the list and the
-slider always agree: speeds 1 to 3 show Low, 4 to 7 Medium, 8 to 10 High.
+slider always agree: speeds 1 to 3 show Low, 4 to 6 Medium, 7 to 10 High.
 Oscillation, night mode and the airflow direction are lists too, each with its
 own icon.
 
 **Device added before this version?** Open the **Discover** tab and click
 **Update** on the device to get the mode list and the airflow direction. Its
-history and scenes are kept.
+history and scenes are kept. The button shows up as soon as the integration
+has restarted in its new version.
 
 Gladys shows the state the device **confirms**: an order the device refused
 never shows as done. A change made with the remote or the Dyson app shows up
@@ -143,16 +144,30 @@ pollutants.
 **Dyson controls**:
 
 - a live speed gauge;
-- the status: mode, oscillation, night mode, airflow, heating, connection,
-  filters, sleep timer;
-- buttons: turn on / off, auto mode, speed - and speed +.
+- the status: mode (e.g. "Medium · speed 5"), oscillation, night mode,
+  airflow, heating, connection, filters, sleep timer;
+- four buttons, chosen in the widget's **Buttons** setting:
+  - **On/off, auto, speed - and +** (default): turn on / off, auto mode (or
+    back to manual), speed - and speed +;
+  - **On/off, oscillation, night mode, airflow**: a setting that is on is a
+    filled button, a click switches it. On the models that blow one way, the
+    auto mode takes the place of the airflow.
+
+After a click, the widget updates as soon as the device answered. To get both
+button sets, add the widget twice.
+
+Gladys allows four buttons per widget. To control everything in one place
+(mode list, speed slider, oscillation, night mode, airflow), also add the
+device to a "Devices" box of your dashboard.
 
 ## Settings
 
 - **Device addresses (local)**: the address of each device on your network,
   as `serial=IP`, separated by commas. Example:
-  `NK6-EU-MHA0000A=192.168.1.20`. A device without an address here goes
-  through the Dyson cloud (badge with an orange dot). The serial number is on
+  `NK6-EU-MHA0000A=192.168.1.20`. With a single Dyson device in the account,
+  the address alone is enough: `192.168.1.20`. A device without an address
+  here goes through the Dyson cloud (badge with an orange dot); the badge
+  message and **Test the connection** give the serial to type. The serial number is on
   the device label and in the MyDyson app. Give the device a fixed address in
   your router so it does not change.
 
@@ -169,7 +184,8 @@ pollutants.
 
 - **Receive a code** / **Validate the code**: sign in to the Dyson account.
 - **Test the connection**: reads the account's device list again and shows,
-  for each device, the path in use (local, Dyson cloud, unreachable).
+  for each device, the path in use (local, Dyson cloud, unreachable) and,
+  on a fallback, why.
 - **Sign out**: deletes the token and the device list kept by the
   integration. The devices stay in Gladys.
 
@@ -182,9 +198,14 @@ pollutants.
 - **"cloud" badge with an orange dot**: the device address is missing from
   **Device addresses**, or the local connection was refused (wrong address,
   device on another network Gladys cannot reach). A factory reset changes the device's local password: click
-  **Test the connection** to read it again.
+  **Test the connection** to read it again. When the local connection failed
+  (device restarting, Wi-Fi down), the integration tries it again every 4
+  minutes and goes back to it on its own.
 - **"unreachable" badge**: the device is unplugged, off Wi-Fi, or neither the
   local network nor the cloud answers. The integration keeps retrying.
+- **The "Air quality" widget tiles stay blue**: with the Gladys "glass" theme,
+  the colour of the tile icons is not applied (to be fixed in Gladys). The
+  overall level keeps its colour in the status.
 - **A sensor stays empty**: some sensors need a few minutes after power-up. A
   model without that sensor never sends a value.
 

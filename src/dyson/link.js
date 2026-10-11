@@ -32,17 +32,23 @@ const CLOUD_CONNECT_TIMEOUT_MS = 15000;
 // Retry delays after a failed connection, the last one repeated: quick at
 // first (a device rebooting, a Wi-Fi hiccup), then gentle.
 export const RETRY_DELAYS_MS = [5000, 15000, 60000, 300000];
+// On the fallback after the preferred transport FAILED (device rebooting at
+// start-up, Internet down for a while), try the preferred one again at this
+// pace: without it the link would stay on the fallback until the next restart.
+export const UPGRADE_DELAY_MS = 240000;
 
 const REASONS = {
-  noHost: {
+  // The serial is in the message: it is what the setting needs next to the IP.
+  noHost: (serial) => ({
     degrade: true,
     message: {
-      en: 'Local address unknown (Device addresses setting): using the Dyson cloud.',
-      fr: 'Adresse locale inconnue (réglage Adresses des appareils) : passage par le cloud Dyson.',
+      en: `Local address unknown: add ${serial}=<IP> to the Device addresses setting. Using the Dyson cloud.`,
+      fr: `Adresse locale inconnue : ajoutez ${serial}=<IP> au réglage Adresses des appareils. Passage par le cloud Dyson.`,
     },
-  },
+  }),
   localFailed: {
     degrade: true,
+    failed: true,
     message: {
       en: 'Local connection refused or unreachable: using the Dyson cloud.',
       fr: 'Connexion locale refusée ou injoignable : passage par le cloud Dyson.',
@@ -60,6 +66,7 @@ const REASONS = {
   },
   cloudFailed: {
     degrade: true,
+    failed: true,
     message: {
       en: 'Dyson cloud unreachable: using the local connection.',
       fr: 'Cloud Dyson injoignable : passage par la connexion locale.',
@@ -106,6 +113,7 @@ export class DeviceLink extends EventEmitter {
     this.connecting = null;
     this.retryIndex = 0;
     this.retryTimer = null;
+    this.upgradeTimer = null;
     this.refreshTimer = null;
     this.status = { transport: DEVICE_TRANSPORTS.UNREACHABLE, degraded: false, message: null };
   }
@@ -198,6 +206,9 @@ export class DeviceLink extends EventEmitter {
           this.#adopt(client);
           this.retryIndex = 0;
           this.#setStatus(transport, transport === order[0] ? null : preferredReason);
+          if (preferredReason?.failed) {
+            this.#scheduleUpgrade(order[0]);
+          }
           return;
         } catch (err) {
           this.logger.warn(`${transport} connection failed: ${err.message}`);
@@ -219,7 +230,7 @@ export class DeviceLink extends EventEmitter {
       if (!this.device.localPassword) {
         return REASONS.noLocalAccess;
       }
-      return this.hostOf() ? null : REASONS.noHost;
+      return this.hostOf() ? null : REASONS.noHost(this.device.serial);
     }
     return this.cloud.available() ? null : REASONS.noCloud;
   }
@@ -311,11 +322,12 @@ export class DeviceLink extends EventEmitter {
     client.on('error', (err) => this.logger.debug(`MQTT error: ${err.message}`));
     client.on('close', () => {
       if (this.client !== client) {
-        return; // closed on purpose (stop, reconnect)
+        return; // closed on purpose (stop, reconnect, upgrade)
       }
       this.logger.warn('connection lost');
       this.client = null;
       this.#stopRefresh();
+      this.#clearUpgrade();
       if (!this.stopped) {
         this.#setStatus(DEVICE_TRANSPORTS.UNREACHABLE, null);
         this.#scheduleRetry();
@@ -330,6 +342,7 @@ export class DeviceLink extends EventEmitter {
 
   #closeClient() {
     this.#stopRefresh();
+    this.#clearUpgrade();
     const client = this.client;
     this.client = null;
     client?.end(true);
@@ -344,6 +357,49 @@ export class DeviceLink extends EventEmitter {
       this.emit('retry');
       this.#connect();
     }, delay);
+  }
+
+  #scheduleUpgrade(transport) {
+    this.#clearUpgrade();
+    this.upgradeTimer = this.timers.setTimeout(() => {
+      this.upgradeTimer = null;
+      this.#tryUpgrade(transport);
+    }, UPGRADE_DELAY_MS);
+  }
+
+  #clearUpgrade() {
+    if (this.upgradeTimer) {
+      this.timers.clearTimeout(this.upgradeTimer);
+      this.upgradeTimer = null;
+    }
+  }
+
+  /** Still on the fallback: open the preferred transport, swap if it works. */
+  async #tryUpgrade(transport) {
+    if (this.stopped || !this.client || this.connecting || this.#unavailable(transport)) {
+      return;
+    }
+    const fallback = this.client;
+    let client;
+    try {
+      client = await this.#open(transport);
+    } catch (err) {
+      this.logger.debug(`${transport} still unavailable: ${err.message}`);
+      if (!this.stopped && this.client === fallback) {
+        this.#scheduleUpgrade(transport);
+      }
+      return;
+    }
+    // The fallback session dropped, was replaced (new settings) or the link
+    // stopped meanwhile: the session in place, or the retry path, wins.
+    if (this.stopped || this.client !== fallback || this.connecting) {
+      client.end(true);
+      return;
+    }
+    this.logger.info(`back on the ${transport} connection`);
+    this.#closeClient();
+    this.#adopt(client);
+    this.#setStatus(transport, null);
   }
 
   #clearRetry() {

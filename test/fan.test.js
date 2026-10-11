@@ -106,7 +106,7 @@ test('product state of a 2018+ model', () => {
     [FEATURES.SPEED]: 7,
     [FEATURES.OSCILLATION]: 1,
     [FEATURES.NIGHT_MODE]: 0,
-    [FEATURES.FAN_MODE]: 2,
+    [FEATURES.FAN_MODE]: 3,
     [FEATURES.HEATING]: 1,
     [FEATURES.TARGET_TEMPERATURE]: 21.9,
     [FEATURES.HEPA_FILTER]: 87,
@@ -213,8 +213,9 @@ test('the fan mode list follows the speed, so the list and the slider agree', ()
     ['0001', FAN_MODES.LOW],
     ['0003', FAN_MODES.LOW],
     ['0004', FAN_MODES.MEDIUM],
-    ['0007', FAN_MODES.MEDIUM],
-    ['0008', FAN_MODES.HIGH],
+    ['0006', FAN_MODES.MEDIUM],
+    // 7 already blows hard: "high" from there (forum feedback).
+    ['0007', FAN_MODES.HIGH],
     ['0010', FAN_MODES.HIGH],
   ]) {
     assert.equal(modeOf(PURE, { fpwr: 'ON', auto: 'OFF', fnsp: speed }), mode, speed);

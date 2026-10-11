@@ -11,7 +11,12 @@ import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/config.js';
 import { SCENE_ACTIONS } from '../src/capabilities/scenes.js';
 import { SCENE_TRIGGERS, createTriggerTracker } from '../src/capabilities/triggers.js';
-import { WIDGETS, WIDGET_CONTENT } from '../src/capabilities/widget.js';
+import {
+  BUTTON_SETS,
+  CONTROLS_WIDGET,
+  WIDGETS,
+  WIDGET_CONTENT,
+} from '../src/capabilities/widget.js';
 import { describeModel } from '../src/dyson/models.js';
 import { createFakeGladys } from './helpers/fakeGladys.js';
 
@@ -225,4 +230,15 @@ test('the widgets are declared with the keys the code serves', () => {
   assert.match(indexSource, /for \(const key of WIDGETS\)/);
   assert.match(indexSource, /onWidgetGet\(key/);
   assert.match(indexSource, /onWidgetAction\(key/);
+});
+
+test('the button sets of the controls widget are the ones the code draws', () => {
+  const setting = manifest.widgets
+    .find((widget) => widget.key === CONTROLS_WIDGET)
+    .settings.find((field) => field.key === 'buttons');
+  assert.deepEqual(
+    setting.options.map((option) => option.value),
+    Object.values(BUTTON_SETS),
+  );
+  assert.equal(setting.default, BUTTON_SETS.SPEED);
 });

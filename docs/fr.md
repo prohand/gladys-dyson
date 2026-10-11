@@ -58,37 +58,38 @@ de la connexion vous demande un nouveau code.
 
 Selon le modèle :
 
-| Fonction                                 | Modèles                                     |
-| ---------------------------------------- | ------------------------------------------- |
-| Marche / arrêt                           | tous                                        |
-| Liste des modes (arrêt, bas, moyen, ...) | tous                                        |
-| Vitesse (1 à 10)                         | tous                                        |
-| Mode auto                                | tous                                        |
-| Oscillation                              | tous                                        |
-| Mode nuit                                | tous                                        |
-| Sens du flux d'air (avant / arrière)     | Pure Cool, Purifier Cool, Hot+Cool          |
-| Chauffage + consigne (°C)                | Hot+Cool                                    |
-| Humidification                           | Humidify+Cool                               |
-| Température, humidité                    | tous                                        |
-| PM2.5, PM10 (µg/m³)                      | modèles depuis 2018                         |
-| Indice COV, indice NO2                   | modèles depuis 2018 (COV seul sur « Link ») |
-| Formaldéhyde (mg/m³)                     | modèles « Formaldehyde » (suffixe K)        |
-| Usure des filtres                        | % (HEPA, charbon), heures sur « Link »      |
+| Fonction                                | Modèles                                     |
+| --------------------------------------- | ------------------------------------------- |
+| Marche / arrêt                          | tous                                        |
+| Liste des modes (arrêt, faible, moyen…) | tous                                        |
+| Vitesse (1 à 10)                        | tous                                        |
+| Mode auto                               | tous                                        |
+| Oscillation                             | tous                                        |
+| Mode nuit                               | tous                                        |
+| Sens du flux d'air (avant / arrière)    | Pure Cool, Purifier Cool, Hot+Cool          |
+| Chauffage + consigne (°C)               | Hot+Cool                                    |
+| Humidification                          | Humidify+Cool                               |
+| Température, humidité                   | tous                                        |
+| PM2.5, PM10 (µg/m³)                     | modèles depuis 2018                         |
+| Indice COV, indice NO2                  | modèles depuis 2018 (COV seul sur « Link ») |
+| Formaldéhyde (mg/m³)                    | modèles « Formaldehyde » (suffixe K)        |
+| Usure des filtres                       | % (HEPA, charbon), heures sur « Link »      |
 
 Les indices COV et NO2 sont ceux de Dyson : de 0 (air propre) à 10.
 
 Choisir une vitesse allume l'appareil et coupe le mode auto, comme sur la
 télécommande. En mode auto, aucune vitesse n'est affichée.
 
-La **liste des modes** marche comme pour les ventilateurs Matter : Arrêt, Bas
-(vitesse 1), Moyen (vitesse 5), Haut (vitesse 10) et Auto. Elle suit la
+La **liste des modes** marche comme pour les ventilateurs Matter : Arrêt,
+Faible (vitesse 1), Moyen (vitesse 5), Fort (vitesse 10) et Auto. Elle suit la
 vitesse : la liste et le curseur sont toujours d'accord. Les vitesses 1 à 3
-affichent Bas, 4 à 7 Moyen, 8 à 10 Haut. L'oscillation, le mode nuit et le
+affichent Faible, 4 à 6 Moyen, 7 à 10 Fort. L'oscillation, le mode nuit et le
 sens du flux d'air sont aussi des listes, chacune avec son icône.
 
 **Appareil ajouté avant cette version ?** Ouvrez l'onglet **Découverte** et
 cliquez sur **Mettre à jour** sur l'appareil pour obtenir la liste des modes
-et le sens du flux d'air. L'historique et les scènes sont gardés.
+et le sens du flux d'air. L'historique et les scènes sont gardés. Le bouton
+apparaît dès que l'intégration a redémarré dans sa nouvelle version.
 
 L'état affiché dans Gladys est celui que l'appareil **confirme** : un ordre
 refusé par l'appareil ne s'affiche pas comme fait. Un changement fait avec la
@@ -147,16 +148,32 @@ des quatre polluants.
 **Commandes Dyson** :
 
 - une jauge de vitesse en direct ;
-- l'état : mode, oscillation, mode nuit, flux d'air, chauffage, connexion,
-  filtres, minuterie ;
-- des boutons : allumer / éteindre, mode auto, vitesse - et vitesse +.
+- l'état : mode (par exemple « Moyen · vitesse 5 »), oscillation, mode nuit,
+  flux d'air, chauffage, connexion, filtres, minuterie ;
+- quatre boutons, au choix dans le réglage **Boutons** du widget :
+  - **Marche, auto, vitesse - et +** (par défaut) : allumer / éteindre, mode
+    auto (ou retour en manuel), vitesse - et vitesse + ;
+  - **Marche, oscillation, mode nuit, flux d'air** : un réglage actif est un
+    bouton plein, un clic l'inverse. Sur les modèles qui soufflent dans un
+    seul sens, le mode auto remplace le flux d'air.
+
+Après un clic, le widget se met à jour dès que l'appareil a répondu. Pour
+avoir les deux jeux de boutons, ajoutez le widget deux fois.
+
+Gladys limite un widget à quatre boutons. Pour tout piloter au même endroit
+(liste des modes, curseur de vitesse, oscillation, mode nuit, flux d'air),
+ajoutez aussi l'appareil dans une boîte « Appareils » de votre tableau de
+bord.
 
 ## Réglages
 
 - **Adresses des appareils (local)** : l'adresse de chaque appareil sur votre
   réseau, sous la forme `numéro_de_série=adresse_IP`, séparées par des
-  virgules. Exemple : `NK6-EU-MHA0000A=192.168.1.20`. Un appareil sans adresse
-  ici passe par le cloud Dyson (badge avec un point orange). Le numéro de série est sur l'étiquette de
+  virgules. Exemple : `NK6-EU-MHA0000A=192.168.1.20`. Avec un seul appareil
+  Dyson dans le compte, l'adresse seule suffit : `192.168.1.20`. Un appareil
+  sans adresse ici passe par le cloud Dyson (badge avec un point orange) ; le
+  message du badge et **Tester la connexion** donnent le numéro de série à
+  saisir. Le numéro de série est sur l'étiquette de
   l'appareil et dans l'application MyDyson. Donnez une adresse fixe à
   l'appareil dans votre box pour qu'elle ne change pas.
 
@@ -172,7 +189,8 @@ des quatre polluants.
 
 - **Recevoir un code** / **Valider le code** : connexion au compte Dyson.
 - **Tester la connexion** : relit la liste des appareils du compte et affiche,
-  pour chacun, le chemin utilisé (local, cloud Dyson, injoignable).
+  pour chacun, le chemin utilisé (local, cloud Dyson, injoignable) et, en cas
+  de secours, pourquoi.
 - **Se déconnecter** : supprime le jeton et la liste des appareils gardés par
   l'intégration. Les appareils restent dans Gladys.
 
@@ -187,8 +205,13 @@ des quatre polluants.
   dans **Adresses des appareils**, ou la connexion locale a été refusée
   (mauvaise adresse, appareil sur un autre réseau que Gladys ne voit pas). Une remise à zéro de l'appareil change son mot de
   passe local : cliquez alors sur **Tester la connexion** pour le relire.
+  Si la connexion locale a échoué (appareil redémarré, Wi-Fi coupé),
+  l'intégration la réessaie toutes les 4 minutes et y revient seule.
 - **Badge « injoignable »** : l'appareil est éteint au secteur, hors Wi-Fi, ou
   ni le réseau local ni le cloud ne répondent. L'intégration réessaie seule.
+- **Les tuiles du widget « Qualité de l'air » restent bleues** : avec le thème
+  « verre » de Gladys, la couleur de l'icône des tuiles n'est pas appliquée
+  (à corriger côté Gladys). Le niveau global reste coloré dans l'état.
 - **Un capteur reste vide** : certains capteurs ont besoin de quelques minutes
   après la mise sous tension. Un modèle sans ce capteur n'envoie jamais de
   valeur.

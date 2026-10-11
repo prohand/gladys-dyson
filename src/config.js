@@ -46,6 +46,7 @@ export function normalizeConfig(raw = {}) {
     culture: `${FRENCH_COUNTRIES.has(validCountry) ? 'fr' : 'en'}-${validCountry}`,
     device_hosts: deviceHosts,
     hosts: parseDeviceHosts(deviceHosts),
+    bareHosts: parseBareHosts(deviceHosts),
     refresh_interval: clampInteger(
       source.refresh_interval,
       REFRESH_INTERVAL_MIN,
@@ -75,6 +76,19 @@ export function parseDeviceHosts(text) {
     }
   }
   return hosts;
+}
+
+/**
+ * The addresses typed WITHOUT a serial ("192.168.1.20"): the natural thing to
+ * type with a single device. The manager uses one when the account has a
+ * single device, since then there is no doubt about which one it is.
+ * @param {string} text
+ * @returns {string[]} hosts
+ */
+export function parseBareHosts(text) {
+  return String(text ?? '')
+    .split(/[\s,;]+/)
+    .filter((entry) => /^[A-Za-z0-9.-]+$/.test(entry) && /[.]/.test(entry));
 }
 
 function clampInteger(value, min, max, fallback) {

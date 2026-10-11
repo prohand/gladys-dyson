@@ -2,11 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
 import {
+  NUDGE_MIN_INTERVAL_MS,
   buildAirContent,
   buildControlsContent,
+  createWidgetNudger,
   handleWidgetAction,
 } from '../src/capabilities/widget.js';
 import { describeModel } from '../src/dyson/models.js';
+import { createFakeTimers } from './helpers/fakeMqtt.js';
 
 const ID = 'ext:dyson:fan:S1';
 const feature = (key) => `${ID}:${key}`;
@@ -92,7 +95,7 @@ test('controls widget of a 2018+ device: speed gauge, settings, four buttons', (
   assert.deepEqual(
     items.map((item) => [item.label.en, item.value]),
     [
-      ['Mode', { en: 'Speed 6', fr: 'Vitesse 6' }],
+      ['Mode', { en: 'Medium · speed 6', fr: 'Moyen · vitesse 6' }],
       ['Oscillation', { en: 'On', fr: 'Activé' }],
       ['Night mode', { en: 'Off', fr: 'Désactivé' }],
       ['Airflow', { en: 'Back', fr: 'Arrière' }],
@@ -105,13 +108,51 @@ test('controls widget of a 2018+ device: speed gauge, settings, four buttons', (
   );
   assert.equal(items[6].color, 'warning', 'a filter under 10 % is a warning');
   assert.deepEqual(
-    byType(content, 'button').map((b) => [b.device_feature, b.value]),
+    byType(content, 'button').map((b) => [b.action.key, b.action.params]),
     [
-      [feature('power'), 0],
-      [feature('auto'), 1],
-      [feature('speed'), 5],
-      [feature('speed'), 7],
+      ['power', { device: ID, value: 0 }],
+      ['auto', { device: ID, value: 1 }],
+      ['speed_down', { device: ID }],
+      ['speed_up', { device: ID }],
     ],
+    'actions: the core refetches the widget once the device answered',
+  );
+});
+
+test('controls widget, "settings" buttons: on/off, oscillation, night mode, airflow', () => {
+  const buttonsOf = (info) =>
+    byType(
+      buildControlsContent(dysonWith(info), { settings: { device: ID, buttons: 'settings' } }),
+      'button',
+    );
+
+  const buttons = buttonsOf(PURE_INFO);
+  assert.deepEqual(validateWidgetContent({ components: buttons }), []);
+  assert.deepEqual(
+    buttons.map((b) => [b.label.fr, b.style, b.action.key, b.action.params.value]),
+    [
+      ['Éteindre', 'secondary', 'power', 0],
+      ['Oscillation', 'primary', 'oscillation', 0],
+      ['Mode nuit', 'secondary', 'night_mode', 1],
+      ["Flux vers l'avant", 'secondary', 'airflow', 0],
+    ],
+    'a setting that is on is filled, a tap switches it',
+  );
+
+  const humidifier = buttonsOf({
+    ...PURE_INFO,
+    model: describeModel('358'),
+    productState: { fpwr: 'ON', auto: 'ON', oson: 'OFF', nmod: 'ON' },
+  });
+  assert.deepEqual(
+    humidifier.map((b) => [b.label.en, b.style, b.action.params.value]),
+    [
+      ['Turn off', 'secondary', 0],
+      ['Oscillation', 'secondary', 1],
+      ['Night mode', 'primary', 0],
+      ['Auto mode', 'primary', 0],
+    ],
+    'one-way airflow: the auto mode takes the fourth button',
   );
 });
 
@@ -134,7 +175,10 @@ test('controls widget: no speed step past the ends, nor while in auto', () => {
     'Auto mode',
     'Speed +',
   ]);
-  assert.deepEqual(buttonsAt({ fpwr: 'ON', auto: 'ON', fnsp: 'AUTO' }), ['Turn off', 'Auto mode']);
+  assert.deepEqual(buttonsAt({ fpwr: 'ON', auto: 'ON', fnsp: 'AUTO' }), [
+    'Turn off',
+    'Manual mode',
+  ]);
   assert.deepEqual(buttonsAt({ fpwr: 'OFF', fnsp: '0004' }), ['Turn on', 'Auto mode']);
 });
 
@@ -205,4 +249,107 @@ test('the refresh button asks the device for its readings', async () => {
   });
   assert.match(unreachable.en, /unreachable/);
   await assert.rejects(handleWidgetAction(dyson, { actionKey: 'nope', params: {} }), /Unknown/);
+});
+
+test('the control buttons change the device, from the state at the tap', async () => {
+  const commands = [];
+  const dyson = {
+    async command(device, key, valueOf) {
+      if (device !== ID) {
+        return false;
+      }
+      commands.push([key, valueOf({ fpwr: 'ON', auto: 'OFF', fnsp: '0004' })]);
+      return true;
+    },
+  };
+  const tap = (actionKey, value) =>
+    handleWidgetAction(dyson, {
+      actionKey,
+      params: value === undefined ? { device: ID } : { device: ID, value },
+    });
+
+  assert.equal(await tap('power', 0), undefined, 'no toast: the refetched widget shows it');
+  await tap('auto', 1);
+  await tap('speed_up');
+  await tap('speed_down');
+  await tap('oscillation', 1);
+  await tap('night_mode', '1');
+  await tap('airflow', 1);
+  assert.deepEqual(commands, [
+    ['power', 0],
+    ['auto', 1],
+    ['speed', 5],
+    ['speed', 3],
+    ['oscillation', 1],
+    ['night-mode', 1],
+    ['airflow-direction', 1],
+  ]);
+
+  const unreachable = await handleWidgetAction(dyson, {
+    actionKey: 'power',
+    params: { device: 'other', value: 1 },
+  });
+  assert.match(unreachable.fr, /injoignable/);
+});
+
+test('a speed step past the ends, or in auto, changes nothing', async () => {
+  const valueAt = async (actionKey, fnsp) => {
+    let value;
+    await handleWidgetAction(
+      {
+        async command(_device, _key, valueOf) {
+          value = valueOf({ fpwr: 'ON', fnsp });
+          return true;
+        },
+      },
+      { actionKey, params: { device: ID } },
+    );
+    return value;
+  };
+  assert.equal(await valueAt('speed_up', '0010'), null);
+  assert.equal(await valueAt('speed_down', '0001'), null);
+  assert.equal(await valueAt('speed_up', 'AUTO'), null);
+});
+
+test('widget nudges: paced under the core limit, the ones in between held, never lost', () => {
+  const timers = createFakeTimers();
+  let clock = 1000;
+  const sent = [];
+  const nudger = createWidgetNudger((key) => sent.push([key, clock]), {
+    timers,
+    now: () => clock,
+  });
+
+  nudger.nudge('dyson_controls');
+  assert.deepEqual(sent, [['dyson_controls', 1000]], 'the first nudge goes at once');
+
+  clock += 3000; // a command answered 3 s after a sensor nudge
+  nudger.nudge('dyson_controls');
+  nudger.nudge('dyson_controls');
+  assert.equal(sent.length, 1, 'held: the core would drop it');
+  assert.equal(timers.timeouts.size, 1, 'one held nudge for any number of changes');
+  assert.equal([...timers.timeouts.values()][0].ms, NUDGE_MIN_INTERVAL_MS - 3000);
+
+  nudger.nudge('dyson_air');
+  assert.deepEqual(sent.at(-1), ['dyson_air', 4000], 'each widget key has its own pace');
+
+  clock = 1000 + NUDGE_MIN_INTERVAL_MS;
+  timers.runTimeouts(NUDGE_MIN_INTERVAL_MS - 3000);
+  assert.deepEqual(sent.at(-1), ['dyson_controls', clock], 'the held nudge is sent at the end');
+
+  clock += NUDGE_MIN_INTERVAL_MS;
+  nudger.nudge('dyson_controls');
+  assert.deepEqual(sent.at(-1), ['dyson_controls', clock], 'after a quiet period: at once again');
+
+  clock += 1000;
+  nudger.nudge('dyson_controls');
+  nudger.stop();
+  assert.equal(timers.timeouts.size, 0, 'stop drops the held nudges');
+});
+
+test('widget nudges: a refused nudge (socket down) never throws', () => {
+  const nudger = createWidgetNudger(() => {
+    throw new Error('not connected');
+  });
+  assert.doesNotThrow(() => nudger.nudge('dyson_air'));
 });

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DeviceLink, RETRY_DELAYS_MS } from '../src/dyson/link.js';
+import { DeviceLink, RETRY_DELAYS_MS, UPGRADE_DELAY_MS } from '../src/dyson/link.js';
 import { createFakeMqtt, createFakeTimers, flush } from './helpers/fakeMqtt.js';
 
 const DEVICE = { serial: 'NK6-EU-MHA0000A', productType: '438', localPassword: 'local-secret' };
@@ -87,12 +87,16 @@ test('local refused: Dyson cloud, flagged degraded with the reason', async () =>
 });
 
 test('address unknown: cloud, degraded, no local attempt', async () => {
-  const { link, mqtt, statuses } = setup({ host: null });
+  const { link, mqtt, timers, statuses } = setup({ host: null });
   await link.start();
 
   assert.equal(mqtt.clients.length, 1);
   assert.equal(statuses.at(-1).transport, 'cloud');
-  assert.match(statuses.at(-1).message.en, /Local address unknown/);
+  assert.match(statuses.at(-1).message.en, /Local address unknown: add NK6-EU-MHA0000A=<IP>/);
+  assert.ok(
+    [...timers.timeouts.values()].every((t) => t.ms !== UPGRADE_DELAY_MS),
+    'no address: nothing to try again until the setting changes',
+  );
   link.stop();
 });
 
@@ -244,5 +248,69 @@ test('changing the preference and reconnecting switches transport', async () => 
 
   assert.equal(mqtt.clients[0].ended, true);
   assert.equal(statuses.at(-1).transport, 'cloud');
+  link.stop();
+});
+
+test('on the fallback after a failure, the preferred transport is tried again', async () => {
+  let localUp = false;
+  const { link, mqtt, timers, statuses } = setup({
+    decide: (url) => (isLocal(url) && !localUp ? 'error' : 'connect'),
+  });
+  await link.start();
+  assert.equal(statuses.at(-1).transport, 'cloud');
+
+  // Still down: stays on the cloud, tries again later.
+  timers.runTimeouts(UPGRADE_DELAY_MS);
+  await flush();
+  await flush();
+  assert.equal(statuses.at(-1).transport, 'cloud');
+  assert.equal(mqtt.clients.length, 3);
+  assert.equal(mqtt.clients[1].ended, false, 'the cloud session is kept meanwhile');
+
+  // Back: the link moves to local and closes the cloud session.
+  localUp = true;
+  timers.runTimeouts(UPGRADE_DELAY_MS);
+  await flush();
+  await flush();
+  assert.deepEqual(statuses.at(-1), { transport: 'local', degraded: false, message: null });
+  assert.equal(mqtt.clients[1].ended, true);
+  assert.equal(link.client, mqtt.clients[3]);
+  assert.ok([...timers.timeouts.values()].every((t) => t.ms !== UPGRADE_DELAY_MS));
+
+  // Messages now come from the local session only.
+  const received = [];
+  link.on('state', (values) => received.push(values));
+  mqtt.clients[3].receive({ msg: 'STATE-CHANGE', 'product-state': { fpwr: ['OFF', 'ON'] } });
+  assert.deepEqual(received, [{ fpwr: 'ON' }]);
+  link.stop();
+});
+
+test('a lost fallback session cancels the pending try of the preferred one', async () => {
+  const { link, mqtt, timers } = setup({ decide: (url) => (isLocal(url) ? 'error' : 'connect') });
+  await link.start();
+  assert.ok([...timers.timeouts.values()].some((t) => t.ms === UPGRADE_DELAY_MS));
+
+  mqtt.clients[1].drop();
+  assert.ok([...timers.timeouts.values()].every((t) => t.ms !== UPGRADE_DELAY_MS));
+  link.stop();
+});
+
+test('settings changed while the preferred transport is tried: the new session wins', async () => {
+  let localUp = false;
+  const { link, mqtt, timers, statuses } = setup({
+    decide: (url) => (isLocal(url) && !localUp ? 'error' : 'connect'),
+  });
+  await link.start();
+  localUp = true;
+
+  timers.runTimeouts(UPGRADE_DELAY_MS); // the local try starts...
+  link.setPreferLocal(false);
+  await link.reconnect(); // ...and the user now prefers the cloud
+  await flush();
+  await flush();
+
+  assert.equal(statuses.at(-1).transport, 'cloud');
+  assert.equal(mqtt.clients[2].ended, true, 'the late local session is closed');
+  assert.equal(link.client, mqtt.clients[3]);
   link.stop();
 });

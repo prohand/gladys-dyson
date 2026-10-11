@@ -6,19 +6,25 @@
 //                   PM10, VOC, NO2, temperature, humidity), each coloured by
 //                   its pollutant level, the overall air quality level, and a
 //                   "Refresh" button;
-//   dyson_controls  the fan: a live speed gauge, a status list (mode,
-//                   oscillation, night mode, airflow, connection, filters,
-//                   sleep timer), and on/off, auto, speed - and speed +
-//                   buttons that go through the device features (onSetValue).
+//   dyson_controls  the fan, as a remote: a live speed gauge, a status list
+//                   (mode, oscillation, night mode, airflow, connection,
+//                   filters, sleep timer) and four buttons, chosen in the
+//                   settings: on/off, auto, speed - and speed +; or on/off,
+//                   oscillation, night mode and airflow.
 //
 // The tiles and the gauge follow the published states. The rest (colours,
-// status rows, button values) is cached by the core until `ttl_seconds`; the
-// manager nudges the widgets (requestWidgetRefresh) when a product state, the
+// status rows, buttons) is cached by the core until `ttl_seconds`; the manager
+// nudges the widgets (requestWidgetRefresh) when a product state, the
 // connection or a pollutant level changes.
+//
+// The control buttons are widget ACTIONS, not device-feature buttons: the core
+// refetches the content as soon as an action returns, and the action returns
+// once the device answered, so a tap shows its result at once. A speed step
+// is computed from the state at the tap, not from the content shown.
 // -----------------------------------------------------------------------------
 
 import { createLogger, WIDGET_COLORS } from '@gladysassistant/integration-sdk';
-import { FEATURES, SPEED_MAX, SPEED_MIN } from '../devices/fan.js';
+import { AIRFLOW, FAN_MODES, FEATURES, SPEED_MAX, SPEED_MIN, fanModeOf } from '../devices/fan.js';
 import { kelvinTenthsToCelsius, readNumber } from '../dyson/protocol.js';
 
 const logger = createLogger({ name: 'widget' });
@@ -28,7 +34,20 @@ export const AIR_WIDGET = 'dyson_air';
 export const CONTROLS_WIDGET = 'dyson_controls';
 export const WIDGETS = [AIR_WIDGET, CONTROLS_WIDGET];
 
-export const WIDGET_ACTIONS = { REFRESH: 'refresh' };
+export const WIDGET_ACTIONS = {
+  REFRESH: 'refresh',
+  POWER: 'power',
+  AUTO: 'auto',
+  SPEED_DOWN: 'speed_down',
+  SPEED_UP: 'speed_up',
+  OSCILLATION: 'oscillation',
+  NIGHT_MODE: 'night_mode',
+  AIRFLOW: 'airflow',
+};
+
+// Values of the `buttons` setting of the controls widget (stored by the
+// dashboards: never rename one).
+export const BUTTON_SETS = { SPEED: 'speed', SETTINGS: 'settings' };
 
 // The content budget allows 6 tiles; with the status list and the button,
 // 8 components. By priority: the pollutants, then the comfort readings. A
@@ -87,6 +106,14 @@ function isAuto(model, state) {
   return model.protocol === 'link' ? state.fmod === 'AUTO' : state.auto === 'ON';
 }
 
+// The names Gladys gives the entries of the fan mode list.
+const MODE_NAMES = {
+  [FAN_MODES.LOW]: { en: 'Low', fr: 'Faible' },
+  [FAN_MODES.MEDIUM]: { en: 'Medium', fr: 'Moyen' },
+  [FAN_MODES.HIGH]: { en: 'High', fr: 'Fort' },
+};
+
+/** The mode row says what the mode list says, with the speed behind it. */
 function modeStatus(model, state) {
   if (isOff(model, state)) {
     return { value: { en: 'Off', fr: 'Éteint' }, color: WIDGET_COLORS.NEUTRAL };
@@ -95,11 +122,12 @@ function modeStatus(model, state) {
     return { value: { en: 'Auto', fr: 'Auto' }, color: WIDGET_COLORS.PRIMARY };
   }
   const speed = readNumber(state.fnsp);
+  const name = MODE_NAMES[fanModeOf(model, state)];
   return {
     value:
-      speed === null
+      speed === null || !name
         ? { en: 'On', fr: 'Allumé' }
-        : { en: `Speed ${speed}`, fr: `Vitesse ${speed}` },
+        : { en: `${name.en} · speed ${speed}`, fr: `${name.fr} · vitesse ${speed}` },
     color: WIDGET_COLORS.PRIMARY,
   };
 }
@@ -296,6 +324,138 @@ export function buildAirContent(dyson, { settings }) {
   return { ttl_seconds: 120, components };
 }
 
+const actionButton = (device, key, label, icon, style, value) => ({
+  type: 'button',
+  label,
+  icon,
+  style,
+  action: { key, params: value === undefined ? { device } : { device, value } },
+});
+
+const powerButton = (model, state, device) =>
+  isOff(model, state)
+    ? actionButton(
+        device,
+        WIDGET_ACTIONS.POWER,
+        { en: 'Turn on', fr: 'Allumer' },
+        'power',
+        'primary',
+        1,
+      )
+    : actionButton(
+        device,
+        WIDGET_ACTIONS.POWER,
+        { en: 'Turn off', fr: 'Éteindre' },
+        'power',
+        'secondary',
+        0,
+      );
+
+const autoButton = (device, value) =>
+  value === 1
+    ? actionButton(
+        device,
+        WIDGET_ACTIONS.AUTO,
+        { en: 'Auto mode', fr: 'Mode auto' },
+        'zap',
+        'secondary',
+        1,
+      )
+    : actionButton(
+        device,
+        WIDGET_ACTIONS.AUTO,
+        { en: 'Manual mode', fr: 'Mode manuel' },
+        'sliders',
+        'secondary',
+        0,
+      );
+
+/** On/off, auto (or back to manual), speed - and speed + (not past the ends). */
+function speedButtons(model, state, device) {
+  const buttons = [powerButton(model, state, device)];
+  if (isOff(model, state)) {
+    return [...buttons, autoButton(device, 1)];
+  }
+  if (isAuto(model, state)) {
+    return [...buttons, autoButton(device, 0)];
+  }
+  buttons.push(autoButton(device, 1));
+  const speed = readNumber(state.fnsp);
+  if (speed !== null && speed > SPEED_MIN) {
+    buttons.push(
+      actionButton(
+        device,
+        WIDGET_ACTIONS.SPEED_DOWN,
+        { en: 'Speed -', fr: 'Vitesse -' },
+        'minus',
+        'secondary',
+      ),
+    );
+  }
+  if (speed !== null && speed < SPEED_MAX) {
+    buttons.push(
+      actionButton(
+        device,
+        WIDGET_ACTIONS.SPEED_UP,
+        { en: 'Speed +', fr: 'Vitesse +' },
+        'plus',
+        'secondary',
+      ),
+    );
+  }
+  return buttons;
+}
+
+/**
+ * On/off, oscillation, night mode, then airflow (or auto on the models that
+ * blow one way). A setting that is on is a filled button; a tap switches it.
+ */
+function settingButtons(model, state, device) {
+  const toggle = (key, label, icon, on) =>
+    actionButton(device, key, label, icon, on ? 'primary' : 'secondary', on ? 0 : 1);
+  const buttons = [
+    powerButton(model, state, device),
+    toggle(
+      WIDGET_ACTIONS.OSCILLATION,
+      { en: 'Oscillation', fr: 'Oscillation' },
+      'refresh-cw',
+      state.oson === 'ON' || state.oson === 'OION',
+    ),
+    toggle(
+      WIDGET_ACTIONS.NIGHT_MODE,
+      { en: 'Night mode', fr: 'Mode nuit' },
+      'moon',
+      state.nmod === 'ON',
+    ),
+  ];
+  if (model.airflow) {
+    // The label says where a tap sends the air.
+    const front = state.fdir !== 'OFF';
+    buttons.push(
+      actionButton(
+        device,
+        WIDGET_ACTIONS.AIRFLOW,
+        front
+          ? { en: 'Airflow to back', fr: "Flux vers l'arrière" }
+          : { en: 'Airflow to front', fr: "Flux vers l'avant" },
+        'repeat',
+        'secondary',
+        front ? AIRFLOW.REVERSE : AIRFLOW.FORWARD,
+      ),
+    );
+  } else {
+    buttons.push(
+      toggle(
+        WIDGET_ACTIONS.AUTO,
+        { en: 'Auto mode', fr: 'Mode auto' },
+        'zap',
+        isAuto(model, state),
+      ),
+    );
+  }
+  return buttons;
+}
+
 /**
  * Content of one "Dyson controls" instance.
  * @param {object} dyson the manager (deviceInfo)
@@ -329,54 +489,70 @@ export function buildControlsContent(dyson, { settings }) {
   }
   components.push({ type: 'status', items: items.slice(0, 10) });
 
-  const off = isOff(model, state);
-  if (features[FEATURES.POWER]) {
-    components.push({
-      type: 'button',
-      label: off ? { en: 'Turn on', fr: 'Allumer' } : { en: 'Turn off', fr: 'Éteindre' },
-      icon: 'power',
-      style: off ? 'primary' : 'secondary',
-      device_feature: features[FEATURES.POWER],
-      value: off ? 1 : 0,
-    });
-  }
-  if (features[FEATURES.AUTO]) {
-    components.push({
-      type: 'button',
-      label: { en: 'Auto mode', fr: 'Mode auto' },
-      icon: 'zap',
-      style: 'secondary',
-      device_feature: features[FEATURES.AUTO],
-      value: 1,
-    });
-  }
-  // A button carries a fixed value: one step from the current speed. Hidden
-  // while the device is off or gives no speed (auto), and at the ends.
-  const speed = readNumber(state.fnsp);
-  if (features[FEATURES.SPEED] && reachable && !off && speed !== null) {
-    if (speed > SPEED_MIN) {
-      components.push({
-        type: 'button',
-        label: { en: 'Speed -', fr: 'Vitesse -' },
-        icon: 'minus',
-        style: 'secondary',
-        device_feature: features[FEATURES.SPEED],
-        value: speed - 1,
-      });
-    }
-    if (speed < SPEED_MAX) {
-      components.push({
-        type: 'button',
-        label: { en: 'Speed +', fr: 'Vitesse +' },
-        icon: 'plus',
-        style: 'secondary',
-        device_feature: features[FEATURES.SPEED],
-        value: speed + 1,
-      });
-    }
+  if (reachable) {
+    const buttons =
+      settings.buttons === BUTTON_SETS.SETTINGS
+        ? settingButtons(model, state, settings.device)
+        : speedButtons(model, state, settings.device);
+    components.push(...buttons);
   }
 
   return { ttl_seconds: 120, components };
+}
+
+// The core drops a nudge that comes less than 10 s after the previous one of
+// the same widget, and a dropped nudge leaves the widget stale until its TTL:
+// a command answered 3 s after a sensor nudge would show minutes later. The
+// nudges are paced here instead: one now, the next ones held and sent once.
+export const NUDGE_MIN_INTERVAL_MS = 10500;
+
+/**
+ * Paced `requestWidgetRefresh`: never two nudges of a key within the core's
+ * limit, and never a nudge lost — one asked during the quiet period is sent
+ * at its end.
+ * @param {(key: string) => void} request e.g. gladys.requestWidgetRefresh
+ * @param {object} [options]
+ * @param {object} [options.timers] injectable timers (tests)
+ * @param {() => number} [options.now]
+ * @returns {{nudge: (key: string) => void, stop: () => void}}
+ */
+export function createWidgetNudger(request, { timers = globalThis, now = Date.now } = {}) {
+  /** key -> { last, timer } */
+  const keys = new Map();
+
+  function send(key, entry) {
+    entry.last = now();
+    entry.timer = null;
+    try {
+      request(key);
+    } catch (err) {
+      logger.debug(`Widget ${key} not nudged: ${err.message}`);
+    }
+  }
+
+  return {
+    nudge(key) {
+      const entry = keys.get(key) ?? { last: -Infinity, timer: null };
+      keys.set(key, entry);
+      if (entry.timer) {
+        return; // the held nudge will show this change too
+      }
+      const wait = entry.last + NUDGE_MIN_INTERVAL_MS - now();
+      if (wait <= 0) {
+        send(key, entry);
+        return;
+      }
+      entry.timer = timers.setTimeout(() => send(key, entry), wait);
+    },
+    stop() {
+      for (const entry of keys.values()) {
+        if (entry.timer) {
+          timers.clearTimeout(entry.timer);
+          entry.timer = null;
+        }
+      }
+    },
+  };
 }
 
 /** The content builder of each widget key. */
@@ -385,17 +561,44 @@ export const WIDGET_CONTENT = {
   [CONTROLS_WIDGET]: buildControlsContent,
 };
 
+const UNREACHABLE = { en: 'The device is unreachable.', fr: "L'appareil est injoignable." };
+
+// The value a declared 0 / 1 param stands for, whatever its type on the way.
+const flag = (params) => (Number(params?.value) === 1 ? 1 : 0);
+
+const speedStep = (step) => (state) => {
+  const speed = readNumber(state.fnsp);
+  const next = speed === null ? null : speed + step;
+  return next === null || next < SPEED_MIN || next > SPEED_MAX ? null : next;
+};
+
+/** Action key -> the feature it changes, and its value from the params or the state. */
+const ACTION_COMMANDS = {
+  [WIDGET_ACTIONS.POWER]: (params) => [FEATURES.POWER, () => flag(params)],
+  [WIDGET_ACTIONS.AUTO]: (params) => [FEATURES.AUTO, () => flag(params)],
+  [WIDGET_ACTIONS.SPEED_DOWN]: () => [FEATURES.SPEED, speedStep(-1)],
+  [WIDGET_ACTIONS.SPEED_UP]: () => [FEATURES.SPEED, speedStep(1)],
+  [WIDGET_ACTIONS.OSCILLATION]: (params) => [FEATURES.OSCILLATION, () => flag(params)],
+  [WIDGET_ACTIONS.NIGHT_MODE]: (params) => [FEATURES.NIGHT_MODE, () => flag(params)],
+  [WIDGET_ACTIONS.AIRFLOW]: (params) => [FEATURES.AIRFLOW_DIRECTION, () => flag(params)],
+};
+
 /**
  * A tapped `button` carrying an `action`. `params` are the ones this content
- * declared, never user input.
+ * declared, never user input. A control resolves no toast when it worked: the
+ * refetched content shows the result.
  */
 export async function handleWidgetAction(dyson, { actionKey, params }) {
   logger.info(`onWidgetAction <- ${actionKey}`);
-  if (actionKey !== WIDGET_ACTIONS.REFRESH) {
+  if (actionKey === WIDGET_ACTIONS.REFRESH) {
+    const refreshed = await dyson.refreshDevice(params?.device);
+    return refreshed ? { en: 'Readings requested.', fr: 'Relevés demandés.' } : UNREACHABLE;
+  }
+  const command = ACTION_COMMANDS[actionKey];
+  if (!command) {
     throw new Error(`Unknown widget action: ${actionKey}`);
   }
-  const refreshed = await dyson.refreshDevice(params?.device);
-  return refreshed
-    ? { en: 'Readings requested.', fr: 'Relevés demandés.' }
-    : { en: 'The device is unreachable.', fr: "L'appareil est injoignable." };
+  const [key, valueOf] = command(params);
+  const done = await dyson.command(params?.device, key, valueOf);
+  return done ? undefined : UNREACHABLE;
 }
