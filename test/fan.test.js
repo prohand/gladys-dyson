@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  AIRFLOW,
+  FAN_MODES,
   FEATURES,
   buildDevice,
   commandFor,
@@ -104,6 +106,7 @@ test('product state of a 2018+ model', () => {
     [FEATURES.SPEED]: 7,
     [FEATURES.OSCILLATION]: 1,
     [FEATURES.NIGHT_MODE]: 0,
+    [FEATURES.FAN_MODE]: 2,
     [FEATURES.HEATING]: 1,
     [FEATURES.TARGET_TEMPERATURE]: 21.9,
     [FEATURES.HEPA_FILTER]: 87,
@@ -113,6 +116,7 @@ test('product state of a 2018+ model', () => {
 test('an automatic speed publishes no speed, a partial change only what changed', () => {
   assert.deepEqual(byKey(statesFromProductState(PURE, { fnsp: 'AUTO', auto: 'ON' })), {
     [FEATURES.AUTO]: 1,
+    [FEATURES.FAN_MODE]: 4,
   });
   assert.deepEqual(byKey(statesFromProductState(PURE, { nmod: 'ON' })), {
     [FEATURES.NIGHT_MODE]: 1,
@@ -122,11 +126,18 @@ test('an automatic speed publishes no speed, a partial change only what changed'
 test('product state of a Link model: one key for power and auto', () => {
   assert.deepEqual(
     byKey(statesFromProductState(LINK_HEATER, { fmod: 'AUTO', filf: '2150', hmod: 'OFF' })),
-    { [FEATURES.POWER]: 1, [FEATURES.AUTO]: 1, [FEATURES.FILTER]: 2150, [FEATURES.HEATING]: 0 },
+    {
+      [FEATURES.POWER]: 1,
+      [FEATURES.AUTO]: 1,
+      [FEATURES.FILTER]: 2150,
+      [FEATURES.FAN_MODE]: 4,
+      [FEATURES.HEATING]: 0,
+    },
   );
   assert.deepEqual(byKey(statesFromProductState(LINK_HEATER, { fmod: 'OFF' })), {
     [FEATURES.POWER]: 0,
     [FEATURES.AUTO]: 0,
+    [FEATURES.FAN_MODE]: 0,
   });
 });
 
@@ -191,6 +202,84 @@ test('commands of a Link model', () => {
   assert.deepEqual(commandFor(LINK_HEATER, FEATURES.AUTO, 1), { fmod: 'AUTO' });
   assert.deepEqual(commandFor(LINK_HEATER, FEATURES.AUTO, 0), { fmod: 'FAN' });
   assert.deepEqual(commandFor(LINK_HEATER, FEATURES.SPEED, 3), { fmod: 'FAN', fnsp: '0003' });
+});
+
+test('the fan mode list follows the speed, so the list and the slider agree', () => {
+  const modeOf = (model, values) => byKey(statesFromProductState(model, values))[FEATURES.FAN_MODE];
+
+  assert.equal(modeOf(PURE, { fpwr: 'OFF', auto: 'ON', fnsp: '0004' }), FAN_MODES.OFF);
+  assert.equal(modeOf(PURE, { fpwr: 'ON', auto: 'ON', fnsp: 'AUTO' }), FAN_MODES.AUTO);
+  for (const [speed, mode] of [
+    ['0001', FAN_MODES.LOW],
+    ['0003', FAN_MODES.LOW],
+    ['0004', FAN_MODES.MEDIUM],
+    ['0007', FAN_MODES.MEDIUM],
+    ['0008', FAN_MODES.HIGH],
+    ['0010', FAN_MODES.HIGH],
+  ]) {
+    assert.equal(modeOf(PURE, { fpwr: 'ON', auto: 'OFF', fnsp: speed }), mode, speed);
+  }
+  assert.equal(modeOf(LINK_HEATER, { fmod: 'FAN', fnsp: '0009' }), FAN_MODES.HIGH);
+  // A speed change alone: the rest of the state comes from what is known.
+  const known = { fpwr: 'ON', auto: 'OFF', fnsp: '0002' };
+  assert.equal(
+    byKey(statesFromProductState(PURE, { fnsp: '0002' }, known))[FEATURES.FAN_MODE],
+    FAN_MODES.LOW,
+  );
+  // Not enough to tell: nothing published.
+  assert.equal(modeOf(PURE, { nmod: 'ON' }), undefined);
+});
+
+test('a mode of the list is a power, auto or speed order', () => {
+  assert.deepEqual(commandFor(PURE, FEATURES.FAN_MODE, FAN_MODES.OFF), { fpwr: 'OFF' });
+  assert.deepEqual(commandFor(PURE, FEATURES.FAN_MODE, FAN_MODES.LOW), {
+    fpwr: 'ON',
+    auto: 'OFF',
+    fnsp: '0001',
+  });
+  assert.deepEqual(commandFor(PURE, FEATURES.FAN_MODE, FAN_MODES.MEDIUM).fnsp, '0005');
+  assert.deepEqual(commandFor(PURE, FEATURES.FAN_MODE, FAN_MODES.HIGH).fnsp, '0010');
+  assert.deepEqual(commandFor(PURE, FEATURES.FAN_MODE, FAN_MODES.AUTO), {
+    fpwr: 'ON',
+    auto: 'ON',
+  });
+  assert.deepEqual(commandFor(LINK_HEATER, FEATURES.FAN_MODE, FAN_MODES.AUTO), { fmod: 'AUTO' });
+  assert.deepEqual(commandFor(LINK_HEATER, FEATURES.FAN_MODE, FAN_MODES.MEDIUM), {
+    fmod: 'FAN',
+    fnsp: '0005',
+  });
+  assert.deepEqual(commandFor(LINK_HEATER, FEATURES.FAN_MODE, FAN_MODES.OFF), { fmod: 'OFF' });
+  assert.throws(() => commandFor(PURE, FEATURES.FAN_MODE, 9), /cannot be controlled/);
+});
+
+test('airflow direction: the towers only, front is forward', () => {
+  assert.ok(featureKeys(PURE).includes(FEATURES.AIRFLOW_DIRECTION));
+  assert.ok(!featureKeys(HUMIDIFY).includes(FEATURES.AIRFLOW_DIRECTION));
+  assert.ok(!featureKeys(LINK_HEATER).includes(FEATURES.AIRFLOW_DIRECTION));
+
+  const direction = (model, fdir) =>
+    byKey(statesFromProductState(model, { fdir }))[FEATURES.AIRFLOW_DIRECTION];
+  assert.equal(direction(PURE, 'ON'), AIRFLOW.FORWARD);
+  assert.equal(direction(PURE, 'OFF'), AIRFLOW.REVERSE);
+  assert.equal(direction(HUMIDIFY, 'ON'), undefined);
+
+  assert.deepEqual(commandFor(PURE, FEATURES.AIRFLOW_DIRECTION, AIRFLOW.FORWARD), { fdir: 'ON' });
+  assert.deepEqual(commandFor(PURE, FEATURES.AIRFLOW_DIRECTION, AIRFLOW.REVERSE), { fdir: 'OFF' });
+  assert.throws(() => commandFor(HUMIDIFY, FEATURES.AIRFLOW_DIRECTION, 1), /cannot be controlled/);
+});
+
+test('fan controls use the Gladys FAN types, drawn with their own icons', () => {
+  const gladys = createFakeGladys();
+  const device = buildDevice(gladys, { serial: 'S', name: 'x' }, PURE);
+  const typeOf = (key) => {
+    const feature = device.features.find((f) => f.external_id.endsWith(`:${key}`));
+    return `${feature.category}/${feature.type}/${feature.min}-${feature.max}`;
+  };
+
+  assert.equal(typeOf(FEATURES.FAN_MODE), 'fan/mode/0-4');
+  assert.equal(typeOf(FEATURES.OSCILLATION), 'fan/rock-setting/0-1');
+  assert.equal(typeOf(FEATURES.NIGHT_MODE), 'fan/wind-setting/0-1');
+  assert.equal(typeOf(FEATURES.AIRFLOW_DIRECTION), 'fan/airflow-direction/0-1');
 });
 
 test('a sensor, or a control the model lacks, cannot be commanded', () => {

@@ -86,12 +86,18 @@ test('product types: families, revisions, and what is not a fan', () => {
     protocol: 'pure',
     heater: false,
     humidifier: false,
+    airflow: true,
     formaldehyde: true,
   });
   assert.equal(describeModel('455').protocol, 'link');
   assert.equal(describeModel('455').heater, true);
   assert.equal(describeModel('527e').heater, true);
   assert.equal(describeModel('358K').humidifier, true);
+  // Front / back airflow: the towers and desk fans only.
+  assert.equal(describeModel('527E').airflow, true);
+  assert.equal(describeModel('358').airflow, false);
+  assert.equal(describeModel('664').airflow, false);
+  assert.equal(describeModel('475').airflow, false);
   // Unknown revision of a known family.
   assert.equal(describeModel('664B').name, 'Purifier Big+Quiet');
   // Robot vacuum, light, nothing.

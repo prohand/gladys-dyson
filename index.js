@@ -18,15 +18,21 @@ import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
 import { createDysonManager } from './src/dyson/manager.js';
 import { createAccountStore } from './src/dyson/store.js';
 import { SCENE_ACTIONS } from './src/capabilities/scenes.js';
-import { AIR_WIDGET, buildWidgetContent, handleWidgetAction } from './src/capabilities/widget.js';
+import { WIDGETS, WIDGET_CONTENT, handleWidgetAction } from './src/capabilities/widget.js';
 
 const gladys = new GladysIntegration();
+
+function refreshWidgets() {
+  for (const key of WIDGETS) {
+    gladys.requestWidgetRefresh(key);
+  }
+}
 const dyson = createDysonManager({
   gladys,
   store: createAccountStore(),
-  // The widget's computed rows (mode, connection, air quality level) changed:
-  // nudge open dashboards (fire-and-forget, rate-limited by the core).
-  onDeviceChange: () => gladys.requestWidgetRefresh(AIR_WIDGET),
+  // The widgets' computed parts (mode, connection, air quality levels)
+  // changed: nudge open dashboards (fire-and-forget, rate-limited by the core).
+  onDeviceChange: refreshWidgets,
 });
 
 // --- Discovery: Gladys asks for the list of devices --------------------------
@@ -64,11 +70,13 @@ for (const [actionKey, handler] of Object.entries(SCENE_ACTIONS)) {
   gladys.onSceneAction(actionKey, (fields) => handler(dyson, fields));
 }
 
-// --- Dashboard widget (Gladys 5.1+) -------------------------------------------
-gladys.onWidgetGet(AIR_WIDGET, (request) => buildWidgetContent(dyson, request));
-gladys.onWidgetAction(AIR_WIDGET, (actionKey, params) =>
-  handleWidgetAction(dyson, { actionKey, params }),
-);
+// --- Dashboard widgets (Gladys 5.1+) ------------------------------------------
+for (const key of WIDGETS) {
+  gladys.onWidgetGet(key, (request) => WIDGET_CONTENT[key](dyson, request));
+  gladys.onWidgetAction(key, (actionKey, params) =>
+    handleWidgetAction(dyson, { actionKey, params }),
+  );
+}
 
 // --- Configuration updated by the user ---------------------------------------
 gladys.onConfigUpdated(async (newConfig) => {
@@ -83,7 +91,7 @@ gladys.on('connected', async () => {
   try {
     await dyson.start(await gladys.getConfig());
     // Nudges sent while the socket was down were dropped: re-sync dashboards.
-    gladys.requestWidgetRefresh(AIR_WIDGET);
+    refreshWidgets();
   } catch (err) {
     logger.error('Post-connection initialization failed', err);
     await gladys

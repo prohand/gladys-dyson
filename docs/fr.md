@@ -58,25 +58,37 @@ de la connexion vous demande un nouveau code.
 
 Selon le modèle :
 
-| Fonction                  | Modèles                                     |
-| ------------------------- | ------------------------------------------- |
-| Marche / arrêt            | tous                                        |
-| Vitesse (1 à 10)          | tous                                        |
-| Mode auto                 | tous                                        |
-| Oscillation               | tous                                        |
-| Mode nuit                 | tous                                        |
-| Chauffage + consigne (°C) | Hot+Cool                                    |
-| Humidification            | Humidify+Cool                               |
-| Température, humidité     | tous                                        |
-| PM2.5, PM10 (µg/m³)       | modèles depuis 2018                         |
-| Indice COV, indice NO2    | modèles depuis 2018 (COV seul sur « Link ») |
-| Formaldéhyde (mg/m³)      | modèles « Formaldehyde » (suffixe K)        |
-| Usure des filtres         | % (HEPA, charbon), heures sur « Link »      |
+| Fonction                                 | Modèles                                     |
+| ---------------------------------------- | ------------------------------------------- |
+| Marche / arrêt                           | tous                                        |
+| Liste des modes (arrêt, bas, moyen, ...) | tous                                        |
+| Vitesse (1 à 10)                         | tous                                        |
+| Mode auto                                | tous                                        |
+| Oscillation                              | tous                                        |
+| Mode nuit                                | tous                                        |
+| Sens du flux d'air (avant / arrière)     | Pure Cool, Purifier Cool, Hot+Cool          |
+| Chauffage + consigne (°C)                | Hot+Cool                                    |
+| Humidification                           | Humidify+Cool                               |
+| Température, humidité                    | tous                                        |
+| PM2.5, PM10 (µg/m³)                      | modèles depuis 2018                         |
+| Indice COV, indice NO2                   | modèles depuis 2018 (COV seul sur « Link ») |
+| Formaldéhyde (mg/m³)                     | modèles « Formaldehyde » (suffixe K)        |
+| Usure des filtres                        | % (HEPA, charbon), heures sur « Link »      |
 
 Les indices COV et NO2 sont ceux de Dyson : de 0 (air propre) à 10.
 
 Choisir une vitesse allume l'appareil et coupe le mode auto, comme sur la
 télécommande. En mode auto, aucune vitesse n'est affichée.
+
+La **liste des modes** marche comme pour les ventilateurs Matter : Arrêt, Bas
+(vitesse 1), Moyen (vitesse 5), Haut (vitesse 10) et Auto. Elle suit la
+vitesse : la liste et le curseur sont toujours d'accord. Les vitesses 1 à 3
+affichent Bas, 4 à 7 Moyen, 8 à 10 Haut. L'oscillation, le mode nuit et le
+sens du flux d'air sont aussi des listes, chacune avec son icône.
+
+**Appareil ajouté avant cette version ?** Ouvrez l'onglet **Découverte** et
+cliquez sur **Mettre à jour** sur l'appareil pour obtenir la liste des modes
+et le sens du flux d'air. L'historique et les scènes sont gardés.
 
 L'état affiché dans Gladys est celui que l'appareil **confirme** : un ordre
 refusé par l'appareil ne s'affiche pas comme fait. Un changement fait avec la
@@ -115,14 +127,29 @@ Les deux renvoient `sent` (ordre envoyé ou non) et `transport` (connexion
 utilisée). Un appareil injoignable ne fait pas échouer la scène :
 `sent` vaut alors `false`.
 
-## Widget du tableau de bord
+## Widgets du tableau de bord
 
-Le widget **Qualité de l'air Dyson** affiche un appareil, choisi dans ses
-réglages :
+Chaque widget affiche un appareil, choisi dans ses réglages.
 
-- 4 tuiles en direct : PM2.5, COV, température, humidité (selon le modèle) ;
-- l'état : qualité de l'air, connexion, mode, filtres, minuterie ;
-- des boutons : allumer / éteindre, mode auto, actualiser les relevés.
+**Qualité de l'air Dyson** :
+
+- jusqu'à 6 tuiles en direct : PM2.5, PM10, COV, NO2, température, humidité
+  (selon le modèle). Chaque tuile de polluant prend la couleur de son niveau :
+  vert (bonne), bleu (moyenne), orange (mauvaise), rouge (très mauvaise), avec
+  les seuils des scènes ci-dessus ;
+- l'état : qualité de l'air globale (le pire polluant), formaldéhyde sur les
+  modèles K, connexion ;
+- un bouton pour actualiser les relevés.
+
+Dyson ne donne pas d'indice AQI unique : le niveau global est calculé à partir
+des quatre polluants.
+
+**Commandes Dyson** :
+
+- une jauge de vitesse en direct ;
+- l'état : mode, oscillation, mode nuit, flux d'air, chauffage, connexion,
+  filtres, minuterie ;
+- des boutons : allumer / éteindre, mode auto, vitesse - et vitesse +.
 
 ## Réglages
 
@@ -132,6 +159,11 @@ réglages :
   ici passe par le cloud Dyson (badge avec un point orange). Le numéro de série est sur l'étiquette de
   l'appareil et dans l'application MyDyson. Donnez une adresse fixe à
   l'appareil dans votre box pour qu'elle ne change pas.
+
+  Pour trouver l'adresse, regardez la liste des appareils connectés de votre
+  box : l'appareil y apparaît en général sous son numéro de série. L'intégration ne sait pas encore la trouver seule : Gladys ne lui
+  permet pas d'écouter les annonces `_dyson_mqtt._tcp` des appareils.
+
 - **Rafraîchissement des capteurs (s)** : fréquence de lecture des capteurs de
   qualité de l'air, de 15 à 3600 secondes (60 par défaut). Les changements de
   marche, vitesse, etc. arrivent eux tout de suite, sans attendre.

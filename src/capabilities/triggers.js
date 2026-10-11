@@ -38,20 +38,32 @@ const BANDS = {
 };
 
 /**
+ * Level of each pollutant read (the widget colours its tiles with them).
+ * @param {object} readings feature key -> value (pm25, pm10, voc, no2)
+ * @returns {object} feature key -> one of AIR_QUALITY_LEVELS, read ones only
+ */
+export function pollutantLevels(readings) {
+  const levels = {};
+  for (const [key, bands] of Object.entries(BANDS)) {
+    const value = readings[key];
+    if (typeof value === 'number') {
+      const index = bands.findIndex((limit) => value <= limit);
+      levels[key] = AIR_QUALITY_LEVELS[index === -1 ? bands.length : index];
+    }
+  }
+  return levels;
+}
+
+/**
  * Air quality level of a set of readings: the worst pollutant decides.
  * @param {object} readings feature key -> value (pm25, pm10, voc, no2)
  * @returns {string|null} one of AIR_QUALITY_LEVELS, null without any reading
  */
 export function airQualityLevel(readings) {
-  let worst = -1;
-  for (const [key, bands] of Object.entries(BANDS)) {
-    const value = readings[key];
-    if (typeof value !== 'number') {
-      continue;
-    }
-    const index = bands.findIndex((limit) => value <= limit);
-    worst = Math.max(worst, index === -1 ? bands.length : index);
-  }
+  const worst = Math.max(
+    -1,
+    ...Object.values(pollutantLevels(readings)).map((level) => AIR_QUALITY_LEVELS.indexOf(level)),
+  );
   return worst === -1 ? null : AIR_QUALITY_LEVELS[worst];
 }
 
@@ -66,15 +78,22 @@ export const FILTER_THRESHOLDS = {
 /**
  * @param {object} gladys SDK instance (publishSceneEvent)
  * @param {object} [options]
- * @param {(serial: string) => void} [options.onLevelChange] e.g. nudge the widget
+ * @param {(serial: string) => void} [options.onLevelChange] the level of the
+ *   device or of one of its pollutants changed: e.g. nudge the widget
  */
 export function createTriggerTracker(gladys, { onLevelChange = () => {} } = {}) {
-  /** serial -> { readings, level, filters: { hepa: below? }, transport } */
+  /** serial -> { readings, levels, level, filters: { hepa: below? }, transport } */
   const devices = new Map();
 
   function stateOf(serial) {
     if (!devices.has(serial)) {
-      devices.set(serial, { readings: {}, level: null, filters: {}, transport: null });
+      devices.set(serial, {
+        readings: {},
+        levels: {},
+        level: null,
+        filters: {},
+        transport: null,
+      });
     }
     return devices.get(serial);
   }
@@ -95,13 +114,22 @@ export function createTriggerTracker(gladys, { onLevelChange = () => {} } = {}) 
       for (const { key, value } of statesFromEnvironment(model, values)) {
         state.readings[key] = value;
       }
+      // A tile changes colour when its own pollutant changes level, even if
+      // the worst one stays the same.
+      const levels = pollutantLevels(state.readings);
+      const changed = Object.keys({ ...levels, ...state.levels }).some(
+        (key) => levels[key] !== state.levels[key],
+      );
+      state.levels = levels;
+      if (changed) {
+        onLevelChange(device.serial);
+      }
       const level = airQualityLevel(state.readings);
       if (level === null || level === state.level) {
         return;
       }
       const previous = state.level;
       state.level = level;
-      onLevelChange(device.serial);
       if (previous === null) {
         return;
       }
@@ -163,6 +191,12 @@ export function createTriggerTracker(gladys, { onLevelChange = () => {} } = {}) 
 
     levelOf(serial) {
       return devices.get(serial)?.level ?? null;
+    },
+
+    /** The last sensor readings and the level of each pollutant. */
+    airOf(serial) {
+      const state = devices.get(serial);
+      return { readings: { ...state?.readings }, levels: { ...state?.levels } };
     },
 
     forget(serial) {

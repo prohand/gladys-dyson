@@ -636,10 +636,35 @@
         "fr": "Qualité de l'air Dyson"
       },
       "description": {
-        "en": "Live air readings, mode, connection and filters of a Dyson device.",
-        "fr": "Mesures de l'air en direct, mode, connexion et filtres d'un appareil Dyson."
+        "en": "Live PM2.5, PM10, VOC, NO2, temperature and humidity of a Dyson device, coloured by level.",
+        "fr": "PM2.5, PM10, COV, NO2, température et humidité d'un appareil Dyson en direct, colorés par niveau."
       },
       "icon": "wind",
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          },
+          "required": true
+        }
+      ],
+      "action_timeout_seconds": 15
+    },
+    {
+      "key": "dyson_controls",
+      "label": {
+        "en": "Dyson controls",
+        "fr": "Commandes Dyson"
+      },
+      "description": {
+        "en": "Speed, mode, oscillation, filters and on/off, auto and speed buttons of a Dyson device.",
+        "fr": "Vitesse, mode, oscillation, filtres et boutons marche, auto et vitesse d'un appareil Dyson."
+      },
+      "icon": "sliders",
       "settings": [
         {
           "key": "device",

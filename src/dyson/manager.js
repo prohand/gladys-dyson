@@ -224,9 +224,10 @@ export function createDysonManager({
     const device = { serial, externalId: deviceIds(gladys, serial).device };
 
     link.on('state', async (values) => {
-      productStates.set(serial, { ...productStates.get(serial), ...values });
+      const state = { ...productStates.get(serial), ...values };
+      productStates.set(serial, state);
       onDeviceChange();
-      await publish(serial, statesFromProductState(model, values));
+      await publish(serial, statesFromProductState(model, values, state));
       await triggers.onProductState(device, values);
     });
     link.on('environment', async (values) => {
@@ -524,6 +525,7 @@ export function createDysonManager({
         status: entry.link.status,
         productState: productStates.get(entry.serial) ?? {},
         level: triggers.levelOf(entry.serial),
+        ...triggers.airOf(entry.serial),
         features,
       };
     },
