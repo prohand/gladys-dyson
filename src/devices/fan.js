@@ -65,7 +65,7 @@ export const FAN_MODES = { OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3, AUTO: 4 };
 // The speed each mode of the list sets, and the speeds each mode shows.
 const MODE_SPEEDS = { [FAN_MODES.LOW]: 1, [FAN_MODES.MEDIUM]: 5, [FAN_MODES.HIGH]: 10 };
 const LOW_MAX_SPEED = 3;
-const MEDIUM_MAX_SPEED = 7;
+const MEDIUM_MAX_SPEED = 6;
 
 // Gladys FAN_AIRFLOW_DIRECTION values: forward is the Dyson front airflow.
 export const AIRFLOW = { FORWARD: 0, REVERSE: 1 };
@@ -304,7 +304,7 @@ export function fanModeOf(model, state) {
     }
   }
   // Manual: the speed picks the entry of the list, so the slider and the
-  // list always agree (1-3 low, 4-7 medium, 8-10 high).
+  // list always agree (1-3 low, 4-6 medium, 7-10 high).
   const speed = readNumber(state.fnsp);
   if (speed === null) {
     return null;

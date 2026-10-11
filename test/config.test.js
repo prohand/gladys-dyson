@@ -1,6 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_CONFIG, normalizeConfig, parseDeviceHosts } from '../src/config.js';
+import {
+  DEFAULT_CONFIG,
+  normalizeConfig,
+  parseBareHosts,
+  parseDeviceHosts,
+} from '../src/config.js';
 
 test('an empty configuration gets the defaults', () => {
   const config = normalizeConfig();
@@ -57,4 +62,13 @@ test('device addresses are read as serial=host pairs', () => {
   );
   assert.equal(parseDeviceHosts('').size, 0);
   assert.equal(parseDeviceHosts(undefined).size, 0);
+});
+
+test('addresses typed without a serial are kept apart', () => {
+  assert.deepEqual(parseBareHosts(' 192.168.1.20 '), ['192.168.1.20']);
+  assert.deepEqual(parseBareHosts('dyson.lan, NK6-EU-MHA0000A=192.168.1.20'), ['dyson.lan']);
+  assert.deepEqual(parseBareHosts('NK6-EU-MHA0000A'), [], 'a serial alone is not an address');
+  assert.deepEqual(parseBareHosts('$(rm) 1.2.3.4;x'), ['1.2.3.4']);
+  assert.deepEqual(normalizeConfig({ device_hosts: '10.0.0.5' }).bareHosts, ['10.0.0.5']);
+  assert.equal(normalizeConfig({ device_hosts: '10.0.0.5' }).hosts.size, 0);
 });

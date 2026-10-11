@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDysonManager } from '../src/dyson/manager.js';
+import { ANSWER_TIMEOUT_MS, createDysonManager } from '../src/dyson/manager.js';
 import { FEATURES } from '../src/devices/fan.js';
 import { createFakeGladys } from './helpers/fakeGladys.js';
 import { createFakeMqtt, createFakeTimers, flush } from './helpers/fakeMqtt.js';
@@ -152,6 +152,36 @@ test('no address: the device goes through the cloud, flagged degraded', async ()
   assert.match(entry.message.fr, /Adresses des appareils/);
 });
 
+test('a bare address is used when the account has a single fan', async () => {
+  const context = setup({ devices: [PURE_COOL, ROBOT] });
+  await signIn(context, { ...ACCOUNT_CONFIG, device_hosts: ' 192.168.1.42 ' });
+
+  assert.equal(context.mqtt.clients[0].url, 'mqtt://192.168.1.42:1883');
+  assert.equal(context.gladys.transports.at(-1).transport, 'local');
+});
+
+test('a bare address with several fans: cloud, the message names the serial to type', async () => {
+  const context = setup({ devices: [PURE_COOL, HOT_COOL_LINK] });
+  await signIn(context, { ...ACCOUNT_CONFIG, device_hosts: '192.168.1.42' });
+
+  assert.ok(context.mqtt.clients.every((c) => !c.url.startsWith('mqtt://')));
+  const entry = context.gladys.transports.find(
+    (t) => t.external_id === 'ext:dyson:fan:NK6-EU-MHA0000A',
+  );
+  assert.equal(entry.degraded, true);
+  assert.match(entry.message.en, /add NK6-EU-MHA0000A=<IP> to the Device addresses setting/);
+  assert.match(entry.message.fr, /ajoutez NK6-EU-MHA0000A=<IP> au réglage Adresses des appareils/);
+});
+
+test('a bare address typed later moves the single fan to local', async () => {
+  const context = setup();
+  await signIn(context);
+
+  await context.manager.updateConfig({ ...ACCOUNT_CONFIG, device_hosts: '192.168.1.42' });
+
+  assert.equal(context.gladys.transports.at(-1).transport, 'local');
+});
+
 test('an address typed later moves the device to local', async () => {
   const context = setup();
   await signIn(context);
@@ -297,6 +327,30 @@ test('sign out: links closed, saved data deleted', async () => {
   assert.equal(context.gladys.lastStatus().connected, false);
 });
 
+test('every start publishes the device list: the Discover tab sees a new version', async () => {
+  const store = createMemoryStore({ email: 'me@example.com', token: 'tok', devices: [] });
+  const context = setup({ store, devices: [PURE_COOL] });
+
+  await context.manager.start(ACCOUNT_CONFIG);
+
+  assert.deepEqual(
+    context.gladys.discovered.map((d) => d.external_id),
+    ['ext:dyson:fan:NK6-EU-MHA0000A'],
+  );
+  assert.ok(
+    context.gladys.discovered[0].features.some((f) => f.external_id.endsWith(':fan-mode')),
+    'with the features of this version',
+  );
+});
+
+test('a fresh install publishes no empty device list at start', async () => {
+  const { gladys, manager } = setup();
+  gladys.discovered = null;
+  await manager.start({});
+
+  assert.equal(gladys.discovered, null, 'nothing published');
+});
+
 test('scan publishes the devices of the account', async () => {
   const store = createMemoryStore({ email: 'me@example.com', token: 'tok', devices: [] });
   const context = setup({ store, devices: [PURE_COOL] });
@@ -370,4 +424,49 @@ test('a lost connection fires the connection_changed trigger', async () => {
       },
     },
   ]);
+});
+
+test('a widget command waits for the device answer, from the state known at the tap', async () => {
+  const context = setup();
+  await signIn(context, LOCAL_CONFIG);
+  const id = 'ext:dyson:fan:NK6-EU-MHA0000A';
+  const [client] = context.mqtt.clients;
+  client.receive({
+    msg: 'CURRENT-STATE',
+    'product-state': { fpwr: 'ON', auto: 'OFF', fnsp: '0004', oson: 'OION' },
+  });
+  await flush();
+
+  let done = false;
+  const pending = context.manager
+    .command(id, FEATURES.SPEED, (state) => Number(state.fnsp) + 1)
+    .then((result) => {
+      done = result;
+    });
+  await flush();
+  assert.deepEqual(client.published.at(-1).payload.data, {
+    fpwr: 'ON',
+    auto: 'OFF',
+    fnsp: '0005',
+  });
+  assert.equal(done, false, 'still waiting for the device');
+
+  client.receive({ msg: 'STATE-CHANGE', 'product-state': { fnsp: ['0004', '0005'] } });
+  await pending;
+  assert.equal(done, true);
+
+  // A device that does not answer: the wait ends after a few seconds.
+  const silent = context.manager.command(id, FEATURES.OSCILLATION, () => 0);
+  await flush();
+  assert.deepEqual(client.published.at(-1).payload.data, { oson: 'OIOF' }, 'its dialect');
+  context.timers.runTimeouts(ANSWER_TIMEOUT_MS);
+  assert.equal(await silent, true);
+
+  const before = client.published.length;
+  assert.equal(await context.manager.command(id, FEATURES.SPEED, () => null), true);
+  assert.equal(client.published.length, before, 'nothing to change: nothing sent');
+
+  client.drop();
+  assert.equal(await context.manager.command(id, FEATURES.POWER, () => 1), false);
+  assert.equal(await context.manager.command('nope', FEATURES.POWER, () => 1), false);
 });

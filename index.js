@@ -18,13 +18,20 @@ import { GladysIntegration, logger } from '@gladysassistant/integration-sdk';
 import { createDysonManager } from './src/dyson/manager.js';
 import { createAccountStore } from './src/dyson/store.js';
 import { SCENE_ACTIONS } from './src/capabilities/scenes.js';
-import { WIDGETS, WIDGET_CONTENT, handleWidgetAction } from './src/capabilities/widget.js';
+import {
+  WIDGETS,
+  WIDGET_CONTENT,
+  createWidgetNudger,
+  handleWidgetAction,
+} from './src/capabilities/widget.js';
 
 const gladys = new GladysIntegration();
 
+// Paced under the core's limit, so a nudge is held rather than dropped.
+const nudger = createWidgetNudger((key) => gladys.requestWidgetRefresh(key));
 function refreshWidgets() {
   for (const key of WIDGETS) {
-    gladys.requestWidgetRefresh(key);
+    nudger.nudge(key);
   }
 }
 const dyson = createDysonManager({
@@ -112,6 +119,7 @@ process.on('unhandledRejection', (err) => {
 gladys.handleShutdown((signal) => {
   logger.info(`Received ${signal} -> closing the Dyson connections`);
   dyson.stop();
+  nudger.stop();
 });
 
 // --- Startup -----------------------------------------------------------------

@@ -78,8 +78,8 @@
         "fr": "Adresses des appareils (local)"
       },
       "description": {
-        "en": "For the local connection: serial=IP of each device, separated by commas. Without it: Dyson cloud.",
-        "fr": "Pour la connexion locale : numéro de série=IP de chaque appareil, séparés par des virgules. Sans : cloud Dyson."
+        "en": "For the local connection: serial=IP of each device, separated by commas (the IP alone with a single device). Without it: Dyson cloud.",
+        "fr": "Pour la connexion locale : numéro de série=IP de chaque appareil, séparés par des virgules (l'IP seule avec un seul appareil). Sans : cloud Dyson."
       },
       "placeholder": {
         "en": "e.g. NK6-EU-MHA0000A=192.168.1.20",
@@ -661,8 +661,8 @@
         "fr": "Commandes Dyson"
       },
       "description": {
-        "en": "Speed, mode, oscillation, filters and on/off, auto and speed buttons of a Dyson device.",
-        "fr": "Vitesse, mode, oscillation, filtres et boutons marche, auto et vitesse d'un appareil Dyson."
+        "en": "A Dyson remote: speed, mode, settings, filters, and on/off, auto, speed or settings buttons.",
+        "fr": "Télécommande Dyson : vitesse, mode, réglages, filtres, et boutons marche, auto, vitesse ou réglages."
       },
       "icon": "sliders",
       "settings": [
@@ -675,6 +675,32 @@
             "fr": "Appareil"
           },
           "required": true
+        },
+        {
+          "key": "buttons",
+          "type": "select",
+          "label": {
+            "en": "Buttons",
+            "fr": "Boutons"
+          },
+          "options": [
+            {
+              "value": "speed",
+              "label": {
+                "en": "On/off, auto, speed - and +",
+                "fr": "Marche, auto, vitesse - et +"
+              }
+            },
+            {
+              "value": "settings",
+              "label": {
+                "en": "On/off, oscillation, night mode, airflow",
+                "fr": "Marche, oscillation, mode nuit, flux d'air"
+              }
+            }
+          ],
+          "required": false,
+          "default": "speed"
         }
       ],
       "action_timeout_seconds": 15

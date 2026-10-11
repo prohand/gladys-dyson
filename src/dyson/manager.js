@@ -26,6 +26,9 @@ const logger = createLogger({ name: 'dyson' });
 
 // A code e-mailed by Dyson is valid for a short while only.
 const CHALLENGE_TTL_MS = 30 * 60 * 1000;
+// How long a widget button waits for the device's answer: the core refetches
+// the widget when the action returns, and it should show the new state.
+export const ANSWER_TIMEOUT_MS = 4000;
 
 const STATUS_MESSAGES = {
   noAccount: {
@@ -121,6 +124,26 @@ export function createDysonManager({
     }
   }
 
+  // The core keeps the discovered list in memory only, from the last publish:
+  // a new version must publish its list at every connection, or the Discover
+  // tab keeps showing the previous version's features with no "Update" button.
+  async function publishDiscovered() {
+    if (!account.token && (account.devices ?? []).length === 0) {
+      return;
+    }
+    try {
+      await gladys.publishDiscoveredDevices(discoveredDevices());
+    } catch (err) {
+      logger.warn(`Discovered devices not published: ${err.message}`);
+    }
+  }
+
+  function discoveredDevices() {
+    return supportedDevices().map(({ dysonDevice, model }) =>
+      buildDevice(gladys, dysonDevice, model),
+    );
+  }
+
   async function reportStatus() {
     let connected = true;
     let message;
@@ -143,8 +166,17 @@ export function createDysonManager({
   // (`_dyson_mqtt._tcp`), but the store refuses that service name in the
   // manifest `network_discovery` (no "_" allowed inside it), so the mediated
   // scan cannot be declared: without an address, the cloud is the path.
-  function hostOf(serial) {
-    return config.hosts.get(serial) ?? null;
+  // A bare address (no "serial=") is what people type with one device: it is
+  // used when the account has a single fan, where it cannot be the wrong one.
+  function hostOf(serial, from = config) {
+    const typed = from.hosts.get(serial);
+    if (typed) {
+      return typed;
+    }
+    if (from.bareHosts.length === 1 && supportedDevices().length === 1) {
+      return from.bareHosts[0];
+    }
+    return null;
   }
 
   // --- links ---------------------------------------------------------------
@@ -288,6 +320,24 @@ export function createDysonManager({
     productStates.clear();
   }
 
+  /** The next product state the link reports, or nothing after a while. */
+  function waitForState(link) {
+    let cancel;
+    const promise = new Promise((resolve) => {
+      const finish = () => {
+        timers.clearTimeout(timer);
+        link.off('state', finish);
+        resolve();
+      };
+      const timer = timers.setTimeout(finish, ANSWER_TIMEOUT_MS);
+      // Registered after the manager's own listener: the known state is
+      // already updated when this one runs.
+      link.on('state', finish);
+      cancel = finish;
+    });
+    return { promise, cancel };
+  }
+
   function findLinkByDevice(device) {
     return findLink(device.external_id);
   }
@@ -309,6 +359,7 @@ export function createDysonManager({
       await load();
       await this.updateConfig(rawConfig, { initial: true });
       await refreshDevices();
+      await publishDiscovered();
       published.clear();
       await syncLinks();
       await gladys.publishTransports(this.transportEntries()).catch(() => {});
@@ -338,7 +389,7 @@ export function createDysonManager({
         link.setRefreshInterval(config.refresh_interval);
         const routeChanged =
           link.preferLocal !== config.preferLocal ||
-          previous.hosts.get(dysonDevice.serial) !== config.hosts.get(dysonDevice.serial);
+          hostOf(dysonDevice.serial, previous) !== hostOf(dysonDevice.serial);
         link.setPreferLocal(config.preferLocal);
         if (routeChanged) {
           await link.reconnect();
@@ -465,8 +516,10 @@ export function createDysonManager({
           cloud: { en: 'Dyson cloud', fr: 'cloud Dyson' },
           unreachable: { en: 'unreachable', fr: 'injoignable' },
         }[transport];
-        lines.en.push(`${name}: ${label.en}${degraded ? ' (fallback)' : ''}`);
-        lines.fr.push(`${name} : ${label.fr}${degraded ? ' (secours)' : ''}`);
+        // The reason says what to fix (the address to type, a refused session).
+        const { message } = entry.link.status;
+        lines.en.push(`${name}: ${label.en}${degraded ? ` (fallback). ${message.en}` : ''}`);
+        lines.fr.push(`${name} : ${label.fr}${degraded ? ` (secours). ${message.fr}` : ''}`);
       }
       return { en: lines.en.join(' · '), fr: lines.fr.join(' · ') };
     },
@@ -479,11 +532,7 @@ export function createDysonManager({
       await reportStatus();
     },
 
-    discoveredDevices() {
-      return supportedDevices().map(({ dysonDevice, model }) =>
-        buildDevice(gladys, dysonDevice, model),
-      );
-    },
+    discoveredDevices,
 
     async setValue(device, feature, value) {
       const entry = findLinkByDevice(device);
@@ -548,6 +597,40 @@ export function createDysonManager({
         logger.warn(`${entry.serial}: order not sent: ${err.message}`);
         return { sent: false, transport: entry.link.status.transport };
       }
+    },
+
+    /**
+     * A widget button: change one feature, then wait (a few seconds at most)
+     * for the device to answer, so the content refetched after the action
+     * shows the new state. The value comes from the state known at the tap,
+     * never from the content shown, which may be older.
+     * @param {string} externalId device external id
+     * @param {string} key a FEATURES value
+     * @param {(state: object) => number|null} valueOf null: nothing to change
+     * @returns {Promise<boolean>} false when the device is unreachable
+     */
+    async command(externalId, key, valueOf) {
+      const entry = findLink(externalId);
+      if (!entry?.link.connected) {
+        return false;
+      }
+      const state = productStates.get(entry.serial) ?? {};
+      const value = valueOf(state);
+      if (value === null || value === undefined) {
+        return true;
+      }
+      const data = commandFor(entry.model, key, value, state);
+      const answer = waitForState(entry.link);
+      logger.info(`${entry.serial} <- ${JSON.stringify(data)}`);
+      try {
+        await entry.link.send(data);
+      } catch (err) {
+        answer.cancel();
+        logger.warn(`${entry.serial}: order not sent: ${err.message}`);
+        return false;
+      }
+      await answer.promise;
+      return true;
     },
 
     /** Ask the device for its state and sensor data now. */
