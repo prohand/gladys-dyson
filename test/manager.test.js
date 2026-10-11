@@ -215,6 +215,36 @@ test('device states are published once, and only for known features', async () =
   ]);
 });
 
+test('the oscillation angle goes as a text state, and a chosen angle as a range', async () => {
+  const context = setup();
+  await signIn(context);
+  const client = context.mqtt.clients[0];
+  const id = `ext:dyson:fan:NK6-EU-MHA0000A:${FEATURES.OSCILLATION_ANGLE}`;
+
+  client.receive({
+    msg: 'CURRENT-STATE',
+    'product-state': { oson: 'ON', ancp: 'CUST', osal: '0198', osau: '0243' },
+  });
+  await flush();
+  client.receive({ msg: 'STATE-CHANGE', 'product-state': { osau: ['0243', '0243'] } });
+  await flush();
+  assert.deepEqual(
+    context.gladys.published.filter((s) => s.featureExternalId === id),
+    [{ featureExternalId: id, text: '45' }],
+    'once',
+  );
+
+  const [device] = context.gladys.devices;
+  const feature = device.features.find((f) => f.external_id === id);
+  await context.manager.setValue(device, feature, '90');
+  assert.deepEqual(client.published.at(-1).payload.data, {
+    oson: 'ON',
+    ancp: 'CUST',
+    osal: '0176',
+    osau: '0266',
+  });
+});
+
 test('a Gladys command is sent to the device, in its dialect', async () => {
   const context = setup({ devices: [HOT_COOL_LINK] });
   await signIn(context);

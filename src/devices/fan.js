@@ -6,10 +6,12 @@
 // heating switch and target temperature, a humidifier the humidification
 // switch, the 2018+ models the particulate / NO2 / VOC sensors.
 //
-// The fan controls use the Gladys FAN types, like the Matter fans: the mode
-// list (off / low / medium / high / auto), oscillation as a rock setting,
-// night mode as the "sleep" wind setting, the airflow direction. Gladys draws
-// them with their own icon and labels.
+// The fan controls use the Gladys FAN types where Gladys has a list for them,
+// like the Matter fans: the mode list (off / low / medium / high / auto) and
+// the airflow direction. Oscillation and night mode stay on/off switches: the
+// fan rock / wind settings render as two-entry lists, clumsier than a toggle.
+// The oscillation angle (45° / 90° / 180° / 350°, like the Dyson app) is a
+// `text` / `select` list, the only Gladys list with labels of our own.
 //
 // Controls have `has_feedback: true`: a command only SENDS the change, and the
 // STATE-CHANGE the device answers with is what Gladys displays. A command the
@@ -53,6 +55,7 @@ export const FEATURES = {
   FILTER: 'filter',
   FAN_MODE: 'fan-mode',
   AIRFLOW_DIRECTION: 'airflow-direction',
+  OSCILLATION_ANGLE: 'oscillation-angle',
 };
 
 export const SPEED_MIN = 1;
@@ -69,6 +72,14 @@ const MEDIUM_MAX_SPEED = 6;
 
 // Gladys FAN_AIRFLOW_DIRECTION values: forward is the Dyson front airflow.
 export const AIRFLOW = { FORWARD: 0, REVERSE: 1 };
+
+// The oscillation widths of the Dyson app, in degrees. The option values are
+// stored by Gladys and the scenes: never change one. The labels are one string
+// for every language, hence no "off" entry: the oscillation switch does that.
+export const OSCILLATION_ANGLES = [45, 90, 180, 350];
+// The device takes angles from 5 to 355 (180 is straight ahead).
+const ANGLE_MIN = 5;
+const ANGLE_MAX = 355;
 
 const control = (name, category, type, min, max, extra = {}) => ({
   name,
@@ -95,8 +106,6 @@ const sensor = (name, category, type, unit, min, max) => ({
 });
 
 const binary = (name) => control(name, CATEGORIES.SWITCH, TYPES.SWITCH.BINARY, 0, 1);
-// 0 / 1 like a switch: rock setting 1 is left-right, wind setting 1 is sleep.
-const fanSetting = (name, type) => control(name, CATEGORIES.FAN, type, 0, 1);
 
 // Every feature declares min/max: Gladys stores them NOT NULL.
 const DEFINITIONS = {
@@ -106,8 +115,17 @@ const DEFINITIONS = {
   [FEATURES.AUTO]: () => binary('Auto mode'),
   [FEATURES.FAN_MODE]: () =>
     control('Mode', CATEGORIES.FAN, TYPES.FAN.MODE, FAN_MODES.OFF, FAN_MODES.AUTO),
-  [FEATURES.OSCILLATION]: () => fanSetting('Oscillation', TYPES.FAN.ROCK_SETTING),
-  [FEATURES.NIGHT_MODE]: () => fanSetting('Night mode', TYPES.FAN.WIND_SETTING),
+  [FEATURES.OSCILLATION]: () => binary('Oscillation'),
+  [FEATURES.NIGHT_MODE]: () => binary('Night mode'),
+  // A text state has no history in Gladys.
+  [FEATURES.OSCILLATION_ANGLE]: () =>
+    control('Oscillation angle', CATEGORIES.TEXT, TYPES.TEXT.SELECT, 0, 350, {
+      keep_history: false,
+      supported_options: OSCILLATION_ANGLES.map((angle) => ({
+        value: String(angle),
+        label: `${angle}°`,
+      })),
+    }),
   [FEATURES.AIRFLOW_DIRECTION]: () =>
     control(
       'Airflow direction',
@@ -211,7 +229,11 @@ const DEFINITIONS = {
  */
 export function featureKeys(model) {
   const keys = [FEATURES.POWER, FEATURES.FAN_MODE, FEATURES.SPEED, FEATURES.AUTO];
-  keys.push(FEATURES.OSCILLATION, FEATURES.NIGHT_MODE);
+  keys.push(FEATURES.OSCILLATION);
+  if (model.angles) {
+    keys.push(FEATURES.OSCILLATION_ANGLE);
+  }
+  keys.push(FEATURES.NIGHT_MODE);
   if (model.airflow) {
     keys.push(FEATURES.AIRFLOW_DIRECTION);
   }
@@ -320,12 +342,50 @@ export function fanModeOf(model, state) {
 }
 
 /**
+ * The oscillation width the device is set to, as an option value.
+ * @param {object} state flat product state, as complete as known
+ * @returns {string|null} "45", "90", "180", "350", or null for another width
+ */
+export function oscillationAngleOf(state) {
+  // The remote, the buttons and the 2021+ app keep the preset in `ancp` and
+  // leave an old range in osal / osau: the preset wins.
+  const preset = readNumber(state.ancp);
+  if (OSCILLATION_ANGLES.includes(preset)) {
+    return String(preset);
+  }
+  const low = readNumber(state.osal);
+  const high = readNumber(state.osau);
+  if (low === null || high === null) {
+    return null;
+  }
+  // 5..355 is the app's 350°; a few degrees off is still the preset.
+  const angle = OSCILLATION_ANGLES.find((width) => Math.abs(high - low - width) <= 3);
+  return angle === undefined ? null : String(angle);
+}
+
+/**
+ * The STATE-SET of an oscillation width: a range of that width around the
+ * current centre, the way the Dyson app sets a preset on a 438. `ancp` CUST
+ * makes the device use osal / osau. Choosing a width starts the oscillation.
+ */
+function oscillationAngleCommand(width, current) {
+  const low = readNumber(current.osal);
+  const high = readNumber(current.osau);
+  const centre = low === null || high === null ? 180 : Math.round((low + high) / 2);
+  let from = Math.round(centre - width / 2);
+  from = Math.min(ANGLE_MAX - width, Math.max(ANGLE_MIN, from));
+  const oson = current.oson === 'OION' || current.oson === 'OIOF' ? 'OION' : 'ON';
+  return { oson, ancp: 'CUST', osal: pad4(from), osau: pad4(from + width) };
+}
+
+/**
  * Feature values carried by a product state message.
  * @param {object} model
  * @param {object} values flat product state (`fpwr`, `fnsp`...)
  * @param {object} [state] every value known so far, `values` included: the
  *   fan mode depends on several keys a STATE-CHANGE may not all repeat
- * @returns {Array<{key: string, value: number}>}
+ * @returns {Array<{key: string, value?: number, text?: string}>} `text` for a
+ *   text feature (the oscillation angle)
  */
 export function statesFromProductState(model, values, state = values) {
   const states = [];
@@ -360,6 +420,12 @@ export function statesFromProductState(model, values, state = values) {
   );
   add(FEATURES.NIGHT_MODE, onOff(values.nmod));
   add(FEATURES.FAN_MODE, fanModeOf(model, state));
+  if (model.angles && ['ancp', 'osal', 'osau'].some((key) => values[key] !== undefined)) {
+    const angle = oscillationAngleOf(state);
+    if (angle !== null) {
+      states.push({ key: FEATURES.OSCILLATION_ANGLE, text: angle });
+    }
+  }
   if (model.airflow) {
     add(
       FEATURES.AIRFLOW_DIRECTION,
@@ -376,6 +442,18 @@ export function statesFromProductState(model, values, state = values) {
   return states;
 }
 
+// The MyDyson app shows p25r / p10r / hchr. pm25 / pm10 / hcho are older
+// fields that read differently (pm25/pm10 are capped at 149, their PM10 often
+// below PM2.5): used only by a firmware without the new ones. Chosen by
+// presence: "INIT" in the new field is no reading, not a reason to fall back.
+const pick = (values, key, legacy) => (values[key] !== undefined ? values[key] : values[legacy]);
+
+// VOC / NO2: the device sends ten times the index, the app shows it truncated.
+function appIndex(raw) {
+  const value = readNumber(raw);
+  return value === null ? null : Math.floor(value / 10);
+}
+
 /**
  * Feature values carried by a sensor data message.
  * @returns {Array<{key: string, value: number}>}
@@ -387,16 +465,16 @@ export function statesFromEnvironment(model, values) {
   ];
   if (model.protocol === 'pure') {
     readings.push(
-      [FEATURES.PM25, readNumber(values.pm25)],
-      [FEATURES.PM10, readNumber(values.pm10)],
-      [FEATURES.VOC, readNumber(values.va10, 10)],
-      [FEATURES.NO2, readNumber(values.noxl, 10)],
+      [FEATURES.PM25, readNumber(pick(values, 'p25r', 'pm25'))],
+      [FEATURES.PM10, readNumber(pick(values, 'p10r', 'pm10'))],
+      [FEATURES.VOC, appIndex(values.va10)],
+      [FEATURES.NO2, appIndex(values.noxl)],
     );
   } else {
     readings.push([FEATURES.VOC, readNumber(values.vact)]);
   }
   if (model.formaldehyde) {
-    readings.push([FEATURES.FORMALDEHYDE, readNumber(values.hcho, 1000)]);
+    readings.push([FEATURES.FORMALDEHYDE, readNumber(pick(values, 'hchr', 'hcho'), 1000)]);
   }
   return readings.filter(([, value]) => value !== null).map(([key, value]) => ({ key, value }));
 }
@@ -405,7 +483,7 @@ export function statesFromEnvironment(model, values) {
  * The STATE-SET data for a Gladys command.
  * @param {object} model
  * @param {string} key a FEATURES value
- * @param {number} value value sent by Gladys
+ * @param {number|string} value value sent by Gladys (a string for a text feature)
  * @param {object} [current] last product state known (to speak the device's dialect)
  * @returns {object} STATE-SET `data`
  */
@@ -444,6 +522,13 @@ export function commandFor(model, key, value, current = {}) {
       return { oson: on ? 'ON' : 'OFF' };
     case FEATURES.NIGHT_MODE:
       return { nmod: on ? 'ON' : 'OFF' };
+    case FEATURES.OSCILLATION_ANGLE: {
+      const width = Number(value);
+      if (model.angles && OSCILLATION_ANGLES.includes(width)) {
+        return oscillationAngleCommand(width, current);
+      }
+      break;
+    }
     case FEATURES.AIRFLOW_DIRECTION:
       if (model.airflow) {
         return { fdir: Number(value) === AIRFLOW.REVERSE ? 'OFF' : 'ON' };

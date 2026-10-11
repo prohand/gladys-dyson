@@ -87,6 +87,7 @@ test('product types: families, revisions, and what is not a fan', () => {
     heater: false,
     humidifier: false,
     airflow: true,
+    angles: true,
     formaldehyde: true,
   });
   assert.equal(describeModel('455').protocol, 'link');
@@ -98,6 +99,13 @@ test('product types: families, revisions, and what is not a fan', () => {
   assert.equal(describeModel('358').airflow, false);
   assert.equal(describeModel('664').airflow, false);
   assert.equal(describeModel('475').airflow, false);
+  // Oscillation range: the towers only.
+  assert.equal(describeModel('438').angles, true);
+  assert.equal(describeModel('527E').angles, true);
+  assert.equal(describeModel('520').angles, false);
+  assert.equal(describeModel('358').angles, false);
+  assert.equal(describeModel('664').angles, false);
+  assert.equal(describeModel('475').angles, false);
   // Unknown revision of a known family.
   assert.equal(describeModel('664B').name, 'Purifier Big+Quiet');
   // Robot vacuum, light, nothing.

@@ -65,6 +65,7 @@ Selon le modèle :
 | Vitesse (1 à 10)                        | tous                                        |
 | Mode auto                               | tous                                        |
 | Oscillation                             | tous                                        |
+| Angle d'oscillation (45°, 90°, 180°…)   | tours Pure Cool, Purifier Cool, Hot+Cool    |
 | Mode nuit                               | tous                                        |
 | Sens du flux d'air (avant / arrière)    | Pure Cool, Purifier Cool, Hot+Cool          |
 | Chauffage + consigne (°C)               | Hot+Cool                                    |
@@ -75,7 +76,9 @@ Selon le modèle :
 | Formaldéhyde (mg/m³)                    | modèles « Formaldehyde » (suffixe K)        |
 | Usure des filtres                       | % (HEPA, charbon), heures sur « Link »      |
 
-Les indices COV et NO2 sont ceux de Dyson : de 0 (air propre) à 10.
+Les valeurs sont celles de l'application MyDyson. Les indices COV et NO2 sont
+ceux de Dyson : de 0 (air propre) à 10, en nombres entiers comme dans
+l'application.
 
 Choisir une vitesse allume l'appareil et coupe le mode auto, comme sur la
 télécommande. En mode auto, aucune vitesse n'est affichée.
@@ -83,12 +86,19 @@ télécommande. En mode auto, aucune vitesse n'est affichée.
 La **liste des modes** marche comme pour les ventilateurs Matter : Arrêt,
 Faible (vitesse 1), Moyen (vitesse 5), Fort (vitesse 10) et Auto. Elle suit la
 vitesse : la liste et le curseur sont toujours d'accord. Les vitesses 1 à 3
-affichent Faible, 4 à 6 Moyen, 7 à 10 Fort. L'oscillation, le mode nuit et le
-sens du flux d'air sont aussi des listes, chacune avec son icône.
+affichent Faible, 4 à 6 Moyen, 7 à 10 Fort. Le sens du flux d'air est aussi une liste.
+L'oscillation et le mode nuit sont des interrupteurs marche / arrêt.
+
+La liste **Angle d'oscillation** propose les largeurs de l'application Dyson :
+45°, 90°, 180° et 350°. En choisir une lance l'oscillation, autour de la
+direction où pointe l'appareil. Pour l'arrêter, utilisez l'interrupteur
+Oscillation. Une largeur réglée autrement (autre application) n'affiche
+aucune entrée dans la liste.
 
 **Appareil ajouté avant cette version ?** Ouvrez l'onglet **Découverte** et
-cliquez sur **Mettre à jour** sur l'appareil pour obtenir la liste des modes
-et le sens du flux d'air. L'historique et les scènes sont gardés. Le bouton
+cliquez sur **Mettre à jour** sur l'appareil pour obtenir les dernières
+fonctions (angle d'oscillation, interrupteurs, icônes PM et humidité).
+L'historique et les scènes sont gardés. Le bouton
 apparaît dès que l'intégration a redémarré dans sa nouvelle version.
 
 L'état affiché dans Gladys est celui que l'appareil **confirme** : un ordre
@@ -147,9 +157,11 @@ des quatre polluants.
 
 **Commandes Dyson** :
 
-- une jauge de vitesse en direct ;
-- l'état : mode (par exemple « Moyen · vitesse 5 »), oscillation, mode nuit,
-  flux d'air, chauffage, connexion, filtres, minuterie ;
+- trois tuiles : le ventilateur (éteint, auto, ou une jauge de vitesse en
+  direct), le niveau de qualité de l'air (en couleur) et le PM2.5 en direct ;
+- l'état : oscillation (avec son angle), mode nuit, flux d'air, chauffage,
+  connexion, filtres, minuterie. Avec les boutons d'oscillation, les lignes
+  oscillation et mode nuit sont retirées : les boutons les montrent ;
 - quatre boutons, au choix dans le réglage **Boutons** du widget :
   - **Marche, auto, vitesse - et +** (par défaut) : allumer / éteindre, mode
     auto (ou retour en manuel), vitesse - et vitesse + ;
