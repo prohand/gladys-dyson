@@ -50,6 +50,28 @@ test('a device without a name in the account is named after its model', () => {
   assert.equal(device.name, 'Dyson Pure Hot+Cool Link');
 });
 
+test('feature names in the language of the account country, English by default', () => {
+  const gladys = createFakeGladys();
+  const names = (language) =>
+    Object.fromEntries(
+      buildDevice(gladys, { serial: 'S', name: 'x' }, PURE, language).features.map((f) => [
+        featureKeyOf(gladys, 'S', f.external_id),
+        f.name,
+      ]),
+    );
+
+  const fr = names('fr');
+  assert.equal(fr['night-mode'], 'Mode nuit');
+  assert.equal(fr['oscillation-angle'], "Angle d'oscillation");
+  assert.equal(fr['hepa-filter'], 'Durée de vie filtre HEPA');
+  assert.equal(names()['night-mode'], 'Night mode');
+  assert.equal(names('de')['night-mode'], 'Night mode');
+  for (const [key, name] of [...Object.entries(fr), ...Object.entries(names('en'))]) {
+    assert.equal(typeof name, 'string', key);
+    assert.ok(name.length > 0, key);
+  }
+});
+
 test('every feature declares min and max, controls have feedback', () => {
   const gladys = createFakeGladys();
   for (const model of [PURE, FORMALDEHYDE, HOT_COOL, HUMIDIFY, LINK_HEATER]) {

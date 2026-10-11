@@ -4,14 +4,15 @@
 //
 //   dyson_air       the air: live tiles bound to the device features (PM2.5,
 //                   PM10, VOC, NO2, temperature, humidity), each coloured by
-//                   its pollutant level, the overall air quality level, and a
+//                   its pollutant level, a status list (overall air quality
+//                   level, connection, filters: they clean the air) and a
 //                   "Refresh" button;
-//   dyson_controls  the fan, as a remote: three tiles (the fan: off, auto or
-//                   a live speed gauge; the air quality; the PM2.5), a status
-//                   list (oscillation, night mode, airflow, connection,
-//                   filters, sleep timer) and four buttons, chosen in the
-//                   settings: on/off, auto, speed - and speed +; or on/off,
-//                   oscillation, night mode and airflow.
+//   dyson_controls  the fan, as a remote, controls only: one tile (the fan:
+//                   off, auto or a live speed gauge), a status list
+//                   (oscillation, night mode, airflow, connection, sleep
+//                   timer) and four buttons, chosen in the settings: on/off,
+//                   auto, speed - and speed +; or on/off, oscillation, night
+//                   mode and airflow.
 //
 // The tiles and the gauge follow the published states. The rest (colours,
 // status rows, buttons) is cached by the core until `ttl_seconds`; the manager
@@ -82,8 +83,6 @@ const LEVELS = {
   poor: { value: { en: 'Poor', fr: 'Mauvaise' }, color: WIDGET_COLORS.WARNING },
   very_poor: { value: { en: 'Very poor', fr: 'Très mauvaise' }, color: WIDGET_COLORS.DANGER },
 };
-// A tile value holds 12 characters at most.
-const TILE_LEVEL_NAMES = { very_poor: { en: 'Very poor', fr: 'Très mauv.' } };
 
 const TRANSPORTS = {
   local: { value: { en: 'Local', fr: 'Locale' }, color: WIDGET_COLORS.SUCCESS },
@@ -152,19 +151,6 @@ function fanTile(model, state, features) {
     };
   }
   return null;
-}
-
-function airQualityTile(level) {
-  if (!LEVELS[level]) {
-    return null;
-  }
-  return {
-    type: 'value',
-    label: { en: 'Air quality', fr: "Qualité de l'air" },
-    icon: 'wind',
-    value: TILE_LEVEL_NAMES[level] ?? LEVELS[level].value,
-    color: LEVELS[level].color,
-  };
 }
 
 /** ON / OFF row, or nothing when the device did not say. */
@@ -368,7 +354,11 @@ export function buildAirContent(dyson, { settings }) {
     });
   }
   items.push(connectionItem(status));
-  components.push({ type: 'status', items });
+  // The filters clean the air: their life belongs here, not with the controls.
+  if (status.transport !== 'unreachable') {
+    items.push(...filterItems(device.model, device.productState));
+  }
+  components.push({ type: 'status', items: items.slice(0, 10) });
   components.push(refreshButton(settings.device));
 
   return { ttl_seconds: 120, components };
@@ -516,27 +506,17 @@ export function buildControlsContent(dyson, { settings }) {
   if (!device) {
     return content;
   }
-  const { model, productState: state, features, status, level } = device;
+  const { model, productState: state, features, status } = device;
   const reachable = status.transport !== 'unreachable';
   const settingsButtons = settings.buttons === BUTTON_SETS.SETTINGS;
   const components = [];
 
-  // Three tiles at most: with the status list and four buttons, the budget
-  // of 8 components is full.
+  // The fan tile only: the air readings belong to the air widget.
   if (reachable) {
-    const tiles = [fanTile(model, state, features), airQualityTile(level)];
-    if (features[FEATURES.PM25]) {
-      tiles.push({
-        type: 'value',
-        label: { en: 'PM2.5', fr: 'PM2.5' },
-        icon: 'wind',
-        device_feature: features[FEATURES.PM25],
-        ...(LEVELS[device.levels?.[FEATURES.PM25]]
-          ? { color: LEVELS[device.levels[FEATURES.PM25]].color }
-          : {}),
-      });
+    const tile = fanTile(model, state, features);
+    if (tile) {
+      components.push(tile);
     }
-    components.push(...tiles.filter(Boolean).slice(0, 3));
   }
 
   const items = [];
@@ -545,7 +525,7 @@ export function buildControlsContent(dyson, { settings }) {
   }
   items.push(connectionItem(status));
   if (reachable) {
-    items.push(...filterItems(model, state), ...timerItems(state));
+    items.push(...timerItems(state));
   }
   components.push({ type: 'status', items: items.slice(0, 10) });
 

@@ -36,6 +36,9 @@ export function normalizeConfig(raw = {}) {
     .toUpperCase();
   const validCountry = /^[A-Z]{2}$/.test(country) ? country : DEFAULT_CONFIG.country;
   const deviceHosts = String(source.device_hosts ?? '');
+  // Also the language of the feature names of new devices: Gladys does not
+  // tell an integration the user's language when it publishes devices.
+  const language = FRENCH_COUNTRIES.has(validCountry) ? 'fr' : 'en';
 
   return {
     email: String(source.email ?? '')
@@ -43,7 +46,8 @@ export function normalizeConfig(raw = {}) {
       .toLowerCase(),
     password: String(source.password ?? ''),
     country: validCountry,
-    culture: `${FRENCH_COUNTRIES.has(validCountry) ? 'fr' : 'en'}-${validCountry}`,
+    language,
+    culture: `${language}-${validCountry}`,
     device_hosts: deviceHosts,
     hosts: parseDeviceHosts(deviceHosts),
     bareHosts: parseBareHosts(deviceHosts),

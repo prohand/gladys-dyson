@@ -77,8 +77,16 @@ test('air widget of a 2018+ device: six live tiles coloured by level — rendere
   const items = byType(content, 'status')[0].items;
   assert.deepEqual(
     items.map((item) => item.value),
-    [{ en: 'Poor', fr: 'Mauvaise' }, '0.02 mg/m³', { en: 'Local', fr: 'Locale' }],
-    'formaldehyde finds no tile: it goes to the status list',
+    [{ en: 'Poor', fr: 'Mauvaise' }, '0.02 mg/m³', { en: 'Local', fr: 'Locale' }, '8 %', '50 %'],
+    'formaldehyde finds no tile: it goes to the status list; the filters follow the connection',
+  );
+  assert.deepEqual(
+    items.slice(3).map((item) => [item.label.en, item.color]),
+    [
+      ['HEPA filter', 'warning'],
+      ['Carbon filter', 'neutral'],
+    ],
+    'a filter under 10 % is a warning',
   );
   assert.deepEqual(
     byType(content, 'button').map((b) => b.action.key),
@@ -86,20 +94,13 @@ test('air widget of a 2018+ device: six live tiles coloured by level — rendere
   );
 });
 
-test('controls widget of a 2018+ device: fan, air and PM2.5 tiles, settings, four buttons', () => {
+test('controls widget of a 2018+ device: the fan tile, settings, four buttons, no air reading', () => {
   const content = buildControlsContent(dysonWith(PURE_INFO), { settings: { device: ID } });
 
   assert.deepEqual(validateWidgetContent(content), []);
-  assert.equal(content.components.length, 8, 'the whole budget');
+  assert.equal(content.components.length, 6, 'fan tile, status list, four buttons');
   assert.equal(byType(content, 'gauge')[0].device_feature, feature('speed'));
-  assert.deepEqual(
-    byType(content, 'value').map((tile) => [tile.label.en, tile.value, tile.color]),
-    [
-      ['Air quality', { en: 'Poor', fr: 'Mauvaise' }, 'warning'],
-      ['PM2.5', undefined, 'info'],
-    ],
-  );
-  assert.equal(byType(content, 'value')[1].device_feature, feature('pm25'));
+  assert.deepEqual(byType(content, 'value'), [], 'no air quality nor PM2.5: controls only');
   const items = byType(content, 'status')[0].items;
   assert.deepEqual(
     items.map((item) => [item.label.en, item.value]),
@@ -109,12 +110,10 @@ test('controls widget of a 2018+ device: fan, air and PM2.5 tiles, settings, fou
       ['Airflow', { en: 'Back', fr: 'Arrière' }],
       ['Heating', '21.9 °C'],
       ['Connection', { en: 'Local', fr: 'Locale' }],
-      ['HEPA filter', '8 %'],
-      ['Carbon filter', '50 %'],
       ['Sleep timer', '30 min'],
     ],
+    'the filters are in the air widget',
   );
-  assert.equal(items[5].color, 'warning', 'a filter under 10 % is a warning');
   assert.deepEqual(
     byType(content, 'button').map((b) => [b.action.key, b.action.params]),
     [
@@ -141,12 +140,9 @@ test('controls widget: the fan tile says off or auto, where the speed is the las
     value: { en: 'Off', fr: 'Éteint' },
     color: 'neutral',
   });
-  assert.equal(off.length, 2, 'no level yet: fan and PM2.5');
+  assert.equal(off.length, 1, 'the fan tile only');
   assert.equal(tilesAt({ fpwr: 'ON', auto: 'ON', fnsp: 'AUTO' })[0].value, 'Auto');
-  assert.deepEqual(tilesAt({ fpwr: 'ON', auto: 'OFF', fnsp: '0003' }, 'very_poor')[1].value, {
-    en: 'Very poor',
-    fr: 'Très mauv.',
-  });
+  assert.equal(tilesAt({ fpwr: 'ON', auto: 'OFF', fnsp: '0003' }, 'very_poor').length, 1);
   for (const level of ['good', 'fair', 'poor', 'very_poor']) {
     const content = buildControlsContent(dysonWith({ ...PURE_INFO, level }), {
       settings: { device: ID },
@@ -256,17 +252,21 @@ test('a Link device that is off, through the cloud fallback', () => {
   const air = buildAirContent(dysonWith(info), { settings: { device: ID } });
   assert.deepEqual(validateWidgetContent(air), []);
   assert.equal(byType(air, 'value')[0].color, undefined, 'no reading yet: no colour');
-  assert.deepEqual(byType(air, 'status')[0].items[0].value, {
+  const airItems = byType(air, 'status')[0].items;
+  assert.deepEqual(airItems[0].value, {
     en: 'Dyson cloud (fallback)',
     fr: 'Cloud Dyson (secours)',
   });
+  assert.equal(airItems[1].value, '300 h', 'the Link filter, in hours');
 
   const controls = buildControlsContent(dysonWith(info), { settings: { device: ID } });
   assert.deepEqual(validateWidgetContent(controls), []);
   assert.deepEqual(byType(controls, 'value')[0].value, { en: 'Off', fr: 'Éteint' });
   const items = byType(controls, 'status')[0].items;
-  assert.deepEqual(items[0].value, { en: 'Dyson cloud (fallback)', fr: 'Cloud Dyson (secours)' });
-  assert.equal(items[1].value, '300 h');
+  assert.deepEqual(
+    items.map((item) => item.value),
+    [{ en: 'Dyson cloud (fallback)', fr: 'Cloud Dyson (secours)' }],
+  );
   assert.deepEqual(byType(controls, 'button')[0].label, { en: 'Turn on', fr: 'Allumer' });
 });
 

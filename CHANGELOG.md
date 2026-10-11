@@ -10,6 +10,16 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- Feature names in French when the account country is French-speaking
+  ("Mode nuit", "Angle d'oscillation"...), in English otherwise. Devices
+  already added keep their names: rename them in the device page.
+- "Dyson controls" widget: controls only. The air quality and PM2.5 tiles are
+  gone (they are in the "Dyson air quality" widget), the filters too.
+- "Dyson air quality" widget: the filter life is in its status list, after
+  the connection.
+
 ## [1.3.0] - 2026-10-11
 
 ### Added

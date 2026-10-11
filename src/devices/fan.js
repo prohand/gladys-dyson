@@ -81,6 +81,9 @@ export const OSCILLATION_ANGLES = [45, 90, 180, 350];
 const ANGLE_MIN = 5;
 const ANGLE_MAX = 355;
 
+// Feature names are { en, fr }: a Gladys feature has ONE name, picked from
+// the language of the account country when the device is built (see
+// buildDevice). Gladys keeps the name a device already has on "Update".
 const control = (name, category, type, min, max, extra = {}) => ({
   name,
   category,
@@ -109,45 +112,65 @@ const binary = (name) => control(name, CATEGORIES.SWITCH, TYPES.SWITCH.BINARY, 0
 
 // Every feature declares min/max: Gladys stores them NOT NULL.
 const DEFINITIONS = {
-  [FEATURES.POWER]: () => binary('Power'),
+  [FEATURES.POWER]: () => binary({ en: 'Power', fr: 'Marche' }),
   [FEATURES.SPEED]: () =>
-    control('Fan speed', CATEGORIES.FAN, TYPES.FAN.SPEED, SPEED_MIN, SPEED_MAX, { step: 1 }),
-  [FEATURES.AUTO]: () => binary('Auto mode'),
+    control(
+      { en: 'Fan speed', fr: 'Vitesse' },
+      CATEGORIES.FAN,
+      TYPES.FAN.SPEED,
+      SPEED_MIN,
+      SPEED_MAX,
+      { step: 1 },
+    ),
+  [FEATURES.AUTO]: () => binary({ en: 'Auto mode', fr: 'Mode auto' }),
   [FEATURES.FAN_MODE]: () =>
-    control('Mode', CATEGORIES.FAN, TYPES.FAN.MODE, FAN_MODES.OFF, FAN_MODES.AUTO),
-  [FEATURES.OSCILLATION]: () => binary('Oscillation'),
-  [FEATURES.NIGHT_MODE]: () => binary('Night mode'),
+    control(
+      { en: 'Mode', fr: 'Mode' },
+      CATEGORIES.FAN,
+      TYPES.FAN.MODE,
+      FAN_MODES.OFF,
+      FAN_MODES.AUTO,
+    ),
+  [FEATURES.OSCILLATION]: () => binary({ en: 'Oscillation', fr: 'Oscillation' }),
+  [FEATURES.NIGHT_MODE]: () => binary({ en: 'Night mode', fr: 'Mode nuit' }),
   // A text state has no history in Gladys.
   [FEATURES.OSCILLATION_ANGLE]: () =>
-    control('Oscillation angle', CATEGORIES.TEXT, TYPES.TEXT.SELECT, 0, 350, {
-      keep_history: false,
-      supported_options: OSCILLATION_ANGLES.map((angle) => ({
-        value: String(angle),
-        label: `${angle}°`,
-      })),
-    }),
+    control(
+      { en: 'Oscillation angle', fr: "Angle d'oscillation" },
+      CATEGORIES.TEXT,
+      TYPES.TEXT.SELECT,
+      0,
+      350,
+      {
+        keep_history: false,
+        supported_options: OSCILLATION_ANGLES.map((angle) => ({
+          value: String(angle),
+          label: `${angle}°`,
+        })),
+      },
+    ),
   [FEATURES.AIRFLOW_DIRECTION]: () =>
     control(
-      'Airflow direction',
+      { en: 'Airflow direction', fr: "Sens du flux d'air" },
       CATEGORIES.FAN,
       TYPES.FAN.AIRFLOW_DIRECTION,
       AIRFLOW.FORWARD,
       AIRFLOW.REVERSE,
     ),
-  [FEATURES.HEATING]: () => binary('Heating'),
+  [FEATURES.HEATING]: () => binary({ en: 'Heating', fr: 'Chauffage' }),
   [FEATURES.TARGET_TEMPERATURE]: () =>
     control(
-      'Target temperature',
+      { en: 'Target temperature', fr: 'Température de consigne' },
       CATEGORIES.THERMOSTAT,
       TYPES.THERMOSTAT.TARGET_TEMPERATURE,
       TARGET_TEMPERATURE_MIN,
       TARGET_TEMPERATURE_MAX,
       { unit: UNITS.CELSIUS, step: 1 },
     ),
-  [FEATURES.HUMIDIFICATION]: () => binary('Humidification'),
+  [FEATURES.HUMIDIFICATION]: () => binary({ en: 'Humidification', fr: 'Humidification' }),
   [FEATURES.TEMPERATURE]: () =>
     sensor(
-      'Temperature',
+      { en: 'Temperature', fr: 'Température' },
       CATEGORIES.TEMPERATURE_SENSOR,
       TYPES.SENSOR.DECIMAL,
       UNITS.CELSIUS,
@@ -159,10 +182,17 @@ const DEFINITIONS = {
   // no label nor icon (empty chip in the Discover tab, empty icon on the
   // dashboard).
   [FEATURES.HUMIDITY]: () =>
-    sensor('Humidity', CATEGORIES.HUMIDITY_SENSOR, TYPES.SENSOR.DECIMAL, UNITS.PERCENT, 0, 100),
+    sensor(
+      { en: 'Humidity', fr: 'Humidité' },
+      CATEGORIES.HUMIDITY_SENSOR,
+      TYPES.SENSOR.DECIMAL,
+      UNITS.PERCENT,
+      0,
+      100,
+    ),
   [FEATURES.PM25]: () =>
     sensor(
-      'PM2.5',
+      { en: 'PM2.5', fr: 'PM2.5' },
       CATEGORIES.PM25_SENSOR,
       TYPES.SENSOR.DECIMAL,
       UNITS.MICROGRAM_PER_CUBIC_METER,
@@ -171,7 +201,7 @@ const DEFINITIONS = {
     ),
   [FEATURES.PM10]: () =>
     sensor(
-      'PM10',
+      { en: 'PM10', fr: 'PM10' },
       CATEGORIES.PM10_SENSOR,
       TYPES.SENSOR.DECIMAL,
       UNITS.MICROGRAM_PER_CUBIC_METER,
@@ -180,12 +210,26 @@ const DEFINITIONS = {
     ),
   // VOC and NO2: Dyson indexes from 0 (clean) to 10, not concentrations.
   [FEATURES.VOC]: () =>
-    sensor('VOC index', CATEGORIES.VOC_INDEX_SENSOR, TYPES.VOC_INDEX_SENSOR.INTEGER, null, 0, 10),
+    sensor(
+      { en: 'VOC index', fr: 'Indice COV' },
+      CATEGORIES.VOC_INDEX_SENSOR,
+      TYPES.VOC_INDEX_SENSOR.INTEGER,
+      null,
+      0,
+      10,
+    ),
   [FEATURES.NO2]: () =>
-    sensor('NO2 index', CATEGORIES.NO2_SENSOR, TYPES.SENSOR.DECIMAL, null, 0, 10),
+    sensor(
+      { en: 'NO2 index', fr: 'Indice NO2' },
+      CATEGORIES.NO2_SENSOR,
+      TYPES.SENSOR.DECIMAL,
+      null,
+      0,
+      10,
+    ),
   [FEATURES.FORMALDEHYDE]: () =>
     sensor(
-      'Formaldehyde',
+      { en: 'Formaldehyde', fr: 'Formaldéhyde' },
       CATEGORIES.FORMALDEHYD_SENSOR,
       TYPES.SENSOR.DECIMAL,
       UNITS.MILLIGRAM_PER_CUBIC_METER,
@@ -194,7 +238,7 @@ const DEFINITIONS = {
     ),
   [FEATURES.HEPA_FILTER]: () =>
     sensor(
-      'HEPA filter life',
+      { en: 'HEPA filter life', fr: 'Durée de vie filtre HEPA' },
       CATEGORIES.MAINTENANCE,
       TYPES.MAINTENANCE.LIFE_REMAINING,
       UNITS.PERCENT,
@@ -203,7 +247,7 @@ const DEFINITIONS = {
     ),
   [FEATURES.CARBON_FILTER]: () =>
     sensor(
-      'Carbon filter life',
+      { en: 'Carbon filter life', fr: 'Durée de vie filtre charbon' },
       CATEGORIES.MAINTENANCE,
       TYPES.MAINTENANCE.LIFE_REMAINING,
       UNITS.PERCENT,
@@ -213,7 +257,7 @@ const DEFINITIONS = {
   // The Link models count the filter life in hours (4300 when new).
   [FEATURES.FILTER]: () =>
     sensor(
-      'Filter life',
+      { en: 'Filter life', fr: 'Durée de vie du filtre' },
       CATEGORIES.MAINTENANCE,
       TYPES.MAINTENANCE.LIFE_REMAINING,
       UNITS.HOURS,
@@ -269,9 +313,11 @@ export function deviceIds(gladys, serial) {
  * @param {object} gladys SDK instance
  * @param {{serial: string, name: string|null, productType: string}} dysonDevice
  * @param {ReturnType<import('../dyson/models.js').describeModel>} model
+ * @param {string} [language] 'fr' or 'en': the language of the feature names
  */
-export function buildDevice(gladys, dysonDevice, model) {
+export function buildDevice(gladys, dysonDevice, model, language = 'en') {
   const ids = deviceIds(gladys, dysonDevice.serial);
+  const lang = language === 'fr' ? 'fr' : 'en';
   return {
     name: dysonDevice.name ?? `Dyson ${model.name}`,
     external_id: ids.device,
@@ -283,10 +329,10 @@ export function buildDevice(gladys, dysonDevice, model) {
       { name: 'DYSON_PRODUCT_TYPE', value: model.productType },
       { name: 'DYSON_MODEL', value: model.name },
     ],
-    features: featureKeys(model).map((key) => ({
-      ...DEFINITIONS[key](),
-      external_id: ids.feature(key),
-    })),
+    features: featureKeys(model).map((key) => {
+      const definition = DEFINITIONS[key]();
+      return { ...definition, name: definition.name[lang], external_id: ids.feature(key) };
+    }),
   };
 }
 

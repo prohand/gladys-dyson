@@ -30,6 +30,8 @@ test('the country is a two-letter code, upper-cased, FR when unreadable', () => 
   assert.equal(normalizeConfig({ country: 'gb' }).country, 'GB');
   assert.equal(normalizeConfig({ country: 'gb' }).culture, 'en-GB');
   assert.equal(normalizeConfig({ country: 'be' }).culture, 'fr-BE');
+  assert.equal(normalizeConfig({ country: 'be' }).language, 'fr');
+  assert.equal(normalizeConfig({ country: 'gb' }).language, 'en');
   assert.equal(normalizeConfig({ country: 'France' }).country, 'FR');
   assert.equal(normalizeConfig({ country: '' }).country, 'FR');
 });
