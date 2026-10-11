@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-11
+
 ### Added
 
 - Oscillation angle list on the Pure Cool, Purifier Cool and Hot+Cool towers:
@@ -140,7 +142,8 @@ Devices added before: click "Update" in the Discover tab.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/prohand/gladys-dyson/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/prohand/gladys-dyson/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/prohand/gladys-dyson/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/prohand/gladys-dyson/compare/v1.0.0...v1.1.0
