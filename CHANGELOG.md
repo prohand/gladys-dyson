@@ -10,6 +10,12 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Fixed
+
+- PM2.5, PM10 and humidity showed as empty chips in the Discover tab, with no
+  icon on the dashboard: they use the type Gladys knows for these sensors.
+  Devices added before: click "Update" in the Discover tab.
+
 ## [1.2.1] - 2026-10-11
 
 ### Changed

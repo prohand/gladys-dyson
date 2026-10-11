@@ -136,13 +136,17 @@ const DEFINITIONS = {
       -20,
       60,
     ),
+  // Humidity and particles are "decimal" even if Dyson sends whole numbers:
+  // Gladys only knows that type for these categories, an "integer" one gets
+  // no label nor icon (empty chip in the Discover tab, empty icon on the
+  // dashboard).
   [FEATURES.HUMIDITY]: () =>
-    sensor('Humidity', CATEGORIES.HUMIDITY_SENSOR, TYPES.SENSOR.INTEGER, UNITS.PERCENT, 0, 100),
+    sensor('Humidity', CATEGORIES.HUMIDITY_SENSOR, TYPES.SENSOR.DECIMAL, UNITS.PERCENT, 0, 100),
   [FEATURES.PM25]: () =>
     sensor(
       'PM2.5',
       CATEGORIES.PM25_SENSOR,
-      TYPES.SENSOR.INTEGER,
+      TYPES.SENSOR.DECIMAL,
       UNITS.MICROGRAM_PER_CUBIC_METER,
       0,
       1000,
@@ -151,7 +155,7 @@ const DEFINITIONS = {
     sensor(
       'PM10',
       CATEGORIES.PM10_SENSOR,
-      TYPES.SENSOR.INTEGER,
+      TYPES.SENSOR.DECIMAL,
       UNITS.MICROGRAM_PER_CUBIC_METER,
       0,
       1000,
