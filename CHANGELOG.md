@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-11
+
 ### Added
 
 - "Dyson controls" widget: a "Buttons" setting to pick the four buttons, on/off,
@@ -105,7 +107,8 @@ becomes the notes of the version's GitHub Release.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/prohand/gladys-dyson/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/prohand/gladys-dyson/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/prohand/gladys-dyson/compare/v0.0.1...v1.0.0
 [0.0.1]: https://github.com/prohand/gladys-dyson/releases/tag/v0.0.1
