@@ -81,8 +81,8 @@ for (const [actionKey, handler] of Object.entries(SCENE_ACTIONS)) {
 // --- Dashboard widgets (Gladys 5.1+) ------------------------------------------
 for (const key of WIDGETS) {
   gladys.onWidgetGet(key, (request) => WIDGET_CONTENT[key](dyson, request));
-  gladys.onWidgetAction(key, (actionKey, params) =>
-    handleWidgetAction(dyson, { actionKey, params }),
+  gladys.onWidgetAction(key, (actionKey, params, { values } = {}) =>
+    handleWidgetAction(dyson, { actionKey, params, values }),
   );
 }
 // One handler for every image key: the product drawings of the controls widget.

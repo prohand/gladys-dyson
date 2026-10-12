@@ -74,8 +74,6 @@ export function createDysonManager({
   const links = new Map();
   /** serial -> last product state (flat), to speak the device's dialect */
   const productStates = new Map();
-  /** feature external id -> last value published (only changes are sent) */
-  const published = new Map();
   // Scene triggers: air quality, filters, connection (one event per change).
   const triggers = createTriggerTracker(gladys, { onLevelChange: () => onDeviceChange() });
 
@@ -186,13 +184,11 @@ export function createDysonManager({
     return (gladys.devices ?? []).some((device) => device.external_id === externalId);
   }
 
+  // Only changes are sent: the SDK remembers the last value Gladys accepted
+  // per feature (publishChangedStates). A new link starts from scratch, so
+  // its first reading is sent whole even when the values did not move.
   function forgetPublished(serial) {
-    const prefix = deviceIds(gladys, serial).device;
-    for (const key of published.keys()) {
-      if (key.startsWith(`${prefix}:`)) {
-        published.delete(key);
-      }
-    }
+    gladys.forgetPublishedStates(deviceIds(gladys, serial).device);
   }
 
   async function publish(serial, states) {
@@ -207,23 +203,15 @@ export function createDysonManager({
       }))
       // A feature the user's device does not have (created before a model
       // update) would be refused: send only what Gladys knows.
-      .filter((state) => known.has(state.device_feature_external_id))
-      .filter(
-        (state) => published.get(state.device_feature_external_id) !== (state.text ?? state.state),
-      );
+      .filter((state) => known.has(state.device_feature_external_id));
     if (batch.length === 0) {
       return;
     }
-    for (const state of batch) {
-      published.set(state.device_feature_external_id, state.text ?? state.state);
-    }
     try {
-      await gladys.publishStates(batch);
+      // Skips the values Gladys already holds; a refused batch is forgotten
+      // by the SDK, so the next reading publishes it again rather than never.
+      await gladys.publishChangedStates(batch);
     } catch (err) {
-      // Publish again at the next reading rather than never.
-      for (const state of batch) {
-        published.delete(state.device_feature_external_id);
-      }
       logger.warn(`States of ${serial} not published: ${err.message}`);
     }
   }
@@ -366,7 +354,9 @@ export function createDysonManager({
       await this.updateConfig(rawConfig, { initial: true });
       await refreshDevices();
       await publishDiscovered();
-      published.clear();
+      // Gladys may have restarted while the socket was down: send everything
+      // once more (the SDK only forgets by itself on device events).
+      gladys.forgetPublishedStates();
       await syncLinks();
       await gladys.publishTransports(this.transportEntries()).catch(() => {});
       await reportStatus();

@@ -8,6 +8,7 @@ suivre la qualité de l'air qu'ils mesurent.
 
 ## Ce dont vous avez besoin
 
+- Gladys **5.2** ou plus.
 - Un compte **MyDyson** (l'application mobile Dyson), avec vos appareils déjà
   ajoutés et connectés au Wi-Fi.
 - L'adresse e-mail et le mot de passe de ce compte.
@@ -175,15 +176,20 @@ des quatre polluants.
 - l'état : oscillation (avec son angle), mode nuit, flux d'air, chauffage,
   connexion, minuterie. Avec les boutons d'oscillation, les lignes
   oscillation et mode nuit sont retirées : les boutons les montrent ;
-- quatre boutons, au choix dans le réglage **Boutons** du widget :
+- jusqu'à quatre boutons, au choix dans le réglage **Boutons** du widget :
   - **Marche, auto, vitesse - et +** (par défaut) : allumer / éteindre, mode
     auto (ou retour en manuel), vitesse - et vitesse + ;
   - **Marche, oscillation, mode nuit, flux d'air** : un réglage actif est un
     bouton plein, un clic l'inverse. Sur les modèles qui soufflent dans un
-    seul sens, le mode auto remplace le flux d'air.
+    seul sens, le mode auto remplace le flux d'air ;
+  - **Marche, mode nuit, minuterie** : la télécommande du coucher.
+    **Minuterie** ouvre un petit formulaire dans le widget qui demande les
+    minutes (0 à 540, 0 annule la minuterie), prérempli avec la minuterie en
+    cours, ou 60 ; le bouton est plein tant qu'une minuterie tourne. Il règle
+    la même minuterie que l'action de scène **Régler la minuterie**.
 
 Après un clic, le widget se met à jour dès que l'appareil a répondu. Pour
-avoir les deux jeux de boutons, ajoutez le widget deux fois.
+avoir plusieurs jeux de boutons, ajoutez le widget plusieurs fois.
 
 Gladys limite un widget à quatre boutons. Pour tout piloter au même endroit
 (liste des modes, curseur de vitesse, oscillation, mode nuit, flux d'air),

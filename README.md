@@ -26,14 +26,15 @@ formaldehyde on the `K` models, filter life.
 
 Gladys 5.1 capabilities:
 
-| Kind          | Key                   | What                                                       |
-| ------------- | --------------------- | ---------------------------------------------------------- |
-| Scene trigger | `air_quality_changed` | air quality level changed (good / fair / poor / very poor) |
-| Scene trigger | `filter_low`          | a filter went under 10 % (400 h on Link models)            |
-| Scene trigger | `connection_changed`  | a device went local / cloud / unreachable                  |
-| Scene action  | `apply_settings`      | power, mode, speed, oscillation, night mode in one order   |
-| Scene action  | `set_sleep_timer`     | the device turns itself off after N minutes                |
-| Widget        | `dyson_air`           | live air tiles, status, on/off, auto and refresh buttons   |
+| Kind          | Key                   | What                                                                               |
+| ------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| Scene trigger | `air_quality_changed` | air quality level changed (good / fair / poor / very poor)                         |
+| Scene trigger | `filter_low`          | a filter went under 10 % (400 h on Link models)                                    |
+| Scene trigger | `connection_changed`  | a device went local / cloud / unreachable                                          |
+| Scene action  | `apply_settings`      | power, mode, speed, oscillation, night mode in one order                           |
+| Scene action  | `set_sleep_timer`     | the device turns itself off after N minutes                                        |
+| Widget        | `dyson_air`           | live air tiles, status, on/off, auto and refresh buttons                           |
+| Widget        | `dyson_controls`      | fan tile, drawing, status, 3 button sets (one with a sleep timer form, Gladys 5.2) |
 
 ## Local and cloud
 

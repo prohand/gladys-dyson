@@ -215,6 +215,40 @@ test('device states are published once, and only for known features', async () =
   ]);
 });
 
+test('a refused batch is published again at the next reading, even unchanged', async () => {
+  const context = setup();
+  await signIn(context);
+  const client = context.mqtt.clients[0];
+  const power = `ext:dyson:fan:NK6-EU-MHA0000A:${FEATURES.POWER}`;
+  const powerStates = () => context.gladys.published.filter((s) => s.featureExternalId === power);
+
+  context.gladys.publishStatesError = new Error('429 Too Many Requests');
+  client.receive({ msg: 'CURRENT-STATE', 'product-state': { fpwr: 'ON' } });
+  await flush();
+  assert.deepEqual(powerStates(), []);
+
+  context.gladys.publishStatesError = null;
+  client.receive({ msg: 'STATE-CHANGE', 'product-state': { fpwr: ['ON', 'ON'] } });
+  await flush();
+  assert.deepEqual(powerStates(), [{ featureExternalId: power, state: 1 }]);
+});
+
+test('a reconnection to Gladys sends the unchanged values once more', async () => {
+  const context = setup();
+  await signIn(context);
+  const client = context.mqtt.clients[0];
+  const power = `ext:dyson:fan:NK6-EU-MHA0000A:${FEATURES.POWER}`;
+  const powerStates = () => context.gladys.published.filter((s) => s.featureExternalId === power);
+
+  client.receive({ msg: 'CURRENT-STATE', 'product-state': { fpwr: 'ON' } });
+  await flush();
+  await context.manager.start(ACCOUNT_CONFIG);
+  assert.equal(context.gladys.forgotten.at(-1), null, 'everything forgotten');
+  client.receive({ msg: 'STATE-CHANGE', 'product-state': { fpwr: ['ON', 'ON'] } });
+  await flush();
+  assert.equal(powerStates().length, 2);
+});
+
 test('the oscillation angle goes as a text state, and a chosen angle as a range', async () => {
   const context = setup();
   await signIn(context);
