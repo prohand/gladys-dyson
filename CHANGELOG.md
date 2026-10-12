@@ -10,6 +10,10 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- `@gladysassistant/integration-sdk` updated to 0.15.0.
+
 ## [1.5.0] - 2026-10-12
 
 ### Added
