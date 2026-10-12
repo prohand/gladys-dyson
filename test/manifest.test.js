@@ -230,6 +230,17 @@ test('the widgets are declared with the keys the code serves', () => {
   assert.match(indexSource, /for \(const key of WIDGETS\)/);
   assert.match(indexSource, /onWidgetGet\(key/);
   assert.match(indexSource, /onWidgetAction\(key/);
+  assert.match(indexSource, /onWidgetGetImage\(widgetImage\)/);
+});
+
+test('the controls widget picture: on by default, and its files in the image', async () => {
+  const setting = manifest.widgets
+    .find((widget) => widget.key === CONTROLS_WIDGET)
+    .settings.find((field) => field.key === 'picture');
+  assert.equal(setting.type, 'boolean');
+  assert.equal(setting.default, true);
+  const dockerfile = await readFile(new URL('../Dockerfile', import.meta.url), 'utf8');
+  assert.match(dockerfile, /^COPY assets \.\/assets$/m, 'widgetImage reads them at run time');
 });
 
 test('the button sets of the controls widget are the ones the code draws', () => {

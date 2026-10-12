@@ -8,7 +8,8 @@
 //                   level, connection, filters: they clean the air) and a
 //                   "Refresh" button;
 //   dyson_controls  the fan, as a remote, controls only: one tile (the fan:
-//                   off, auto or a live speed gauge), a status list
+//                   off, auto or a live speed gauge), a drawing of the
+//                   product (air lines while it runs), a status list
 //                   (oscillation, night mode, airflow, connection, sleep
 //                   timer) and four buttons, chosen in the settings: on/off,
 //                   auto, speed - and speed +; or on/off, oscillation, night
@@ -25,6 +26,7 @@
 // is computed from the state at the tap, not from the content shown.
 // -----------------------------------------------------------------------------
 
+import { readFile } from 'node:fs/promises';
 import { createLogger, WIDGET_COLORS } from '@gladysassistant/integration-sdk';
 import {
   AIRFLOW,
@@ -58,6 +60,19 @@ export const WIDGET_ACTIONS = {
 // Values of the `buttons` setting of the controls widget (stored by the
 // dashboards: never rename one).
 export const BUTTON_SETS = { SPEED: 'speed', SETTINGS: 'settings' };
+
+// The pictures of the controls widget: one drawing per silhouette (models.js
+// `picture`), fan running or off (.github/scripts/device-pictures.mjs). The
+// core caches an image one hour by key: bump the version when a drawing
+// changes.
+const PICTURE_VERSION = 1;
+const PICTURES = ['tower', 'hot-cool', 'desk', 'humidifier', 'big-quiet'];
+const PICTURE_DIR = new URL('../../assets/devices/', import.meta.url);
+
+/** Image keys served by widgetImage, e.g. `dyson-tower-on-v1`. */
+export const PICTURE_KEYS = PICTURES.flatMap((picture) =>
+  ['on', 'off'].map((fan) => `dyson-${picture}-${fan}-v${PICTURE_VERSION}`),
+);
 
 // The content budget allows 6 tiles; with the status list and the button,
 // 8 components. By priority: the pollutants, then the comfort readings. A
@@ -151,6 +166,37 @@ function fanTile(model, state, features) {
     };
   }
   return null;
+}
+
+/**
+ * The product drawn in the 16:9 frame: the air lines while the fan runs. An
+ * unreachable device is drawn off, it is not known to run.
+ */
+function pictureOf(model, state, reachable) {
+  if (!PICTURES.includes(model.picture)) {
+    return null;
+  }
+  const fan = reachable && !isOff(model, state) ? 'on' : 'off';
+  return {
+    type: 'image',
+    key: `dyson-${model.picture}-${fan}-v${PICTURE_VERSION}`,
+    alt: `Dyson ${model.name}`,
+    fit: 'contain',
+  };
+}
+
+/**
+ * Raw base64 of a picture key (onWidgetGetImage). Only the keys this
+ * integration declares: the key never becomes a free path.
+ * @param {string} key
+ * @returns {Promise<string>}
+ */
+export async function widgetImage(key) {
+  if (!PICTURE_KEYS.includes(key)) {
+    throw new Error(`Unknown widget image: ${key}`);
+  }
+  const file = key.replace(/^dyson-/, '').replace(/-v\d+$/, '');
+  return (await readFile(new URL(`${file}.jpg`, PICTURE_DIR))).toString('base64');
 }
 
 /** ON / OFF row, or nothing when the device did not say. */
@@ -516,6 +562,13 @@ export function buildControlsContent(dyson, { settings }) {
     const tile = fanTile(model, state, features);
     if (tile) {
       components.push(tile);
+    }
+  }
+  // On by default: the instances saved before the setting existed have none.
+  if (settings.picture !== false && settings.picture !== 'false') {
+    const picture = pictureOf(model, state, reachable);
+    if (picture) {
+      components.push(picture);
     }
   }
 

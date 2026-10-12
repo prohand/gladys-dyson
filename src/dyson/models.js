@@ -20,25 +20,48 @@
 // yet), the humidifiers (other presets: 45, 90, breeze), the Big+Quiet (it
 // tilts) nor the Link models (on / off only).
 //
+// `picture`: the silhouette drawn in the controls widget (assets/devices):
+// tower, hot-cool (the loop narrows to the base), desk, humidifier, big-quiet.
+//
 // Robot vacuums, lights and hair care products are listed by the account too:
 // they are not fans and are left out.
 // -----------------------------------------------------------------------------
 
 const MODELS = {
-  455: { name: 'Pure Hot+Cool Link', protocol: 'link', heater: true },
-  469: { name: 'Pure Cool Link Desk', protocol: 'link' },
-  475: { name: 'Pure Cool Link', protocol: 'link' },
-  438: { name: 'Pure Cool', protocol: 'pure', airflow: true, angles: true },
-  '438E': { name: 'Purifier Cool', protocol: 'pure', airflow: true, angles: true },
-  '438K': { name: 'Purifier Cool Formaldehyde', protocol: 'pure', airflow: true, angles: true },
-  520: { name: 'Pure Cool Desk', protocol: 'pure', airflow: true },
-  527: { name: 'Pure Hot+Cool', protocol: 'pure', heater: true, airflow: true, angles: true },
+  455: { name: 'Pure Hot+Cool Link', protocol: 'link', heater: true, picture: 'hot-cool' },
+  469: { name: 'Pure Cool Link Desk', protocol: 'link', picture: 'desk' },
+  475: { name: 'Pure Cool Link', protocol: 'link', picture: 'tower' },
+  438: { name: 'Pure Cool', protocol: 'pure', airflow: true, angles: true, picture: 'tower' },
+  '438E': {
+    name: 'Purifier Cool',
+    protocol: 'pure',
+    airflow: true,
+    angles: true,
+    picture: 'tower',
+  },
+  '438K': {
+    name: 'Purifier Cool Formaldehyde',
+    protocol: 'pure',
+    airflow: true,
+    angles: true,
+    picture: 'tower',
+  },
+  520: { name: 'Pure Cool Desk', protocol: 'pure', airflow: true, picture: 'desk' },
+  527: {
+    name: 'Pure Hot+Cool',
+    protocol: 'pure',
+    heater: true,
+    airflow: true,
+    angles: true,
+    picture: 'hot-cool',
+  },
   '527E': {
     name: 'Purifier Hot+Cool',
     protocol: 'pure',
     heater: true,
     airflow: true,
     angles: true,
+    picture: 'hot-cool',
   },
   '527K': {
     name: 'Purifier Hot+Cool Formaldehyde',
@@ -46,11 +69,22 @@ const MODELS = {
     heater: true,
     airflow: true,
     angles: true,
+    picture: 'hot-cool',
   },
-  358: { name: 'Pure Humidify+Cool', protocol: 'pure', humidifier: true },
-  '358E': { name: 'Purifier Humidify+Cool', protocol: 'pure', humidifier: true },
-  '358K': { name: 'Purifier Humidify+Cool Formaldehyde', protocol: 'pure', humidifier: true },
-  664: { name: 'Purifier Big+Quiet', protocol: 'pure' },
+  358: { name: 'Pure Humidify+Cool', protocol: 'pure', humidifier: true, picture: 'humidifier' },
+  '358E': {
+    name: 'Purifier Humidify+Cool',
+    protocol: 'pure',
+    humidifier: true,
+    picture: 'humidifier',
+  },
+  '358K': {
+    name: 'Purifier Humidify+Cool Formaldehyde',
+    protocol: 'pure',
+    humidifier: true,
+    picture: 'humidifier',
+  },
+  664: { name: 'Purifier Big+Quiet', protocol: 'pure', picture: 'big-quiet' },
 };
 
 /**
@@ -58,7 +92,7 @@ const MODELS = {
  * @param {string} productType `ProductType` from the Dyson account, e.g. "438K"
  * @returns {null | {productType: string, name: string, protocol: 'link'|'pure',
  *   heater: boolean, humidifier: boolean, airflow: boolean, angles: boolean,
- *   formaldehyde: boolean}}
+ *   formaldehyde: boolean, picture: string}}
  *   null when the product is not a supported fan / purifier
  */
 export function describeModel(productType) {
@@ -80,5 +114,6 @@ export function describeModel(productType) {
     airflow: model.airflow === true,
     angles: model.angles === true,
     formaldehyde: model.protocol === 'pure' && type.endsWith('K'),
+    picture: model.picture,
   };
 }

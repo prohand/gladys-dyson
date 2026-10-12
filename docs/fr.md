@@ -167,6 +167,11 @@ des quatre polluants.
 
 - une tuile : le ventilateur (éteint, auto, ou une jauge de vitesse en
   direct). Les relevés de l'air sont dans le widget qualité de l'air ;
+- un dessin de l'appareil (tour, Hot+Cool, ventilateur de bureau,
+  humidificateur ou Big+Quiet), avec des lignes d'air quand le ventilateur
+  tourne. Les photos Dyson ne peuvent pas être fournies et le compte n'en
+  donne pas : ce sont des dessins. Le réglage **Afficher le dessin de
+  l'appareil** le masque ;
 - l'état : oscillation (avec son angle), mode nuit, flux d'air, chauffage,
   connexion, minuterie. Avec les boutons d'oscillation, les lignes
   oscillation et mode nuit sont retirées : les boutons les montrent ;
@@ -183,7 +188,9 @@ avoir les deux jeux de boutons, ajoutez le widget deux fois.
 Gladys limite un widget à quatre boutons. Pour tout piloter au même endroit
 (liste des modes, curseur de vitesse, oscillation, mode nuit, flux d'air),
 ajoutez aussi l'appareil dans une boîte « Appareils » de votre tableau de
-bord.
+bord. Le panneau de commande qui s'ouvre depuis une lumière dans cette boîte
+est dessiné par Gladys pour les lumières seulement : une intégration ne peut
+pas en ajouter un pour un ventilateur.
 
 ## Réglages
 

@@ -89,6 +89,7 @@ test('product types: families, revisions, and what is not a fan', () => {
     airflow: true,
     angles: true,
     formaldehyde: true,
+    picture: 'tower',
   });
   assert.equal(describeModel('455').protocol, 'link');
   assert.equal(describeModel('455').heater, true);
@@ -103,6 +104,11 @@ test('product types: families, revisions, and what is not a fan', () => {
   assert.equal(describeModel('438').angles, true);
   assert.equal(describeModel('527E').angles, true);
   assert.equal(describeModel('520').angles, false);
+  // The silhouette of the controls widget picture.
+  assert.equal(describeModel('455').picture, 'hot-cool');
+  assert.equal(describeModel('469').picture, 'desk');
+  assert.equal(describeModel('358E').picture, 'humidifier');
+  assert.equal(describeModel('664B').picture, 'big-quiet');
   assert.equal(describeModel('358').angles, false);
   assert.equal(describeModel('664').angles, false);
   assert.equal(describeModel('475').angles, false);

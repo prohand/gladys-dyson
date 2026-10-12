@@ -1,12 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateWidgetContent } from '@gladysassistant/integration-sdk';
+import { validateWidgetContent, validateWidgetImage } from '@gladysassistant/integration-sdk';
 import {
   NUDGE_MIN_INTERVAL_MS,
+  PICTURE_KEYS,
   buildAirContent,
   buildControlsContent,
   createWidgetNudger,
   handleWidgetAction,
+  widgetImage,
 } from '../src/capabilities/widget.js';
 import { describeModel } from '../src/dyson/models.js';
 import { createFakeTimers } from './helpers/fakeMqtt.js';
@@ -98,7 +100,7 @@ test('controls widget of a 2018+ device: the fan tile, settings, four buttons, n
   const content = buildControlsContent(dysonWith(PURE_INFO), { settings: { device: ID } });
 
   assert.deepEqual(validateWidgetContent(content), []);
-  assert.equal(content.components.length, 6, 'fan tile, status list, four buttons');
+  assert.equal(content.components.length, 7, 'fan tile, picture, status list, four buttons');
   assert.equal(byType(content, 'gauge')[0].device_feature, feature('speed'));
   assert.deepEqual(byType(content, 'value'), [], 'no air quality nor PM2.5: controls only');
   const items = byType(content, 'status')[0].items;
@@ -124,6 +126,45 @@ test('controls widget of a 2018+ device: the fan tile, settings, four buttons, n
     ],
     'actions: the core refetches the widget once the device answered',
   );
+});
+
+test('controls widget: a drawing of the product, air lines while the fan runs', () => {
+  const pictureOf = (info, settings = {}) =>
+    byType(
+      buildControlsContent(dysonWith(info), { settings: { device: ID, ...settings } }),
+      'image',
+    );
+
+  assert.deepEqual(pictureOf(PURE_INFO), [
+    {
+      type: 'image',
+      key: 'dyson-hot-cool-on-v1',
+      alt: 'Dyson Purifier Hot+Cool Formaldehyde',
+      fit: 'contain',
+    },
+  ]);
+  const off = { ...PURE_INFO, productState: { ...PURE_INFO.productState, fpwr: 'OFF' } };
+  assert.equal(pictureOf(off)[0].key, 'dyson-hot-cool-off-v1');
+  const lost = { ...PURE_INFO, status: { transport: 'unreachable', degraded: false } };
+  assert.equal(pictureOf(lost)[0].key, 'dyson-hot-cool-off-v1', 'not known to run');
+  const link = { ...PURE_INFO, model: describeModel('475'), productState: { fmod: 'FAN' } };
+  assert.equal(pictureOf(link)[0].key, 'dyson-tower-on-v1');
+  assert.deepEqual(pictureOf(PURE_INFO, { picture: false }), [], 'the setting hides it');
+  assert.equal(pictureOf(PURE_INFO, { picture: true }).length, 1);
+});
+
+test('the pictures: every key served, as the core accepts it; nothing else', async () => {
+  assert.equal(PICTURE_KEYS.length, 10, 'five silhouettes, fan on and off');
+  for (const key of PICTURE_KEYS) {
+    assert.match(key, /^[a-z0-9][a-z0-9-]{0,63}$/);
+    assert.deepEqual(validateWidgetImage(await widgetImage(key)), [], key);
+  }
+  for (const model of ['455', '469', '475', '438', '520', '527', '358', '664']) {
+    const picture = describeModel(model).picture;
+    assert.ok(PICTURE_KEYS.includes(`dyson-${picture}-on-v1`), model);
+  }
+  await assert.rejects(widgetImage('dyson-../../etc/passwd-on-v1'), /Unknown widget image/);
+  await assert.rejects(widgetImage('cleaning-map'), /Unknown widget image/);
 });
 
 test('controls widget: the fan tile says off or auto, where the speed is the last manual one', () => {
