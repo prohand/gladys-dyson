@@ -159,6 +159,10 @@ pollutants.
 
 - one tile: the fan (off, auto, or a live speed gauge). The air readings are
   in the air quality widget;
+- a drawing of the device (tower, Hot+Cool, desk fan, humidifier or
+  Big+Quiet), with air lines while the fan runs. Dyson photos cannot be
+  shipped and the account gives none: these are drawings. The **Show the
+  device drawing** setting hides it;
 - the status: oscillation (with its angle), night mode, airflow, heating,
   connection, sleep timer. With the oscillation buttons, the
   oscillation and night mode rows are left out: the buttons show them;
@@ -174,7 +178,9 @@ button sets, add the widget twice.
 
 Gladys allows four buttons per widget. To control everything in one place
 (mode list, speed slider, oscillation, night mode, airflow), also add the
-device to a "Devices" box of your dashboard.
+device to a "Devices" box of your dashboard. The control panel that opens
+from a light in that box is drawn by Gladys for lights only: an integration
+cannot add one for a fan.
 
 ## Settings
 

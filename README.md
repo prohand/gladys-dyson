@@ -80,6 +80,8 @@ local MQTT password. Sign-in uses the one-time code Dyson e-mails.
 ├─ .github/workflows/build.yml    # multi-arch build (git tag or called by release)
 ├─ .github/workflows/github-release.yml # GitHub Release of every version tag
 ├─ .github/scripts/changelog-release.mjs # rolls CHANGELOG.md at release
+├─ .github/scripts/device-pictures.mjs # draws assets/devices (controls widget pictures)
+├─ assets/devices/                # product drawings served to the controls widget
 ├─ .github/dependabot.yml         # npm / GitHub Actions / Docker updates
 └─ cover.png                      # catalog cover, 800×534 px
 ```

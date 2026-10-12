@@ -10,6 +10,17 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- "Dyson controls" widget: a drawing of the device (tower, Hot+Cool, desk fan,
+  humidifier or Big+Quiet), with air lines while the fan runs. The new "Show
+  the device drawing" setting hides it.
+
+### Fixed
+
+- "Dyson controls" widget description: it no longer lists the air quality and
+  PM2.5, removed in 1.4.0.
+
 ## [1.4.0] - 2026-10-11
 
 ### Changed

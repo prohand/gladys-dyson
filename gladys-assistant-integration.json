@@ -661,8 +661,8 @@
         "fr": "Commandes Dyson"
       },
       "description": {
-        "en": "A Dyson remote: fan, air quality, PM2.5, settings, and on/off, auto, speed or settings buttons.",
-        "fr": "Télécommande Dyson : ventilateur, qualité de l'air, PM2.5, réglages et boutons au choix."
+        "en": "A Dyson remote: fan, a drawing of the device, settings, and on/off, auto, speed or settings buttons.",
+        "fr": "Télécommande Dyson : ventilateur, dessin de l'appareil, réglages et boutons au choix."
       },
       "icon": "sliders",
       "settings": [
@@ -701,6 +701,16 @@
           ],
           "required": false,
           "default": "speed"
+        },
+        {
+          "key": "picture",
+          "type": "boolean",
+          "label": {
+            "en": "Show the device drawing",
+            "fr": "Afficher le dessin de l'appareil"
+          },
+          "required": false,
+          "default": true
         }
       ],
       "action_timeout_seconds": 15

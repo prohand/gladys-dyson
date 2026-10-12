@@ -23,6 +23,7 @@ import {
   WIDGET_CONTENT,
   createWidgetNudger,
   handleWidgetAction,
+  widgetImage,
 } from './src/capabilities/widget.js';
 
 const gladys = new GladysIntegration();
@@ -84,6 +85,8 @@ for (const key of WIDGETS) {
     handleWidgetAction(dyson, { actionKey, params }),
   );
 }
+// One handler for every image key: the product drawings of the controls widget.
+gladys.onWidgetGetImage(widgetImage);
 
 // --- Configuration updated by the user ---------------------------------------
 gladys.onConfigUpdated(async (newConfig) => {

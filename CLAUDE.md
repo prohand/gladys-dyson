@@ -45,11 +45,13 @@ src/dyson/store.js        /data/dyson-account.json (token, device list, addresse
 src/devices/fan.js        Gladys device + features of a model, states <-> Dyson values
 src/capabilities/triggers.js  scene triggers: air quality level, filter low, connection
 src/capabilities/scenes.js    scene actions: apply_settings, set_sleep_timer
-src/capabilities/widget.js    dashboard widget dyson_air (content + refresh action)
+src/capabilities/widget.js    dashboard widgets dyson_air, dyson_controls (content, actions, pictures)
+assets/devices/           drawings of the products (controls widget), copied into the image
 gladys-assistant-integration.json  manifest: config_schema, actions, transports
 docs/en.md, docs/fr.md    user documentation, re-hosted by Gladys (mandatory)
 test/                     node --test; helpers fake Gladys, MQTT, timers and the Dyson API
 .github/scripts/changelog-release.mjs  rolls CHANGELOG.md at release, tested in test/
+.github/scripts/device-pictures.mjs    draws assets/devices (needs playwright, --no-save)
 ```
 
 ### How it works
@@ -85,8 +87,13 @@ test/                     node --test; helpers fake Gladys, MQTT, timers and the
   (`test/manifest.test.js` fires each one and checks).
 - **Scene actions** never throw on an unreachable device: they return
   `{ sent: false, transport }`.
-- **Widget budget**: 8 components at most (4 tiles + status + 3 buttons);
-  `test/widget.test.js` asserts `validateWidgetContent(content)` is `[]`.
+- **Widget budget**: 8 components at most, 1 focal (`image`), 6 tiles, 1
+  status, 4 buttons; `test/widget.test.js` asserts `validateWidgetContent(content)`
+  is `[]`.
+- **Widget pictures** are our own drawings (no Dyson photo: not ours to ship,
+  and the account gives none), one per `picture` of `models.js`, fan on / off,
+  served by `onWidgetGetImage`. The core caches an image one hour by key: a
+  redrawn picture bumps `PICTURE_VERSION`.
 - Only devices **created in Gladys** get a link; states are published only for
   features the Gladys device has, and only when they change.
 
