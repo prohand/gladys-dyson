@@ -8,7 +8,7 @@
   },
   "version": "1.5.0",
   "docker_image": "ghcr.io/prohand/gladys-dyson:1.5.0",
-  "gladys_version": ">=5.1.0",
+  "gladys_version": ">=5.2.0",
   "cover_image": "https://raw.githubusercontent.com/prohand/gladys-dyson/main/cover.png",
   "categories": ["climate", "environment", "appliances"],
   "transports": ["local", "cloud"],
@@ -661,7 +661,7 @@
         "fr": "Commandes Dyson"
       },
       "description": {
-        "en": "A Dyson remote: fan, a drawing of the device, settings, and on/off, auto, speed or settings buttons.",
+        "en": "A Dyson remote: fan, device drawing, settings, and on/off, speed, settings or sleep timer buttons.",
         "fr": "Télécommande Dyson : ventilateur, dessin de l'appareil, réglages et boutons au choix."
       },
       "icon": "sliders",
@@ -696,6 +696,13 @@
               "label": {
                 "en": "On/off, oscillation, night mode, airflow",
                 "fr": "Marche, oscillation, mode nuit, flux d'air"
+              }
+            },
+            {
+              "value": "night",
+              "label": {
+                "en": "On/off, night mode, sleep timer",
+                "fr": "Marche, mode nuit, minuterie"
               }
             }
           ],

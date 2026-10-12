@@ -13,6 +13,9 @@ becomes the notes of the version's GitHub Release.
 ### Changed
 
 - `@gladysassistant/integration-sdk` updated to 0.15.0.
+- Requires Gladys 5.2.0: the "Dyson controls" widget gets a third button set, "On/off,
+  night mode, sleep timer", whose **Sleep timer** button opens a form asking the minutes
+  (0 to 540, 0 cancels) and sets the same timer as the "Set the sleep timer" scene action.
 
 ## [1.5.0] - 2026-10-12
 

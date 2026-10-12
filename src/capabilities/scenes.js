@@ -20,6 +20,8 @@ import { pad4 } from '../dyson/protocol.js';
 const logger = createLogger({ name: 'scenes' });
 
 export const SLEEP_TIMER_MAX_MINUTES = 540;
+// The default of the `minutes` field (manifest), also the widget form's.
+export const SLEEP_TIMER_DEFAULT_MINUTES = 60;
 
 const isSet = (value) => value !== undefined && value !== null && value !== '';
 

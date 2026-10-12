@@ -11,9 +11,11 @@
 //                   off, auto or a live speed gauge), a drawing of the
 //                   product (air lines while it runs), a status list
 //                   (oscillation, night mode, airflow, connection, sleep
-//                   timer) and four buttons, chosen in the settings: on/off,
-//                   auto, speed - and speed +; or on/off, oscillation, night
-//                   mode and airflow.
+//                   timer) and up to four buttons, chosen in the settings:
+//                   on/off, auto, speed - and speed +; or on/off,
+//                   oscillation, night mode and airflow; or on/off, night
+//                   mode and the sleep timer, a form asking the minutes
+//                   (Gladys 5.2+) that runs the set_sleep_timer scene action.
 //
 // The tiles and the gauge follow the published states. The rest (colours,
 // status rows, buttons) is cached by the core until `ttl_seconds`; the manager
@@ -38,6 +40,7 @@ import {
   oscillationAngleOf,
 } from '../devices/fan.js';
 import { kelvinTenthsToCelsius, readNumber } from '../dyson/protocol.js';
+import { SCENE_ACTIONS, SLEEP_TIMER_DEFAULT_MINUTES, SLEEP_TIMER_MAX_MINUTES } from './scenes.js';
 
 const logger = createLogger({ name: 'widget' });
 
@@ -55,11 +58,15 @@ export const WIDGET_ACTIONS = {
   OSCILLATION: 'oscillation',
   NIGHT_MODE: 'night_mode',
   AIRFLOW: 'airflow',
+  SLEEP_TIMER: 'sleep_timer',
 };
+
+/** The one field of the sleep timer form. */
+export const SLEEP_TIMER_FIELD = 'minutes';
 
 // Values of the `buttons` setting of the controls widget (stored by the
 // dashboards: never rename one).
-export const BUTTON_SETS = { SPEED: 'speed', SETTINGS: 'settings' };
+export const BUTTON_SETS = { SPEED: 'speed', SETTINGS: 'settings', NIGHT: 'night' };
 
 // The pictures of the controls widget: one drawing per silhouette (models.js
 // `picture`), fan running or off (.github/scripts/device-pictures.mjs). The
@@ -543,6 +550,66 @@ function settingButtons(model, state, device) {
 }
 
 /**
+ * The sleep timer: a form asking the minutes, pre-filled with the timer that
+ * runs (or the scene action's default), with the scene action's bounds. A
+ * running timer is a filled button.
+ */
+function sleepTimerButton(state, device) {
+  const timer = readNumber(state.sltm);
+  const running = timer !== null && timer > 0;
+  return {
+    type: 'button',
+    label: { en: 'Sleep timer', fr: 'Minuterie' },
+    icon: 'clock',
+    style: running ? 'primary' : 'secondary',
+    action: {
+      key: WIDGET_ACTIONS.SLEEP_TIMER,
+      params: { device },
+      fields: [
+        {
+          key: SLEEP_TIMER_FIELD,
+          type: 'number',
+          label: { en: 'Minutes (0 cancels)', fr: 'Minutes (0 annule)' },
+          required: true,
+          min: 0,
+          max: SLEEP_TIMER_MAX_MINUTES,
+          default: running ? Math.min(timer, SLEEP_TIMER_MAX_MINUTES) : SLEEP_TIMER_DEFAULT_MINUTES,
+        },
+      ],
+    },
+  };
+}
+
+/** On/off, night mode and the sleep timer: the bedtime remote. */
+function nightButtons(model, state, device) {
+  const nightOn = state.nmod === 'ON';
+  return [
+    powerButton(model, state, device),
+    actionButton(
+      device,
+      WIDGET_ACTIONS.NIGHT_MODE,
+      { en: 'Night mode', fr: 'Mode nuit' },
+      'moon',
+      nightOn ? 'primary' : 'secondary',
+      nightOn ? 0 : 1,
+    ),
+    sleepTimerButton(state, device),
+  ];
+}
+
+/** The buttons of a controls instance, by its `buttons` setting. */
+function controlButtons(set, model, state, device) {
+  switch (set) {
+    case BUTTON_SETS.SETTINGS:
+      return settingButtons(model, state, device);
+    case BUTTON_SETS.NIGHT:
+      return nightButtons(model, state, device);
+    default:
+      return speedButtons(model, state, device);
+  }
+}
+
+/**
  * Content of one "Dyson controls" instance.
  * @param {object} dyson the manager (deviceInfo)
  * @param {{settings: object}} request
@@ -583,10 +650,7 @@ export function buildControlsContent(dyson, { settings }) {
   components.push({ type: 'status', items: items.slice(0, 10) });
 
   if (reachable) {
-    const buttons = settingsButtons
-      ? settingButtons(model, state, settings.device)
-      : speedButtons(model, state, settings.device);
-    components.push(...buttons);
+    components.push(...controlButtons(settings.buttons, model, state, settings.device));
   }
 
   return { ttl_seconds: 120, components };
@@ -655,6 +719,38 @@ export const WIDGET_CONTENT = {
 
 const UNREACHABLE = { en: 'The device is unreachable.', fr: "L'appareil est injoignable." };
 
+// A core older than 5.2 drops the form of a button and runs its action
+// without `values`: no minutes were typed, nothing is sent.
+const NEEDS_FORM = {
+  en: 'This button needs Gladys 5.2 or later. Use the "Set the sleep timer" scene action meanwhile.',
+  fr: "Ce bouton demande Gladys 5.2 ou plus. Utilisez l'action de scène « Régler la minuterie » d'ici là.",
+};
+
+/**
+ * The sleep timer form: the minutes go through the set_sleep_timer scene
+ * action, the very STATE-SET a scene sends. The device does not answer a
+ * timer with a state change at once: the toast says what was set.
+ */
+async function setSleepTimer(dyson, params, values) {
+  const minutes = values?.[SLEEP_TIMER_FIELD];
+  if (
+    minutes === undefined ||
+    minutes === null ||
+    minutes === '' ||
+    !Number.isFinite(Number(minutes))
+  ) {
+    return NEEDS_FORM;
+  }
+  const { sent } = await SCENE_ACTIONS.set_sleep_timer(dyson, { device: params?.device, minutes });
+  if (!sent) {
+    return UNREACHABLE;
+  }
+  const set = Math.min(SLEEP_TIMER_MAX_MINUTES, Math.round(Number(minutes)));
+  return set > 0
+    ? { en: `Sleep timer: ${set} min.`, fr: `Minuterie : ${set} min.` }
+    : { en: 'Sleep timer cancelled.', fr: 'Minuterie annulée.' };
+}
+
 // The value a declared 0 / 1 param stands for, whatever its type on the way.
 const flag = (params) => (Number(params?.value) === 1 ? 1 : 0);
 
@@ -677,11 +773,15 @@ const ACTION_COMMANDS = {
 
 /**
  * A tapped `button` carrying an `action`. `params` are the ones this content
- * declared, never user input. A control resolves no toast when it worked: the
+ * declared, never user input; `values` the form of a button declaring
+ * `fields`, validated by the core against that declaration. A control resolves no toast when it worked: the
  * refetched content shows the result.
  */
-export async function handleWidgetAction(dyson, { actionKey, params }) {
+export async function handleWidgetAction(dyson, { actionKey, params, values }) {
   logger.info(`onWidgetAction <- ${actionKey}`);
+  if (actionKey === WIDGET_ACTIONS.SLEEP_TIMER) {
+    return setSleepTimer(dyson, params, values);
+  }
   if (actionKey === WIDGET_ACTIONS.REFRESH) {
     const refreshed = await dyson.refreshDevice(params?.device);
     return refreshed ? { en: 'Readings requested.', fr: 'Relevés demandés.' } : UNREACHABLE;

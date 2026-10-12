@@ -7,6 +7,7 @@ night mode and heating, and follow the air quality they measure.
 
 ## What you need
 
+- Gladys **5.2** or later.
 - A **MyDyson** account (the Dyson mobile app), with your devices already
   added and connected to Wi-Fi.
 - The e-mail address and password of that account.
@@ -166,15 +167,20 @@ pollutants.
 - the status: oscillation (with its angle), night mode, airflow, heating,
   connection, sleep timer. With the oscillation buttons, the
   oscillation and night mode rows are left out: the buttons show them;
-- four buttons, chosen in the widget's **Buttons** setting:
+- up to four buttons, chosen in the widget's **Buttons** setting:
   - **On/off, auto, speed - and +** (default): turn on / off, auto mode (or
     back to manual), speed - and speed +;
   - **On/off, oscillation, night mode, airflow**: a setting that is on is a
     filled button, a click switches it. On the models that blow one way, the
-    auto mode takes the place of the airflow.
+    auto mode takes the place of the airflow;
+  - **On/off, night mode, sleep timer**: the bedtime remote. **Sleep timer**
+    opens a small form in the widget asking the minutes (0 to 540, 0 cancels
+    the timer), pre-filled with the timer that runs, or 60; it is a filled
+    button while a timer runs. It sets the same timer as the **Set the sleep
+    timer** scene action.
 
-After a click, the widget updates as soon as the device answered. To get both
-button sets, add the widget twice.
+After a click, the widget updates as soon as the device answered. To get
+several button sets, add the widget several times.
 
 Gladys allows four buttons per widget. To control everything in one place
 (mode list, speed slider, oscillation, night mode, airflow), also add the

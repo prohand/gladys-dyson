@@ -9,12 +9,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { DEFAULT_CONFIG } from '../src/config.js';
-import { SCENE_ACTIONS } from '../src/capabilities/scenes.js';
+import {
+  SCENE_ACTIONS,
+  SLEEP_TIMER_DEFAULT_MINUTES,
+  SLEEP_TIMER_MAX_MINUTES,
+} from '../src/capabilities/scenes.js';
 import { SCENE_TRIGGERS, createTriggerTracker } from '../src/capabilities/triggers.js';
 import {
   BUTTON_SETS,
   CONTROLS_WIDGET,
+  SLEEP_TIMER_FIELD,
   WIDGETS,
+  WIDGET_ACTIONS,
   WIDGET_CONTENT,
 } from '../src/capabilities/widget.js';
 import { describeModel } from '../src/dyson/models.js';
@@ -152,9 +158,22 @@ test('the categories stay inside the vocabulary the store indexes', () => {
 
 test('the Gladys floor covers every field the manifest declares', () => {
   // Older cores reject a manifest field they do not know: `categories` needs
-  // 4.86; this integration is built and tested against Gladys 5.1.
+  // 4.86, the widgets and scenes 5.1; the sleep timer FORM of the controls
+  // widget needs 5.2 (an older core drops it and runs the action without
+  // `values`).
+  assert.ok(WIDGET_ACTIONS.SLEEP_TIMER);
   const [major, minor] = manifest.gladys_version.replace(/^>=/, '').split('.').map(Number);
-  assert.ok(major > 5 || (major === 5 && minor >= 1), `got ${manifest.gladys_version}`);
+  assert.ok(major > 5 || (major === 5 && minor >= 2), `got ${manifest.gladys_version}`);
+  assert.match(indexSource, /\{ actionKey, params, values \}/, 'index.js relays the form');
+});
+
+test('the sleep timer form and the scene action take the same minutes', () => {
+  const minutes = manifest.scene_actions
+    .find((action) => action.key === 'set_sleep_timer')
+    .fields.find((field) => field.key === SLEEP_TIMER_FIELD);
+  assert.equal(minutes.min, 0);
+  assert.equal(minutes.max, SLEEP_TIMER_MAX_MINUTES);
+  assert.equal(minutes.default, SLEEP_TIMER_DEFAULT_MINUTES);
 });
 
 test('both transports are declared: local first, Dyson cloud as the fallback', () => {

@@ -2,8 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent, validateWidgetImage } from '@gladysassistant/integration-sdk';
 import {
+  BUTTON_SETS,
   NUDGE_MIN_INTERVAL_MS,
   PICTURE_KEYS,
+  SLEEP_TIMER_FIELD,
+  WIDGET_ACTIONS,
   buildAirContent,
   buildControlsContent,
   createWidgetNudger,
@@ -455,4 +458,97 @@ test('widget nudges: a refused nudge (socket down) never throws', () => {
     throw new Error('not connected');
   });
   assert.doesNotThrow(() => nudger.nudge('dyson_air'));
+});
+
+// --- The "night" buttons and the sleep timer form (Gladys 5.2+) ------------------
+
+const nightButtonsOf = (productState) =>
+  buildControlsContent(dysonWith({ ...PURE_INFO, productState }), {
+    settings: { device: ID, buttons: BUTTON_SETS.NIGHT },
+  });
+
+test('controls widget, "night" buttons: on/off, night mode, the sleep timer form', () => {
+  const content = nightButtonsOf(PURE_INFO.productState);
+  assert.deepEqual(validateWidgetContent(content), []);
+  const buttons = content.components.filter((c) => c.type === 'button');
+  assert.deepEqual(
+    buttons.map((b) => [b.action.key, b.style]),
+    [
+      ['power', 'secondary'],
+      ['night_mode', 'secondary'],
+      ['sleep_timer', 'primary'],
+    ],
+  );
+  const [minutes] = buttons[2].action.fields;
+  assert.deepEqual(
+    {
+      key: minutes.key,
+      type: minutes.type,
+      min: minutes.min,
+      max: minutes.max,
+      default: minutes.default,
+    },
+    { key: SLEEP_TIMER_FIELD, type: 'number', min: 0, max: 540, default: 30 },
+    'pre-filled with the timer that runs',
+  );
+  assert.deepEqual(buttons[2].action.params, { device: ID });
+
+  const idle = nightButtonsOf({ ...PURE_INFO.productState, sltm: 'OFF', nmod: 'ON' });
+  assert.deepEqual(validateWidgetContent(idle), []);
+  const [, night, timer] = idle.components.filter((c) => c.type === 'button');
+  assert.deepEqual([night.style, night.action.params.value], ['primary', 0]);
+  assert.equal(timer.style, 'secondary');
+  assert.equal(timer.action.fields[0].default, 60, 'the scene action default');
+});
+
+test('the sleep timer form goes through the set_sleep_timer scene action', async () => {
+  const sent = [];
+  const dyson = {
+    deviceInfo: (id) => (id === ID ? PURE_INFO : null),
+    async sendToDevice(device, data) {
+      sent.push([device, data]);
+      return { sent: device === ID, transport: 'local' };
+    },
+  };
+  const tap = (values, device = ID) =>
+    handleWidgetAction(dyson, {
+      actionKey: WIDGET_ACTIONS.SLEEP_TIMER,
+      params: { device },
+      values,
+    });
+
+  assert.deepEqual(await tap({ [SLEEP_TIMER_FIELD]: 45 }), {
+    en: 'Sleep timer: 45 min.',
+    fr: 'Minuterie : 45 min.',
+  });
+  assert.deepEqual(await tap({ [SLEEP_TIMER_FIELD]: 0 }), {
+    en: 'Sleep timer cancelled.',
+    fr: 'Minuterie annulée.',
+  });
+  assert.deepEqual(sent, [
+    [ID, { sltm: '0045' }],
+    [ID, { sltm: 'OFF' }],
+  ]);
+  assert.match((await tap({ [SLEEP_TIMER_FIELD]: 30 }, 'other')).fr, /injoignable/);
+});
+
+test('a core that dropped the form gets an explanation, nothing is sent', async () => {
+  const sent = [];
+  const dyson = {
+    deviceInfo: () => PURE_INFO,
+    async sendToDevice(device, data) {
+      sent.push(data);
+      return { sent: true, transport: 'local' };
+    },
+  };
+  for (const values of [undefined, {}, { [SLEEP_TIMER_FIELD]: 'abc' }]) {
+    const message = await handleWidgetAction(dyson, {
+      actionKey: WIDGET_ACTIONS.SLEEP_TIMER,
+      params: { device: ID },
+      values,
+    });
+    assert.match(message.en, /Gladys 5\.2/);
+    assert.match(message.fr, /Gladys 5\.2/);
+  }
+  assert.deepEqual(sent, []);
 });
