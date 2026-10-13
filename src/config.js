@@ -20,16 +20,34 @@ export const DEFAULT_CONFIG = {
 export const REFRESH_INTERVAL_MIN = 15;
 export const REFRESH_INTERVAL_MAX = 3600;
 
-// French-, German- and Spanish-speaking countries get the one-time code
-// e-mail in their language, the others in English: the Dyson API only uses the
-// culture for that e-mail. A multilingual country keeps the language it always
-// had (Switzerland: French), so existing installs see no change.
+// The language of the feature names of new devices, from the account country.
+// A multilingual country keeps the language it always had (Switzerland:
+// French), so existing installs see no change.
 const COUNTRY_LANGUAGES = [
   ['fr', ['FR', 'BE', 'CH', 'LU', 'MC']],
   ['de', ['DE', 'AT', 'LI']],
   [
     'es',
-    ['ES', 'MX', 'AR', 'CL', 'CO', 'PE', 'UY', 'PY', 'BO', 'EC', 'VE', 'CR', 'PA', 'GT', 'HN'],
+    [
+      'ES',
+      'MX',
+      'AR',
+      'CL',
+      'CO',
+      'PE',
+      'UY',
+      'PY',
+      'BO',
+      'EC',
+      'VE',
+      'CR',
+      'PA',
+      'GT',
+      'HN',
+      'SV',
+      'NI',
+      'DO',
+    ],
   ],
 ];
 
@@ -65,7 +83,10 @@ export function normalizeConfig(raw = {}) {
     password: String(source.password ?? ''),
     country: validCountry,
     language,
-    culture: `${language}-${validCountry}`,
+    // The culture only sets the language of the one-time code e-mail. It stays
+    // French or English, as it always was: other cultures were never checked
+    // against the Dyson API, and a refused one would break the sign-in.
+    culture: `${language === 'fr' ? 'fr' : 'en'}-${validCountry}`,
     device_hosts: deviceHosts,
     hosts: parseDeviceHosts(deviceHosts),
     bareHosts: parseBareHosts(deviceHosts),

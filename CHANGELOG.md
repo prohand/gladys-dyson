@@ -15,7 +15,7 @@ becomes the notes of the version's GitHub Release.
 - German and Spanish translations (configuration screen, messages, widgets,
   documentation). Feature names of new devices are in German for an account in
   Germany, Austria or Liechtenstein, in Spanish for Spain and Spanish-speaking
-  Latin America, and the Dyson code e-mail is asked in that language.
+  Latin America.
 
 ### Changed
 
