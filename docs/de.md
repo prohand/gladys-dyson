@@ -1,15 +1,15 @@
 # Dyson
 
-Diese Integration verbindet Gladys mit Ihren vernetzten **Dyson-Luftreinigern,
+Diese Integration verbindet Gladys mit deinen vernetzten **Dyson-Luftreinigern,
 -Ventilatoren und -Heizlüftern** (Pure Cool, Purifier Cool, Hot+Cool,
-Humidify+Cool, Big+Quiet und die älteren „Link“-Modelle). Schalten Sie sie ein
-und aus, stellen Sie Geschwindigkeit, Oszillation, Nachtmodus und Heizung ein
-und verfolgen Sie die Luftqualität, die sie messen.
+Humidify+Cool, Big+Quiet und die älteren „Link“-Modelle). Schalte sie ein
+und aus, stelle Geschwindigkeit, Oszillation, Nachtmodus und Heizung ein
+und verfolge die Luftqualität, die sie messen.
 
-## Was Sie benötigen
+## Was du benötigst
 
 - Gladys **5.2** oder neuer.
-- Ein **MyDyson**-Konto (die mobile Dyson-App), in dem Ihre Geräte bereits
+- Ein **MyDyson**-Konto (die mobile Dyson-App), in dem deine Geräte bereits
   hinzugefügt und mit dem WLAN verbunden sind.
 - Die E-Mail-Adresse und das Passwort dieses Kontos.
 - Zugriff auf das Postfach des Kontos: Dyson sendet bei jeder Anmeldung einen
@@ -19,8 +19,8 @@ und verfolgen Sie die Luftqualität, die sie messen.
 
 Die Integration kann ein Gerät auf zwei Wegen erreichen:
 
-- **Lokal**: direkt über Ihr Netzwerk (MQTT, Port 1883). Schnell, und es
-  funktioniert ohne Internet. Geben Sie die Geräteadresse in der Konfiguration
+- **Lokal**: direkt über dein Netzwerk (MQTT, Port 1883). Schnell, und es
+  funktioniert ohne Internet. Gib die Geräteadresse in der Konfiguration
   an (siehe **Einstellungen** unten).
 - **Dyson-Cloud**: über die Server von Dyson, von überall. Erfordert Internet
   und ein angemeldetes Konto.
@@ -33,30 +33,30 @@ bevorzugen, wenn verfügbar** (standardmäßig aktiviert) den Weg, der zuerst
 versucht wird. Der andere ist der Ersatzweg. Jedes Gerät zeigt ein
 **Abzeichen** mit dem verwendeten Weg: lokal, Cloud oder nicht erreichbar. Ein
 **orangefarbener Punkt** auf dem Abzeichen bedeutet „es funktioniert, aber über
-den Ersatzweg“: Fahren Sie mit der Maus darüber, um den Grund zu sehen.
+den Ersatzweg“: Fahre mit der Maus darüber, um den Grund zu sehen.
 
 ## Erste Schritte
 
-1. Öffnen Sie in Gladys **Integrationen → Dyson → Konfiguration**.
-2. Füllen Sie aus:
-   - **MyDyson-E-Mail**: die E-Mail-Adresse Ihres Kontos;
+1. Öffne in Gladys **Integrationen → Dyson → Konfiguration**.
+2. Fülle aus:
+   - **MyDyson-E-Mail**: die E-Mail-Adresse deines Kontos;
    - **MyDyson-Passwort**;
    - **Land des Kontos**: der zweistellige Code des Landes, das bei der
      Erstellung des Kontos gewählt wurde (`DE`, `AT`, `CH`, `GB`, `US`...).
-3. Klicken Sie auf **Konfiguration speichern**.
-4. Klicken Sie auf **Code erhalten**. Dyson sendet Ihnen einen 6-stelligen Code
+3. Klicke auf **Konfiguration speichern**.
+4. Klicke auf **Code erhalten**. Dyson sendet dir einen 6-stelligen Code
    per E-Mail.
-5. Geben Sie diesen Code unter **Code bestätigen** ein und bestätigen Sie. Die
+5. Gib diesen Code unter **Code bestätigen** ein und bestätige. Die
    Meldung gibt an, wie viele Geräte gefunden wurden.
-6. Öffnen Sie den Tab **Entdecken** und fügen Sie Ihre Geräte hinzu.
-7. Für die lokale Verbindung geben Sie die Adresse jedes Geräts unter
-   **Geräteadressen** ein (siehe **Einstellungen**) und speichern Sie.
+6. Öffne den Tab **Entdecken** und füge deine Geräte hinzu.
+7. Für die lokale Verbindung gib die Adresse jedes Geräts unter
+   **Geräteadressen** ein (siehe **Einstellungen**) und speichere.
 
 Die Sitzung bleibt erhalten: Nach einem Neustart ist kein neuer Code nötig.
 Beendet Dyson die Sitzung (zum Beispiel nach einer Passwortänderung), fordert
 der Verbindungsstatus einen neuen Code an.
 
-## Was Sie erhalten
+## Was du erhältst
 
 Je nach Modell:
 
@@ -82,10 +82,10 @@ Die Namen der Funktionen richten sich nach dem Land des Kontos: Französisch fü
 Frankreich, Belgien, die Schweiz, Luxemburg und Monaco; Deutsch für
 Deutschland, Österreich und Liechtenstein; Spanisch für Spanien und die
 spanischsprachigen Länder Lateinamerikas; sonst Englisch. Ein bereits
-hinzugefügtes Gerät behält seine Namen: Benennen Sie eine Funktion auf der
+hinzugefügtes Gerät behält seine Namen: Benenne eine Funktion auf der
 Geräteseite um (Integrationen → Dyson → Geräte). In einer Box „Geräte“ benennt
 Gladys eine Funktion, die als einzige ihrer Art vorhanden ist, nach ihrem Typ
-(„Auswahl“ für den Oszillationswinkel): Geben Sie der Zeile in den
+(„Auswahl“ für den Oszillationswinkel): Gib der Zeile in den
 Einstellungen der Box einen eigenen Namen.
 
 Die Werte sind die, die die MyDyson-App anzeigt. Der VOC- und der NO2-Index
@@ -105,12 +105,12 @@ Nachtmodus sind Ein/Aus-Schalter.
 
 Die Liste **Oszillationswinkel** bietet die Breiten der Dyson-App: 45°, 90°,
 180° und 350°. Die Wahl einer Breite startet die Oszillation um die Richtung,
-in die das Gerät zeigt. Zum Beenden verwenden Sie den Schalter Oszillation.
+in die das Gerät zeigt. Zum Beenden verwende den Schalter Oszillation.
 Eine anders eingestellte Breite (über eine andere App) zeigt keinen Eintrag in
 der Liste.
 
-**Gerät vor dieser Version hinzugefügt?** Öffnen Sie den Tab **Entdecken** und
-klicken Sie beim Gerät auf **Aktualisieren**, um die neuesten Funktionen zu
+**Gerät vor dieser Version hinzugefügt?** Öffne den Tab **Entdecken** und
+klicke beim Gerät auf **Aktualisieren**, um die neuesten Funktionen zu
 erhalten (Oszillationswinkel, Schalter, Symbole für PM und Luftfeuchtigkeit).
 Sein Verlauf und seine Szenen bleiben erhalten. Die Schaltfläche erscheint,
 sobald die Integration in ihrer neuen Version neu gestartet wurde.
@@ -138,7 +138,7 @@ Im Szeneneditor, Kategorie **Integrationen**:
   `degraded`.
 
 Jeder Auslöser kann auf ein Gerät beschränkt werden. Ein Ereignis pro Änderung.
-Beim Start ist der erste Wert die Referenz: Ein Neustart führt Ihre Szenen
+Beim Start ist der erste Wert die Referenz: Ein Neustart führt deine Szenen
 nicht erneut aus.
 
 ### Aktionen
@@ -187,7 +187,7 @@ Schadstoffen berechnet.
   - **Ein/Aus, Auto, Geschwindigkeit - und +** (Standard): ein- / ausschalten,
     Automatikmodus (oder zurück zu manuell), Geschwindigkeit - und
     Geschwindigkeit +. Geschwindigkeit - und + erscheinen nur, während das
-    Gerät eingeschaltet und im manuellen Modus ist: ausgeschaltet sehen Sie nur
+    Gerät eingeschaltet und im manuellen Modus ist: ausgeschaltet siehst du nur
     **Einschalten** und **Automatikmodus**; im Automatikmodus **Ausschalten**
     und **Manueller Modus**. Bei der niedrigsten Geschwindigkeit (1) ist
     Geschwindigkeit - ausgeblendet, bei der höchsten (10) Geschwindigkeit +;
@@ -203,27 +203,27 @@ Schadstoffen berechnet.
     **Ausschalt-Timer einstellen**.
 
 Nach einem Klick aktualisiert sich das Widget, sobald das Gerät geantwortet
-hat. Für mehrere Schaltflächen-Sätze fügen Sie das Widget mehrmals hinzu.
+hat. Für mehrere Schaltflächen-Sätze füge das Widget mehrmals hinzu.
 
 Gladys erlaubt vier Schaltflächen pro Widget. Um alles an einem Ort zu steuern
 (Modusliste, Geschwindigkeitsregler, Oszillation, Nachtmodus, Luftstrom),
-fügen Sie das Gerät zusätzlich einer Box „Geräte“ Ihres Dashboards hinzu. Das
+füge das Gerät zusätzlich einer Box „Geräte“ deines Dashboards hinzu. Das
 Bedienfeld, das sich bei einer Lampe in dieser Box öffnet, zeichnet Gladys nur
 für Lampen: Eine Integration kann keines für einen Ventilator hinzufügen.
 
 ## Einstellungen
 
-- **Geräteadressen (lokal)**: die Adresse jedes Geräts in Ihrem Netzwerk, als
+- **Geräteadressen (lokal)**: die Adresse jedes Geräts in deinem Netzwerk, als
   `Seriennummer=IP`, durch Kommas getrennt. Beispiel:
   `NK6-EU-MHA0000A=192.168.1.20`. Mit einem einzigen Dyson-Gerät im Konto
   genügt die Adresse allein: `192.168.1.20`. Ein Gerät ohne Adresse hier läuft
   über die Dyson-Cloud (Abzeichen mit orangefarbenem Punkt); die Meldung des
   Abzeichens und **Verbindung testen** nennen die einzugebende Seriennummer.
   Die Seriennummer steht auf dem Etikett des Geräts und in der MyDyson-App.
-  Geben Sie dem Gerät in Ihrem Router eine feste Adresse, damit sie sich nicht
+  Gib dem Gerät in deinem Router eine feste Adresse, damit sie sich nicht
   ändert.
 
-  Um die Adresse zu finden, sehen Sie in der Liste der verbundenen Geräte Ihres
+  Um die Adresse zu finden, sieh in der Liste der verbundenen Geräte deines
   Routers nach: Das Gerät erscheint meist unter seiner Seriennummer. Die
   Integration kann es noch nicht selbst finden: Gladys erlaubt ihr nicht, die
   Ankündigungen `_dyson_mqtt._tcp` der Geräte zu empfangen.
@@ -243,16 +243,16 @@ für Lampen: Eine Integration kann keines für einen Ventilator hinzufügen.
 
 ## Fehlerbehebung
 
-- **„Dyson hat den Code oder das Passwort abgelehnt“**: Prüfen Sie das
-  gespeicherte Passwort und fordern Sie dann einen neuen Code an. Ein Code ist
+- **„Dyson hat den Code oder das Passwort abgelehnt“**: Prüfe das
+  gespeicherte Passwort und fordere dann einen neuen Code an. Ein Code ist
   nur wenige Minuten gültig.
-- **Kein Code erhalten**: Sehen Sie im Spam-Ordner nach und prüfen Sie die
+- **Kein Code erhalten**: Sieh im Spam-Ordner nach und prüfe die
   E-Mail-Adresse und das Land des Kontos.
 - **Abzeichen „Cloud“ mit orangefarbenem Punkt**: Die Geräteadresse fehlt unter
   **Geräteadressen**, oder die lokale Verbindung wurde abgelehnt (falsche
   Adresse, Gerät in einem anderen Netzwerk, das Gladys nicht erreicht). Ein
   Zurücksetzen auf Werkseinstellungen ändert das lokale Passwort des Geräts:
-  Klicken Sie auf **Verbindung testen**, um es erneut zu lesen. Wenn die lokale
+  Klicke auf **Verbindung testen**, um es erneut zu lesen. Wenn die lokale
   Verbindung fehlgeschlagen ist (Gerät startet neu, WLAN ausgefallen), versucht
   die Integration sie alle 4 Minuten erneut und kehrt von selbst zu ihr zurück.
 - **Abzeichen „Nicht erreichbar“**: Das Gerät ist ausgesteckt, nicht im WLAN,
@@ -264,12 +264,12 @@ für Lampen: Eine Integration kann keines für einen Ventilator hinzufügen.
 - **Ein Sensor bleibt leer**: Manche Sensoren brauchen nach dem Einschalten
   einige Minuten. Ein Modell ohne diesen Sensor sendet nie einen Wert.
 
-Die Protokolle der Integration (Tab **Überwachung**) enthalten die Details. Sie
-enthalten nie Ihr Passwort oder Ihr Token.
+Die Protokolle der Integration (Tab **Protokolle**) enthalten die Details. Sie
+enthalten nie dein Passwort oder dein Token.
 
 ## Datenschutz
 
-Ihre E-Mail-Adresse und Ihr Passwort werden nur an Dyson gesendet
+Deine E-Mail-Adresse und dein Passwort werden nur an Dyson gesendet
 (`appapi.cp.dyson.com`). Das Sitzungstoken und die Geräteliste werden im
 Datenvolume der Integration gespeichert und sind nur für die Integration
 lesbar.

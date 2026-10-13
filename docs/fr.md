@@ -255,7 +255,7 @@ pas en ajouter un pour un ventilateur.
   après la mise sous tension. Un modèle sans ce capteur n'envoie jamais de
   valeur.
 
-Les journaux de l'intégration (onglet **Supervision**) donnent le détail. Ils
+Les journaux de l'intégration (onglet **Journaux**) donnent le détail. Ils
 ne contiennent jamais votre mot de passe ni votre jeton.
 
 ## Vie privée

@@ -34,19 +34,19 @@ const STATUS_MESSAGES = {
   noAccount: {
     en: 'Enter the e-mail and password of your Dyson account, save, then use "Receive a code".',
     fr: "Renseignez l'e-mail et le mot de passe de votre compte Dyson, enregistrez, puis utilisez « Recevoir un code ».",
-    de: 'Geben Sie die E-Mail-Adresse und das Passwort Ihres Dyson-Kontos ein, speichern Sie und verwenden Sie dann „Code erhalten“.',
+    de: 'Gib die E-Mail-Adresse und das Passwort deines Dyson-Kontos ein, speichere und verwende dann „Code erhalten“.',
     es: 'Introduzca el correo electrónico y la contraseña de su cuenta Dyson, guarde y luego use «Recibir un código».',
   },
   noToken: {
     en: 'Not signed in yet: use "Receive a code", then "Validate the code".',
     fr: 'Pas encore connecté : utilisez « Recevoir un code », puis « Valider le code ».',
-    de: 'Noch nicht angemeldet: Verwenden Sie „Code erhalten“ und dann „Code bestätigen“.',
+    de: 'Noch nicht angemeldet: Verwende „Code erhalten“ und dann „Code bestätigen“.',
     es: 'Aún no ha iniciado sesión: use «Recibir un código» y luego «Validar el código».',
   },
   tokenRejected: {
     en: 'The Dyson session has expired: sign in again with a new code.',
     fr: 'La session Dyson a expiré : reconnectez-vous avec un nouveau code.',
-    de: 'Die Dyson-Sitzung ist abgelaufen: Melden Sie sich mit einem neuen Code erneut an.',
+    de: 'Die Dyson-Sitzung ist abgelaufen: Melde dich mit einem neuen Code erneut an.',
     es: 'La sesión de Dyson ha caducado: vuelva a iniciar sesión con un código nuevo.',
   },
 };
@@ -414,7 +414,7 @@ export function createDysonManager({
       return {
         en: `A code was sent to ${config.email}. Type it in "Validate the code" within a few minutes.`,
         fr: `Un code a été envoyé à ${config.email}. Saisissez-le dans « Valider le code » dans les minutes qui suivent.`,
-        de: `Ein Code wurde an ${config.email} gesendet. Geben Sie ihn innerhalb weniger Minuten unter „Code bestätigen“ ein.`,
+        de: `Ein Code wurde an ${config.email} gesendet. Gib ihn innerhalb weniger Minuten unter „Code bestätigen“ ein.`,
         es: `Se ha enviado un código a ${config.email}. Introdúzcalo en «Validar el código» en los próximos minutos.`,
       };
     },
@@ -431,7 +431,7 @@ export function createDysonManager({
         return {
           en: 'No code pending for this e-mail: use "Receive a code" first.',
           fr: "Aucun code en attente pour cet e-mail : utilisez d'abord « Recevoir un code ».",
-          de: 'Für diese E-Mail-Adresse steht kein Code aus: Verwenden Sie zuerst „Code erhalten“.',
+          de: 'Für diese E-Mail-Adresse steht kein Code aus: Verwende zuerst „Code erhalten“.',
           es: 'No hay ningún código pendiente para este correo electrónico: use primero «Recibir un código».',
         };
       }
@@ -452,7 +452,7 @@ export function createDysonManager({
           return {
             en: 'Dyson refused the code or the password. Check them, or ask for a new code.',
             fr: 'Dyson a refusé le code ou le mot de passe. Vérifiez-les, ou demandez un nouveau code.',
-            de: 'Dyson hat den Code oder das Passwort abgelehnt. Prüfen Sie beides oder fordern Sie einen neuen Code an.',
+            de: 'Dyson hat den Code oder das Passwort abgelehnt. Prüfe beides oder fordere einen neuen Code an.',
             es: 'Dyson ha rechazado el código o la contraseña. Compruébelos o solicite un código nuevo.',
           };
         }
@@ -473,7 +473,7 @@ export function createDysonManager({
       return {
         en: `Signed in: ${count} Dyson device(s) found. Add them from the Discover tab.`,
         fr: `Connecté : ${count} appareil(s) Dyson trouvé(s). Ajoutez-les depuis l'onglet Découverte.`,
-        de: `Angemeldet: ${count} Dyson-Gerät(e) gefunden. Fügen Sie sie im Tab „Entdecken“ hinzu.`,
+        de: `Angemeldet: ${count} Dyson-Gerät(e) gefunden. Füge sie im Tab „Entdecken“ hinzu.`,
         es: `Sesión iniciada: ${count} dispositivo(s) Dyson encontrado(s). Añádalos desde la pestaña «Descubrir».`,
       };
     },

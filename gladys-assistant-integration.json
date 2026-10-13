@@ -5,7 +5,7 @@
   "description": {
     "en": "Control Dyson purifiers, fans and heaters, and read their air quality sensors.",
     "fr": "Pilotez purificateurs, ventilateurs et chauffages Dyson, et lisez la qualité de l'air.",
-    "de": "Steuern Sie Dyson-Luftreiniger, -Ventilatoren und -Heizlüfter und lesen Sie die Luftqualität aus.",
+    "de": "Steuere Dyson-Luftreiniger, -Ventilatoren und -Heizlüfter und lies die Luftqualität aus.",
     "es": "Controle purificadores, ventiladores y calefactores Dyson, y lea sus sensores de calidad del aire."
   },
   "version": "1.6.0",
@@ -27,7 +27,7 @@
       "description": {
         "en": "1. Enter the e-mail, password and country of your MyDyson account, then save. 2. Click \"Receive a code\": Dyson e-mails you a code. 3. Type it in \"Validate the code\". 4. Add your devices from the Discover tab. To drive a device on your local network, give its address below; otherwise it goes through the Dyson cloud.",
         "fr": "1. Saisissez l'e-mail, le mot de passe et le pays de votre compte MyDyson, puis enregistrez. 2. Cliquez sur « Recevoir un code » : Dyson vous envoie un code par e-mail. 3. Saisissez-le dans « Valider le code ». 4. Ajoutez vos appareils depuis l'onglet Découverte. Pour piloter un appareil sur votre réseau local, donnez son adresse ci-dessous ; sinon il passe par le cloud Dyson.",
-        "de": "1. Geben Sie E-Mail-Adresse, Passwort und Land Ihres MyDyson-Kontos ein und speichern Sie. 2. Klicken Sie auf „Code erhalten“: Dyson sendet Ihnen einen Code per E-Mail. 3. Geben Sie ihn unter „Code bestätigen“ ein. 4. Fügen Sie Ihre Geräte im Tab „Entdecken“ hinzu. Um ein Gerät in Ihrem lokalen Netzwerk zu steuern, geben Sie unten seine Adresse an; andernfalls läuft es über die Dyson-Cloud.",
+        "de": "1. Gib E-Mail-Adresse, Passwort und Land deines MyDyson-Kontos ein und speichere. 2. Klicke auf „Code erhalten“: Dyson sendet dir einen Code per E-Mail. 3. Gib ihn unter „Code bestätigen“ ein. 4. Füge deine Geräte im Tab „Entdecken“ hinzu. Um ein Gerät in deinem lokalen Netzwerk zu steuern, gib unten seine Adresse an; andernfalls läuft es über die Dyson-Cloud.",
         "es": "1. Introduzca el correo electrónico, la contraseña y el país de su cuenta MyDyson y guarde. 2. Haga clic en «Recibir un código»: Dyson le envía un código por correo electrónico. 3. Introdúzcalo en «Validar el código». 4. Añada sus dispositivos desde la pestaña «Descubrir». Para controlar un dispositivo en su red local, indique su dirección a continuación; de lo contrario, pasa por la nube de Dyson."
       }
     },
@@ -147,7 +147,7 @@
       "description": {
         "en": "Dyson e-mails a one-time code to the account (save the form first).",
         "fr": "Dyson envoie un code à usage unique par e-mail (enregistrez le formulaire avant).",
-        "de": "Dyson sendet einen Einmalcode per E-Mail an das Konto (speichern Sie zuerst das Formular).",
+        "de": "Dyson sendet einen Einmalcode per E-Mail an das Konto (speichere zuerst das Formular).",
         "es": "Dyson envía un código de un solo uso por correo electrónico a la cuenta (guarde antes el formulario)."
       },
       "timeout_seconds": 30

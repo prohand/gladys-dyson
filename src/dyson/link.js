@@ -44,7 +44,7 @@ const REASONS = {
     message: {
       en: `Local address unknown: add ${serial}=<IP> to the Device addresses setting. Using the Dyson cloud.`,
       fr: `Adresse locale inconnue : ajoutez ${serial}=<IP> au réglage Adresses des appareils. Passage par le cloud Dyson.`,
-      de: `Lokale Adresse unbekannt: Fügen Sie ${serial}=<IP> zur Einstellung Geräteadressen hinzu. Verbindung über die Dyson-Cloud.`,
+      de: `Lokale Adresse unbekannt: Füge ${serial}=<IP> zur Einstellung Geräteadressen hinzu. Verbindung über die Dyson-Cloud.`,
       es: `Dirección local desconocida: añada ${serial}=<IP> al ajuste Direcciones de los dispositivos. Se usa la nube de Dyson.`,
     },
   }),

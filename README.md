@@ -48,7 +48,7 @@ The manifest declares both transports (`"transports": ["local", "cloud"]`):
 - **cloud** — the Dyson AWS IoT broker, with per-device credentials from the
   Dyson account.
 
-Gladys shows the standard **Prefer the local connection** toggle; the other
+Gladys shows the standard **Prefer the local (LAN) connection when available** toggle; the other
 transport is the fallback, and each device reports the one it uses as a badge
 (orange dot when it fell back for a reason the user can fix). The MyDyson
 account is needed in both cases: it gives the device list and each device's

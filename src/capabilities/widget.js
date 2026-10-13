@@ -417,7 +417,7 @@ function deviceOf(dyson, settings) {
       content: message({
         en: 'Choose a Dyson device in the widget settings.',
         fr: 'Choisissez un appareil Dyson dans les réglages du widget.',
-        de: 'Wählen Sie in den Widget-Einstellungen ein Dyson-Gerät aus.',
+        de: 'Wähle in den Widget-Einstellungen ein Dyson-Gerät aus.',
         es: 'Elija un dispositivo Dyson en la configuración del widget.',
       }),
     };
@@ -830,7 +830,7 @@ const UNREACHABLE = {
 const NEEDS_FORM = {
   en: 'This button needs Gladys 5.2 or later. Use the "Set the sleep timer" scene action meanwhile.',
   fr: "Ce bouton demande Gladys 5.2 ou plus. Utilisez l'action de scène « Régler la minuterie » d'ici là.",
-  de: 'Diese Schaltfläche erfordert Gladys 5.2 oder neuer. Verwenden Sie bis dahin die Szenenaktion „Ausschalt-Timer einstellen“.',
+  de: 'Diese Schaltfläche erfordert Gladys 5.2 oder neuer. Verwende bis dahin die Szenenaktion „Ausschalt-Timer einstellen“.',
   es: 'Este botón requiere Gladys 5.2 o posterior. Mientras tanto, utilice la acción de escena «Ajustar el temporizador de apagado».',
 };
 

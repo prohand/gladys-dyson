@@ -264,7 +264,7 @@ uno para un ventilador.
 - **Un sensor se queda vacío**: algunos sensores necesitan unos minutos tras el
   encendido. Un modelo sin ese sensor nunca envía un valor.
 
-Los registros de la integración (pestaña **Supervisión**) dan los detalles.
+Los registros de la integración (pestaña **Registros**) dan los detalles.
 Nunca contienen su contraseña ni su token.
 
 ## Privacidad

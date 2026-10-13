@@ -22,6 +22,10 @@ becomes the notes of the version's GitHub Release.
 - Documentation: the "Dyson controls" widget shows speed - and + only while the device
   is on and in manual mode.
 
+### Fixed
+
+- The English documentation names the Gladys screens as the Gladys interface does.
+
 ## [1.6.0] - 2026-10-12
 
 ### Changed

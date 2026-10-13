@@ -27,8 +27,8 @@ The integration can reach a device in two ways:
 The Dyson account is always needed once: it gives the list of devices and the
 local password of each one.
 
-On the Configuration screen, the **Prefer the local connection** toggle (on by
-default) picks the path tried first. The other one is the fallback. Each
+On the Configuration screen, the **Prefer the local (LAN) connection when available**
+toggle (on by default) picks the path tried first. The other one is the fallback. Each
 device shows a **badge** with the path in use: local, cloud or unreachable. An
 **orange dot** on the badge means "it works, but through the fallback": hover
 it to see why.
@@ -41,7 +41,7 @@ it to see why.
    - **MyDyson password**;
    - **Account country**: the two-letter code of the country chosen when the
      account was created (`FR`, `BE`, `CH`, `GB`, `US`...).
-3. Click **Save**.
+3. Click **Save configuration**.
 4. Click **Receive a code**. Dyson e-mails you a 6-digit code.
 5. In **Validate the code**, type that code and confirm. The message says how
    many devices were found.
@@ -242,7 +242,7 @@ cannot add one for a fan.
 - **A sensor stays empty**: some sensors need a few minutes after power-up. A
   model without that sensor never sends a value.
 
-The integration logs (**Supervision** tab) give the details. They never
+The integration logs (**Logs** tab) give the details. They never
 contain your password or your token.
 
 ## Privacy
