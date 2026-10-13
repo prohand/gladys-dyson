@@ -10,10 +10,21 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- German and Spanish translations (configuration screen, messages, widgets,
+  documentation). Feature names of new devices are in German for an account in
+  Germany, Austria or Liechtenstein, in Spanish for Spain and Spanish-speaking
+  Latin America.
+
 ### Changed
 
 - Documentation: the "Dyson controls" widget shows speed - and + only while the device
   is on and in manual mode.
+
+### Fixed
+
+- The English documentation names the Gladys screens as the Gladys interface does.
 
 ## [1.6.0] - 2026-10-12
 

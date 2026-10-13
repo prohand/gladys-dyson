@@ -1,0 +1,275 @@
+# Dyson
+
+Esta integración conecta Gladys con sus **purificadores, ventiladores y
+calefactores Dyson** conectados (Pure Cool, Purifier Cool, Hot+Cool,
+Humidify+Cool, Big+Quiet y los modelos «Link» más antiguos). Enciéndalos y
+apáguelos, ajuste la velocidad, la oscilación, el modo nocturno y la
+calefacción, y siga la calidad del aire que miden.
+
+## Lo que necesita
+
+- Gladys **5.2** o posterior.
+- Una cuenta **MyDyson** (la aplicación móvil de Dyson), con sus dispositivos
+  ya añadidos y conectados al wifi.
+- El correo electrónico y la contraseña de esa cuenta.
+- Acceso al buzón de la cuenta: Dyson envía un **código de un solo uso** por
+  correo electrónico en cada inicio de sesión.
+
+## Local y nube
+
+La integración puede llegar a un dispositivo de dos maneras:
+
+- **Local**: directamente por su red (MQTT, puerto 1883). Rápido, y funciona
+  sin Internet. Indique la dirección del dispositivo en la configuración (vea
+  **Ajustes** más abajo).
+- **Nube de Dyson**: a través de los servidores de Dyson, desde cualquier
+  lugar. Necesita Internet y una cuenta con la sesión iniciada.
+
+La cuenta Dyson siempre se necesita al menos una vez: proporciona la lista de
+dispositivos y la contraseña local de cada uno.
+
+En la pantalla de configuración, el interruptor **Preferir la conexión local
+(LAN) cuando esté disponible** (activado por defecto) elige la vía que se
+prueba primero. La otra es la de respaldo. Cada dispositivo muestra una
+**insignia** con la vía en uso: local, nube o inaccesible. Un **punto naranja**
+en la insignia significa «funciona, pero por la vía de respaldo»: pase el
+ratón por encima para ver por qué.
+
+## Primeros pasos
+
+1. En Gladys, abra **Integraciones → Dyson → Configuración**.
+2. Rellene:
+   - **Correo electrónico de MyDyson**: el correo electrónico de su cuenta;
+   - **Contraseña de MyDyson**;
+   - **País de la cuenta**: el código de dos letras del país elegido al crear
+     la cuenta (`ES`, `MX`, `FR`, `GB`, `US`...).
+3. Haga clic en **Guardar configuración**.
+4. Haga clic en **Recibir un código**. Dyson le envía un código de 6 cifras por
+   correo electrónico.
+5. En **Validar el código**, escriba ese código y confirme. El mensaje indica
+   cuántos dispositivos se han encontrado.
+6. Abra la pestaña **Descubrir** y añada sus dispositivos.
+7. Para la conexión local, escriba la dirección de cada dispositivo en
+   **Direcciones de los dispositivos** (vea **Ajustes**) y guarde.
+
+La sesión se conserva: no se necesita un código nuevo tras un reinicio. Si
+Dyson cierra la sesión (por ejemplo, tras un cambio de contraseña), el estado
+de la conexión pide un código nuevo.
+
+## Lo que obtiene
+
+Según el modelo:
+
+| Función                                        | Modelos                                        |
+| ---------------------------------------------- | ---------------------------------------------- |
+| Encendido / apagado                            | todos                                          |
+| Lista de modos (apagado, baja, media, alta...) | todos                                          |
+| Velocidad (1 a 10)                             | todos                                          |
+| Modo automático                                | todos                                          |
+| Oscilación                                     | todos                                          |
+| Ángulo de oscilación (45°, 90°, 180°...)       | torres Pure Cool, Purifier Cool, Hot+Cool      |
+| Modo nocturno                                  | todos                                          |
+| Dirección del flujo de aire (delante / atrás)  | Pure Cool, Purifier Cool, Hot+Cool             |
+| Calefacción + consigna (°C)                    | Hot+Cool                                       |
+| Humidificación                                 | Humidify+Cool                                  |
+| Temperatura, humedad                           | todos                                          |
+| PM2.5, PM10 (µg/m³)                            | modelos de 2018 en adelante                    |
+| Índice COV, índice NO2                         | modelos de 2018 en adelante (solo COV en Link) |
+| Formaldehído (mg/m³)                           | modelos «Formaldehyde» (sufijo K)              |
+| Vida del filtro                                | % (HEPA, carbón), horas en los modelos Link    |
+
+Los nombres de las funciones siguen el país de la cuenta: francés para
+Francia, Bélgica, Suiza, Luxemburgo y Mónaco; alemán para Alemania, Austria y
+Liechtenstein; español para España y los países hispanohablantes de América
+Latina; inglés en los demás casos. Un dispositivo ya añadido conserva sus
+nombres: cambie el nombre de una función en la página del dispositivo
+(Integraciones → Dyson → Dispositivos). En una caja «Dispositivos», Gladys
+nombra una función que es la única de su tipo según su tipo («Selección» para
+el ángulo de oscilación): dé a la fila un nombre propio en la configuración de
+la caja.
+
+Los valores son los que muestra la aplicación MyDyson. Los índices COV y NO2
+son los de Dyson: de 0 (aire limpio) a 10, en números enteros como en la
+aplicación.
+
+Elegir una velocidad enciende el dispositivo y desactiva el modo automático,
+como hace el mando a distancia. En modo automático no se muestra ninguna
+velocidad.
+
+La **lista de modos** funciona como en los ventiladores Matter: Apagado, Baja
+(velocidad 1), Media (velocidad 5), Alta (velocidad 10) y Auto. Sigue a la
+velocidad, de modo que la lista y el control deslizante siempre coinciden: las
+velocidades 1 a 3 muestran Baja, 4 a 6 Media y 7 a 10 Alta. La dirección del
+flujo de aire también es una lista. La oscilación y el modo nocturno son
+interruptores de encendido / apagado.
+
+La lista **Ángulo de oscilación** ofrece los anchos de la aplicación Dyson:
+45°, 90°, 180° y 350°. Elegir uno inicia la oscilación alrededor de la
+dirección a la que apunta el dispositivo. Para detenerla, use el interruptor
+Oscilación. Un ancho ajustado de otro modo (otra aplicación) no muestra ninguna
+entrada en la lista.
+
+**¿Dispositivo añadido antes de esta versión?** Abra la pestaña **Descubrir** y
+haga clic en **Actualizar** en el dispositivo para obtener las últimas
+funciones (ángulo de oscilación, interruptores, iconos de PM y humedad). Su
+historial y sus escenas se conservan. El botón aparece en cuanto la
+integración se ha reiniciado en su nueva versión.
+
+Gladys muestra el estado que el dispositivo **confirma**: una orden que el
+dispositivo ha rechazado nunca aparece como realizada. Un cambio hecho con el
+mando a distancia o con la aplicación Dyson también aparece en Gladys.
+
+## Escenas
+
+### Activadores
+
+En el editor de escenas, categoría **Integraciones**:
+
+- **Calidad del aire modificada**: cambia el nivel medido por un dispositivo.
+  Niveles: buena, aceptable, mala, muy mala. Decide el peor de PM2.5, PM10, COV
+  y NO2, con los intervalos de la aplicación Dyson (PM2.5: 35 / 53 / 70 µg/m³;
+  PM10: 50 / 75 / 100 µg/m³; COV y NO2: 3 / 6 / 8). Variables: `level`,
+  `previous_level`, `pm25`, `pm10`, `voc`, `no2`.
+- **Filtro que cambiar pronto**: un filtro baja del 10 % (400 horas en los
+  modelos Link). Variables: `filter` (`hepa`, `carbon`, `combined`),
+  `remaining`.
+- **Conexión modificada**: un dispositivo pasa a local, a la nube o se vuelve
+  inaccesible. Variables: `transport`, `previous_transport`, `degraded`.
+
+Cada activador puede limitarse a un dispositivo. Un evento por cambio. Al
+arrancar, el primer valor es la referencia: un reinicio no vuelve a ejecutar
+sus escenas.
+
+### Acciones
+
+- **Aplicar ajustes de Dyson**: encendido, modo (auto / manual), velocidad,
+  oscilación y modo nocturno, en una sola orden. Un campo vacío no cambia nada.
+  «Apagado» ignora los demás ajustes.
+- **Ajustar el temporizador de apagado**: el dispositivo se apaga solo tras N
+  minutos (1 a 540); 0 cancela el temporizador.
+
+Ambas devuelven `sent` (orden enviada o no) y `transport` (conexión
+utilizada). Un dispositivo inaccesible no hace fallar la escena: `sent` es
+entonces `false`.
+
+## Widgets del panel
+
+Cada widget muestra un dispositivo, elegido en su configuración.
+
+**Calidad del aire Dyson**:
+
+- hasta 6 mosaicos en directo: PM2.5, PM10, COV, NO2, temperatura, humedad
+  (según el modelo). Cada mosaico de contaminante toma el color de su nivel:
+  verde (buena), azul (aceptable), naranja (mala), rojo (muy mala), con los
+  umbrales de las escenas de arriba;
+- el estado: calidad del aire global (el peor contaminante), formaldehído en
+  los modelos K, conexión, vida de los filtros (los filtros son los que limpian
+  el aire);
+- un botón para actualizar las lecturas.
+
+Dyson no da un único valor AQI: el nivel global se calcula a partir de los
+cuatro contaminantes.
+
+**Mandos Dyson**:
+
+- un mosaico: el ventilador (apagado, auto o un indicador de velocidad en
+  directo). Las lecturas del aire están en el widget de calidad del aire;
+- un dibujo del dispositivo (torre, Hot+Cool, ventilador de mesa,
+  humidificador o Big+Quiet), con líneas de aire mientras el ventilador
+  funciona. Las fotos de Dyson no se pueden distribuir y la cuenta no
+  proporciona ninguna: son dibujos. El ajuste **Mostrar el dibujo del
+  dispositivo** lo oculta;
+- el estado: oscilación (con su ángulo), modo nocturno, flujo de aire,
+  calefacción, conexión, temporizador de apagado. Con los botones de
+  oscilación, se omiten las filas de oscilación y modo nocturno: los botones ya
+  las muestran;
+- hasta cuatro botones, elegidos en el ajuste **Botones** del widget:
+  - **Encendido, auto, velocidad - y +** (por defecto): encender / apagar,
+    modo automático (o volver a manual), velocidad - y velocidad +. Velocidad -
+    y + solo aparecen mientras el dispositivo está encendido y en modo manual:
+    apagado, solo ve **Encender** y **Modo automático**; en automático,
+    **Apagar** y **Modo manual**. En la velocidad más baja (1), velocidad - se
+    oculta; en la más alta (10), velocidad + se oculta;
+  - **Encendido, oscilación, modo nocturno, flujo de aire**: un ajuste activado
+    es un botón relleno, un clic lo cambia. En los modelos que soplan en un solo
+    sentido, el modo automático ocupa el lugar del flujo de aire;
+  - **Encendido, modo nocturno, temporizador de apagado**: el mando para la
+    hora de dormir. **Temporizador de apagado** abre un pequeño formulario en
+    el widget que pide los minutos (0 a 540, 0 cancela el temporizador),
+    rellenado con el temporizador en curso, o 60; es un botón relleno mientras
+    hay un temporizador en marcha. Ajusta el mismo temporizador que la acción
+    de escena **Ajustar el temporizador de apagado**.
+
+Tras un clic, el widget se actualiza en cuanto el dispositivo ha respondido.
+Para tener varios conjuntos de botones, añada el widget varias veces.
+
+Gladys permite cuatro botones por widget. Para controlarlo todo en un solo
+lugar (lista de modos, control deslizante de velocidad, oscilación, modo
+nocturno, flujo de aire), añada también el dispositivo a una caja
+«Dispositivos» de su panel. El panel de control que se abre desde una luz en
+esa caja lo dibuja Gladys solo para las luces: una integración no puede añadir
+uno para un ventilador.
+
+## Ajustes
+
+- **Direcciones de los dispositivos (local)**: la dirección de cada
+  dispositivo en su red, como `número de serie=IP`, separadas por comas.
+  Ejemplo: `NK6-EU-MHA0000A=192.168.1.20`. Con un único dispositivo Dyson en la
+  cuenta, basta con la dirección: `192.168.1.20`. Un dispositivo sin dirección
+  aquí pasa por la nube de Dyson (insignia con un punto naranja); el mensaje de
+  la insignia y **Probar la conexión** indican el número de serie que hay que
+  escribir. El número de serie está en la etiqueta del dispositivo y en la
+  aplicación MyDyson. Asigne al dispositivo una dirección fija en su router
+  para que no cambie.
+
+  Para encontrar la dirección, consulte la lista de dispositivos conectados de
+  su router: el dispositivo suele aparecer con su número de serie. La
+  integración aún no puede encontrarlo por sí misma: Gladys no le permite
+  escuchar los anuncios `_dyson_mqtt._tcp` que envían los dispositivos.
+
+- **Actualización de los sensores (s)**: frecuencia de lectura de los sensores
+  de calidad del aire, de 15 a 3600 segundos (60 por defecto). Los cambios de
+  encendido, velocidad y demás llegan al instante, sin esperar.
+
+## Botones
+
+- **Recibir un código** / **Validar el código**: iniciar sesión en la cuenta
+  Dyson.
+- **Probar la conexión**: vuelve a leer la lista de dispositivos de la cuenta y
+  muestra, para cada dispositivo, la vía en uso (local, nube de Dyson,
+  inaccesible) y, en caso de respaldo, el motivo.
+- **Cerrar sesión**: elimina el token y la lista de dispositivos guardados por
+  la integración. Los dispositivos permanecen en Gladys.
+
+## Solución de problemas
+
+- **«Dyson ha rechazado el código o la contraseña»**: compruebe la contraseña
+  guardada y luego solicite un código nuevo. Un código solo es válido durante
+  unos minutos.
+- **No se recibe ningún código**: mire en la carpeta de correo no deseado y
+  compruebe el correo electrónico y el país de la cuenta.
+- **Insignia «nube» con un punto naranja**: falta la dirección del dispositivo
+  en **Direcciones de los dispositivos**, o se ha rechazado la conexión local
+  (dirección incorrecta, dispositivo en otra red a la que Gladys no llega). Un
+  restablecimiento de fábrica cambia la contraseña local del dispositivo: haga
+  clic en **Probar la conexión** para volver a leerla. Cuando la conexión local
+  ha fallado (dispositivo reiniciándose, wifi caído), la integración la vuelve
+  a intentar cada 4 minutos y vuelve a ella por sí sola.
+- **Insignia «inaccesible»**: el dispositivo está desenchufado, fuera del wifi,
+  o no responden ni la red local ni la nube. La integración sigue
+  reintentándolo.
+- **Los mosaicos del widget «Calidad del aire» se quedan en azul**: con el tema
+  «glass» de Gladys, no se aplica el color de los iconos de los mosaicos (por
+  corregir en Gladys). El nivel global conserva su color en el estado.
+- **Un sensor se queda vacío**: algunos sensores necesitan unos minutos tras el
+  encendido. Un modelo sin ese sensor nunca envía un valor.
+
+Los registros de la integración (pestaña **Registros**) dan los detalles.
+Nunca contienen su contraseña ni su token.
+
+## Privacidad
+
+Su correo electrónico y su contraseña solo se envían a Dyson
+(`appapi.cp.dyson.com`). El token de sesión y la lista de dispositivos se
+guardan en el volumen de datos de la integración, legible solo por la
+integración.

@@ -82,7 +82,13 @@ test('air widget of a 2018+ device: six live tiles coloured by level — rendere
   const items = byType(content, 'status')[0].items;
   assert.deepEqual(
     items.map((item) => item.value),
-    [{ en: 'Poor', fr: 'Mauvaise' }, '0.02 mg/m³', { en: 'Local', fr: 'Locale' }, '8 %', '50 %'],
+    [
+      { en: 'Poor', fr: 'Mauvaise', de: 'Schlecht', es: 'Mala' },
+      '0.02 mg/m³',
+      { en: 'Local', fr: 'Locale', de: 'Lokal', es: 'Local' },
+      '8 %',
+      '50 %',
+    ],
     'formaldehyde finds no tile: it goes to the status list; the filters follow the connection',
   );
   assert.deepEqual(
@@ -110,11 +116,11 @@ test('controls widget of a 2018+ device: the fan tile, settings, four buttons, n
   assert.deepEqual(
     items.map((item) => [item.label.en, item.value]),
     [
-      ['Oscillation', { en: 'On', fr: 'Activé' }],
-      ['Night mode', { en: 'Off', fr: 'Désactivé' }],
-      ['Airflow', { en: 'Back', fr: 'Arrière' }],
+      ['Oscillation', { en: 'On', fr: 'Activé', de: 'Ein', es: 'Activado' }],
+      ['Night mode', { en: 'Off', fr: 'Désactivé', de: 'Aus', es: 'Desactivado' }],
+      ['Airflow', { en: 'Back', fr: 'Arrière', de: 'Hinten', es: 'Atrás' }],
       ['Heating', '21.9 °C'],
-      ['Connection', { en: 'Local', fr: 'Locale' }],
+      ['Connection', { en: 'Local', fr: 'Locale', de: 'Lokal', es: 'Local' }],
       ['Sleep timer', '30 min'],
     ],
     'the filters are in the air widget',
@@ -179,9 +185,9 @@ test('controls widget: the fan tile says off or auto, where the speed is the las
   const off = tilesAt({ fpwr: 'OFF', auto: 'OFF', fnsp: '0003' });
   assert.deepEqual(off[0], {
     type: 'value',
-    label: { en: 'Fan', fr: 'Ventilateur' },
+    label: { en: 'Fan', fr: 'Ventilateur', de: 'Ventilator', es: 'Ventilador' },
     icon: 'power',
-    value: { en: 'Off', fr: 'Éteint' },
+    value: { en: 'Off', fr: 'Éteint', de: 'Aus', es: 'Apagado' },
     color: 'neutral',
   });
   assert.equal(off.length, 1, 'the fan tile only');
@@ -207,6 +213,8 @@ test('controls widget: the oscillation row gives the angle', () => {
   assert.deepEqual(byType(content, 'status')[0].items[0].value, {
     en: 'On · 45°',
     fr: 'Activé · 45°',
+    de: 'Ein · 45°',
+    es: 'Activado · 45°',
   });
 });
 
@@ -300,18 +308,37 @@ test('a Link device that is off, through the cloud fallback', () => {
   assert.deepEqual(airItems[0].value, {
     en: 'Dyson cloud (fallback)',
     fr: 'Cloud Dyson (secours)',
+    de: 'Dyson-Cloud (Ersatzweg)',
+    es: 'Nube de Dyson (respaldo)',
   });
   assert.equal(airItems[1].value, '300 h', 'the Link filter, in hours');
 
   const controls = buildControlsContent(dysonWith(info), { settings: { device: ID } });
   assert.deepEqual(validateWidgetContent(controls), []);
-  assert.deepEqual(byType(controls, 'value')[0].value, { en: 'Off', fr: 'Éteint' });
+  assert.deepEqual(byType(controls, 'value')[0].value, {
+    en: 'Off',
+    fr: 'Éteint',
+    de: 'Aus',
+    es: 'Apagado',
+  });
   const items = byType(controls, 'status')[0].items;
   assert.deepEqual(
     items.map((item) => item.value),
-    [{ en: 'Dyson cloud (fallback)', fr: 'Cloud Dyson (secours)' }],
+    [
+      {
+        en: 'Dyson cloud (fallback)',
+        fr: 'Cloud Dyson (secours)',
+        de: 'Dyson-Cloud (Ersatzweg)',
+        es: 'Nube de Dyson (respaldo)',
+      },
+    ],
   );
-  assert.deepEqual(byType(controls, 'button')[0].label, { en: 'Turn on', fr: 'Allumer' });
+  assert.deepEqual(byType(controls, 'button')[0].label, {
+    en: 'Turn on',
+    fr: 'Allumer',
+    de: 'Einschalten',
+    es: 'Encender',
+  });
 });
 
 test('an unreachable device shows its connection only', () => {
@@ -346,7 +373,12 @@ test('the refresh button asks the device for its readings', async () => {
   const dyson = dysonWith(PURE_INFO);
 
   const toast = await handleWidgetAction(dyson, { actionKey: 'refresh', params: { device: ID } });
-  assert.deepEqual(toast, { en: 'Readings requested.', fr: 'Relevés demandés.' });
+  assert.deepEqual(toast, {
+    en: 'Readings requested.',
+    fr: 'Relevés demandés.',
+    de: 'Messwerte angefordert.',
+    es: 'Lecturas solicitadas.',
+  });
   assert.deepEqual(dyson.refreshed, [ID]);
 
   const unreachable = await handleWidgetAction(dyson, {
@@ -520,10 +552,14 @@ test('the sleep timer form goes through the set_sleep_timer scene action', async
   assert.deepEqual(await tap({ [SLEEP_TIMER_FIELD]: 45 }), {
     en: 'Sleep timer: 45 min.',
     fr: 'Minuterie : 45 min.',
+    de: 'Ausschalt-Timer: 45 Min.',
+    es: 'Temporizador de apagado: 45 min.',
   });
   assert.deepEqual(await tap({ [SLEEP_TIMER_FIELD]: 0 }), {
     en: 'Sleep timer cancelled.',
     fr: 'Minuterie annulée.',
+    de: 'Ausschalt-Timer abgebrochen.',
+    es: 'Temporizador de apagado cancelado.',
   });
   assert.deepEqual(sent, [
     [ID, { sltm: '0045' }],
@@ -551,4 +587,59 @@ test('a core that dropped the form gets an explanation, nothing is sent', async 
     assert.match(message.fr, /Gladys 5\.2/);
   }
   assert.deepEqual(sent, []);
+});
+
+// The core renders a widget in its reader's language, English as fallback:
+// every text the integration writes carries the four Gladys languages.
+const LANGUAGES = ['en', 'fr', 'de', 'es'];
+function multiLanguageTexts(node) {
+  if (Array.isArray(node)) {
+    return node.flatMap(multiLanguageTexts);
+  }
+  if (node && typeof node === 'object') {
+    return typeof node.en === 'string' ? [node] : Object.values(node).flatMap(multiLanguageTexts);
+  }
+  return [];
+}
+
+test('every widget text is in English, French, German and Spanish', async () => {
+  const link = { ...PURE_INFO, model: describeModel('475'), productState: { fmod: 'FAN' } };
+  const contents = [
+    buildAirContent(dysonWith(PURE_INFO), { settings: { device: ID } }),
+    buildAirContent(dysonWith(link), { settings: { device: ID } }),
+    buildAirContent(dysonWith(PURE_INFO), { settings: {} }),
+    buildAirContent(dysonWith(PURE_INFO), { settings: { device: 'other' } }),
+    ...Object.values(BUTTON_SETS).map((buttons) =>
+      buildControlsContent(dysonWith(PURE_INFO), { settings: { device: ID, buttons } }),
+    ),
+    buildControlsContent(
+      dysonWith({ ...PURE_INFO, status: { transport: 'cloud', degraded: true } }),
+      { settings: { device: ID } },
+    ),
+  ];
+  const toasts = [
+    await handleWidgetAction(dysonWith(PURE_INFO), {
+      actionKey: WIDGET_ACTIONS.REFRESH,
+      params: { device: ID },
+    }),
+    await handleWidgetAction(dysonWith(PURE_INFO), {
+      actionKey: WIDGET_ACTIONS.REFRESH,
+      params: { device: 'other' },
+    }),
+    await handleWidgetAction(dysonWith(PURE_INFO), {
+      actionKey: WIDGET_ACTIONS.SLEEP_TIMER,
+      params: { device: ID },
+    }),
+  ];
+  const texts = multiLanguageTexts([...contents, ...toasts]);
+  assert.ok(texts.length > 40, 'the walk finds the texts');
+  for (const text of texts) {
+    assert.deepEqual(Object.keys(text), LANGUAGES, JSON.stringify(text));
+    for (const language of LANGUAGES) {
+      assert.ok(text[language].trim().length > 0, JSON.stringify(text));
+    }
+  }
+  for (const content of contents) {
+    assert.deepEqual(validateWidgetContent(content), [], 'every language within the bounds');
+  }
 });

@@ -77,8 +77,10 @@ Selon le modèle :
 | Formaldéhyde (mg/m³)                    | modèles « Formaldehyde » (suffixe K)        |
 | Usure des filtres                       | % (HEPA, charbon), heures sur « Link »      |
 
-Les noms des fonctions sont en français quand le pays du compte est
-francophone (France, Belgique, Suisse, Luxembourg, Monaco), en anglais sinon.
+Les noms des fonctions suivent le pays du compte : français pour la France,
+la Belgique, la Suisse, le Luxembourg et Monaco ; allemand pour l'Allemagne,
+l'Autriche et le Liechtenstein ; espagnol pour l'Espagne et les pays
+hispanophones d'Amérique latine ; anglais sinon.
 Un appareil déjà ajouté garde ses noms : renommez une fonction dans la page
 de l'appareil (Intégrations → Dyson → Appareils). Dans une boîte
 « Appareils », Gladys nomme une fonction seule de son genre d'après son type
@@ -253,7 +255,7 @@ pas en ajouter un pour un ventilateur.
   après la mise sous tension. Un modèle sans ce capteur n'envoie jamais de
   valeur.
 
-Les journaux de l'intégration (onglet **Supervision**) donnent le détail. Ils
+Les journaux de l'intégration (onglet **Journaux**) donnent le détail. Ils
 ne contiennent jamais votre mot de passe ni votre jeton.
 
 ## Vie privée

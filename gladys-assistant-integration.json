@@ -4,7 +4,9 @@
   "name": "Dyson",
   "description": {
     "en": "Control Dyson purifiers, fans and heaters, and read their air quality sensors.",
-    "fr": "Pilotez purificateurs, ventilateurs et chauffages Dyson, et lisez la qualité de l'air."
+    "fr": "Pilotez purificateurs, ventilateurs et chauffages Dyson, et lisez la qualité de l'air.",
+    "de": "Steuere Dyson-Luftreiniger, -Ventilatoren und -Heizlüfter und lies die Luftqualität aus.",
+    "es": "Controle purificadores, ventiladores y calefactores Dyson, y lea sus sensores de calidad del aire."
   },
   "version": "1.6.0",
   "docker_image": "ghcr.io/prohand/gladys-dyson:1.6.0",
@@ -18,11 +20,15 @@
       "type": "section",
       "label": {
         "en": "Getting started",
-        "fr": "Pour commencer"
+        "fr": "Pour commencer",
+        "de": "Erste Schritte",
+        "es": "Primeros pasos"
       },
       "description": {
         "en": "1. Enter the e-mail, password and country of your MyDyson account, then save. 2. Click \"Receive a code\": Dyson e-mails you a code. 3. Type it in \"Validate the code\". 4. Add your devices from the Discover tab. To drive a device on your local network, give its address below; otherwise it goes through the Dyson cloud.",
-        "fr": "1. Saisissez l'e-mail, le mot de passe et le pays de votre compte MyDyson, puis enregistrez. 2. Cliquez sur « Recevoir un code » : Dyson vous envoie un code par e-mail. 3. Saisissez-le dans « Valider le code ». 4. Ajoutez vos appareils depuis l'onglet Découverte. Pour piloter un appareil sur votre réseau local, donnez son adresse ci-dessous ; sinon il passe par le cloud Dyson."
+        "fr": "1. Saisissez l'e-mail, le mot de passe et le pays de votre compte MyDyson, puis enregistrez. 2. Cliquez sur « Recevoir un code » : Dyson vous envoie un code par e-mail. 3. Saisissez-le dans « Valider le code ». 4. Ajoutez vos appareils depuis l'onglet Découverte. Pour piloter un appareil sur votre réseau local, donnez son adresse ci-dessous ; sinon il passe par le cloud Dyson.",
+        "de": "1. Gib E-Mail-Adresse, Passwort und Land deines MyDyson-Kontos ein und speichere. 2. Klicke auf „Code erhalten“: Dyson sendet dir einen Code per E-Mail. 3. Gib ihn unter „Code bestätigen“ ein. 4. Füge deine Geräte im Tab „Entdecken“ hinzu. Um ein Gerät in deinem lokalen Netzwerk zu steuern, gib unten seine Adresse an; andernfalls läuft es über die Dyson-Cloud.",
+        "es": "1. Introduzca el correo electrónico, la contraseña y el país de su cuenta MyDyson y guarde. 2. Haga clic en «Recibir un código»: Dyson le envía un código por correo electrónico. 3. Introdúzcalo en «Validar el código». 4. Añada sus dispositivos desde la pestaña «Descubrir». Para controlar un dispositivo en su red local, indique su dirección a continuación; de lo contrario, pasa por la nube de Dyson."
       }
     },
     {
@@ -30,11 +36,15 @@
       "type": "string",
       "label": {
         "en": "MyDyson e-mail",
-        "fr": "E-mail MyDyson"
+        "fr": "E-mail MyDyson",
+        "de": "MyDyson-E-Mail",
+        "es": "Correo electrónico de MyDyson"
       },
       "placeholder": {
         "en": "you@example.com",
-        "fr": "vous@exemple.fr"
+        "fr": "vous@exemple.fr",
+        "de": "sie@beispiel.de",
+        "es": "usted@ejemplo.es"
       },
       "required": true,
       "default": ""
@@ -44,11 +54,15 @@
       "type": "secret",
       "label": {
         "en": "MyDyson password",
-        "fr": "Mot de passe MyDyson"
+        "fr": "Mot de passe MyDyson",
+        "de": "MyDyson-Passwort",
+        "es": "Contraseña de MyDyson"
       },
       "description": {
         "en": "Only sent to Dyson, with the e-mailed code, to sign in.",
-        "fr": "Envoyé uniquement à Dyson, avec le code reçu par e-mail, pour la connexion."
+        "fr": "Envoyé uniquement à Dyson, avec le code reçu par e-mail, pour la connexion.",
+        "de": "Wird nur an Dyson gesendet, zusammen mit dem per E-Mail erhaltenen Code, zur Anmeldung.",
+        "es": "Solo se envía a Dyson, con el código recibido por correo electrónico, para iniciar sesión."
       },
       "required": true
     },
@@ -57,15 +71,21 @@
       "type": "string",
       "label": {
         "en": "Account country",
-        "fr": "Pays du compte"
+        "fr": "Pays du compte",
+        "de": "Land des Kontos",
+        "es": "País de la cuenta"
       },
       "description": {
         "en": "Two-letter code of the country of the MyDyson account (FR, BE, CH, GB, US...).",
-        "fr": "Code à deux lettres du pays du compte MyDyson (FR, BE, CH, GB, US...)."
+        "fr": "Code à deux lettres du pays du compte MyDyson (FR, BE, CH, GB, US...).",
+        "de": "Zweistelliger Code des Landes des MyDyson-Kontos (DE, AT, CH, GB, US...).",
+        "es": "Código de dos letras del país de la cuenta MyDyson (ES, MX, FR, GB, US...)."
       },
       "placeholder": {
         "en": "e.g. GB",
-        "fr": "ex. FR"
+        "fr": "ex. FR",
+        "de": "z. B. DE",
+        "es": "p. ej. ES"
       },
       "required": true,
       "default": "FR"
@@ -75,15 +95,21 @@
       "type": "string",
       "label": {
         "en": "Device addresses (local)",
-        "fr": "Adresses des appareils (local)"
+        "fr": "Adresses des appareils (local)",
+        "de": "Geräteadressen (lokal)",
+        "es": "Direcciones de los dispositivos (local)"
       },
       "description": {
         "en": "For the local connection: serial=IP of each device, separated by commas (the IP alone with a single device). Without it: Dyson cloud.",
-        "fr": "Pour la connexion locale : numéro de série=IP de chaque appareil, séparés par des virgules (l'IP seule avec un seul appareil). Sans : cloud Dyson."
+        "fr": "Pour la connexion locale : numéro de série=IP de chaque appareil, séparés par des virgules (l'IP seule avec un seul appareil). Sans : cloud Dyson.",
+        "de": "Für die lokale Verbindung: Seriennummer=IP jedes Geräts, durch Kommas getrennt (nur die IP bei einem einzigen Gerät). Ohne: Dyson-Cloud.",
+        "es": "Para la conexión local: número de serie=IP de cada dispositivo, separados por comas (solo la IP con un único dispositivo). Sin ello: nube de Dyson."
       },
       "placeholder": {
         "en": "e.g. NK6-EU-MHA0000A=192.168.1.20",
-        "fr": "ex. NK6-EU-MHA0000A=192.168.1.20"
+        "fr": "ex. NK6-EU-MHA0000A=192.168.1.20",
+        "de": "z. B. NK6-EU-MHA0000A=192.168.1.20",
+        "es": "p. ej. NK6-EU-MHA0000A=192.168.1.20"
       },
       "required": false,
       "default": ""
@@ -93,11 +119,15 @@
       "type": "number",
       "label": {
         "en": "Sensor refresh (s)",
-        "fr": "Rafraîchissement des capteurs (s)"
+        "fr": "Rafraîchissement des capteurs (s)",
+        "de": "Aktualisierung der Sensoren (s)",
+        "es": "Actualización de los sensores (s)"
       },
       "description": {
         "en": "How often the air quality sensors are read, in seconds.",
-        "fr": "Fréquence de lecture des capteurs de qualité de l'air, en secondes."
+        "fr": "Fréquence de lecture des capteurs de qualité de l'air, en secondes.",
+        "de": "Wie oft die Luftqualitätssensoren ausgelesen werden, in Sekunden.",
+        "es": "Frecuencia de lectura de los sensores de calidad del aire, en segundos."
       },
       "required": false,
       "default": 60,
@@ -110,11 +140,15 @@
       "key": "request_code",
       "label": {
         "en": "Receive a code",
-        "fr": "Recevoir un code"
+        "fr": "Recevoir un code",
+        "de": "Code erhalten",
+        "es": "Recibir un código"
       },
       "description": {
         "en": "Dyson e-mails a one-time code to the account (save the form first).",
-        "fr": "Dyson envoie un code à usage unique par e-mail (enregistrez le formulaire avant)."
+        "fr": "Dyson envoie un code à usage unique par e-mail (enregistrez le formulaire avant).",
+        "de": "Dyson sendet einen Einmalcode per E-Mail an das Konto (speichere zuerst das Formular).",
+        "es": "Dyson envía un código de un solo uso por correo electrónico a la cuenta (guarde antes el formulario)."
       },
       "timeout_seconds": 30
     },
@@ -122,7 +156,9 @@
       "key": "verify_code",
       "label": {
         "en": "Validate the code",
-        "fr": "Valider le code"
+        "fr": "Valider le code",
+        "de": "Code bestätigen",
+        "es": "Validar el código"
       },
       "timeout_seconds": 60,
       "fields": [
@@ -131,11 +167,15 @@
           "type": "string",
           "label": {
             "en": "Code received by e-mail",
-            "fr": "Code reçu par e-mail"
+            "fr": "Code reçu par e-mail",
+            "de": "Per E-Mail erhaltener Code",
+            "es": "Código recibido por correo electrónico"
           },
           "placeholder": {
             "en": "e.g. 123456",
-            "fr": "ex. 123456"
+            "fr": "ex. 123456",
+            "de": "z. B. 123456",
+            "es": "p. ej. 123456"
           },
           "required": true
         }
@@ -145,7 +185,9 @@
       "key": "test_connection",
       "label": {
         "en": "Test the connection",
-        "fr": "Tester la connexion"
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
       },
       "timeout_seconds": 60
     },
@@ -153,11 +195,15 @@
       "key": "sign_out",
       "label": {
         "en": "Sign out",
-        "fr": "Se déconnecter"
+        "fr": "Se déconnecter",
+        "de": "Abmelden",
+        "es": "Cerrar sesión"
       },
       "description": {
         "en": "Deletes the Dyson token and the device list kept by the integration.",
-        "fr": "Supprime le jeton Dyson et la liste des appareils gardés par l'intégration."
+        "fr": "Supprime le jeton Dyson et la liste des appareils gardés par l'intégration.",
+        "de": "Löscht das Dyson-Token und die von der Integration gespeicherte Geräteliste.",
+        "es": "Elimina el token de Dyson y la lista de dispositivos guardados por la integración."
       },
       "timeout_seconds": 15
     }
@@ -167,11 +213,15 @@
       "key": "air_quality_changed",
       "label": {
         "en": "Air quality changed",
-        "fr": "Qualité de l'air modifiée"
+        "fr": "Qualité de l'air modifiée",
+        "de": "Luftqualität geändert",
+        "es": "Calidad del aire modificada"
       },
       "description": {
         "en": "The air quality level measured by a Dyson device changed (worst of PM2.5, PM10, VOC, NO2).",
-        "fr": "Le niveau de qualité de l'air mesuré par un appareil Dyson a changé (le pire de PM2.5, PM10, COV, NO2)."
+        "fr": "Le niveau de qualité de l'air mesuré par un appareil Dyson a changé (le pire de PM2.5, PM10, COV, NO2).",
+        "de": "Die von einem Dyson-Gerät gemessene Luftqualität hat sich geändert (schlechtester Wert aus PM2.5, PM10, VOC, NO2).",
+        "es": "El nivel de calidad del aire medido por un dispositivo Dyson ha cambiado (el peor de PM2.5, PM10, COV, NO2)."
       },
       "fields": [
         {
@@ -180,7 +230,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           }
         },
         {
@@ -188,35 +240,45 @@
           "type": "multi_select",
           "label": {
             "en": "New level",
-            "fr": "Nouveau niveau"
+            "fr": "Nouveau niveau",
+            "de": "Neue Stufe",
+            "es": "Nuevo nivel"
           },
           "options": [
             {
               "value": "good",
               "label": {
                 "en": "Good",
-                "fr": "Bonne"
+                "fr": "Bonne",
+                "de": "Gut",
+                "es": "Buena"
               }
             },
             {
               "value": "fair",
               "label": {
                 "en": "Fair",
-                "fr": "Moyenne"
+                "fr": "Moyenne",
+                "de": "Mäßig",
+                "es": "Aceptable"
               }
             },
             {
               "value": "poor",
               "label": {
                 "en": "Poor",
-                "fr": "Mauvaise"
+                "fr": "Mauvaise",
+                "de": "Schlecht",
+                "es": "Mala"
               }
             },
             {
               "value": "very_poor",
               "label": {
                 "en": "Very poor",
-                "fr": "Très mauvaise"
+                "fr": "Très mauvaise",
+                "de": "Sehr schlecht",
+                "es": "Muy mala"
               }
             }
           ]
@@ -228,7 +290,9 @@
           "type": "string",
           "label": {
             "en": "Level",
-            "fr": "Niveau"
+            "fr": "Niveau",
+            "de": "Stufe",
+            "es": "Nivel"
           }
         },
         {
@@ -236,7 +300,9 @@
           "type": "string",
           "label": {
             "en": "Previous level",
-            "fr": "Niveau précédent"
+            "fr": "Niveau précédent",
+            "de": "Vorherige Stufe",
+            "es": "Nivel anterior"
           }
         },
         {
@@ -244,7 +310,9 @@
           "type": "number",
           "label": {
             "en": "PM2.5 (µg/m³)",
-            "fr": "PM2.5 (µg/m³)"
+            "fr": "PM2.5 (µg/m³)",
+            "de": "PM2.5 (µg/m³)",
+            "es": "PM2.5 (µg/m³)"
           }
         },
         {
@@ -252,7 +320,9 @@
           "type": "number",
           "label": {
             "en": "PM10 (µg/m³)",
-            "fr": "PM10 (µg/m³)"
+            "fr": "PM10 (µg/m³)",
+            "de": "PM10 (µg/m³)",
+            "es": "PM10 (µg/m³)"
           }
         },
         {
@@ -260,7 +330,9 @@
           "type": "number",
           "label": {
             "en": "VOC index",
-            "fr": "Indice COV"
+            "fr": "Indice COV",
+            "de": "VOC-Index",
+            "es": "Índice COV"
           }
         },
         {
@@ -268,7 +340,9 @@
           "type": "number",
           "label": {
             "en": "NO2 index",
-            "fr": "Indice NO2"
+            "fr": "Indice NO2",
+            "de": "NO2-Index",
+            "es": "Índice NO2"
           }
         }
       ]
@@ -277,11 +351,15 @@
       "key": "filter_low",
       "label": {
         "en": "Filter to replace soon",
-        "fr": "Filtre bientôt à changer"
+        "fr": "Filtre bientôt à changer",
+        "de": "Filter bald wechseln",
+        "es": "Filtro que cambiar pronto"
       },
       "description": {
         "en": "A filter went under 10 % (400 hours on the Link models).",
-        "fr": "Un filtre est passé sous 10 % (400 heures sur les modèles Link)."
+        "fr": "Un filtre est passé sous 10 % (400 heures sur les modèles Link).",
+        "de": "Ein Filter ist unter 10 % gefallen (400 Stunden bei den Link-Modellen).",
+        "es": "Un filtro ha bajado del 10 % (400 horas en los modelos Link)."
       },
       "fields": [
         {
@@ -290,7 +368,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           }
         },
         {
@@ -298,28 +378,36 @@
           "type": "select",
           "label": {
             "en": "Filter",
-            "fr": "Filtre"
+            "fr": "Filtre",
+            "de": "Filter",
+            "es": "Filtro"
           },
           "options": [
             {
               "value": "hepa",
               "label": {
                 "en": "HEPA",
-                "fr": "HEPA"
+                "fr": "HEPA",
+                "de": "HEPA",
+                "es": "HEPA"
               }
             },
             {
               "value": "carbon",
               "label": {
                 "en": "Carbon",
-                "fr": "Charbon"
+                "fr": "Charbon",
+                "de": "Aktivkohle",
+                "es": "Carbón"
               }
             },
             {
               "value": "combined",
               "label": {
                 "en": "Combined (Link)",
-                "fr": "Combiné (Link)"
+                "fr": "Combiné (Link)",
+                "de": "Kombiniert (Link)",
+                "es": "Combinado (Link)"
               }
             }
           ]
@@ -331,7 +419,9 @@
           "type": "string",
           "label": {
             "en": "Filter",
-            "fr": "Filtre"
+            "fr": "Filtre",
+            "de": "Filter",
+            "es": "Filtro"
           }
         },
         {
@@ -339,7 +429,9 @@
           "type": "number",
           "label": {
             "en": "Remaining (% or hours)",
-            "fr": "Restant (% ou heures)"
+            "fr": "Restant (% ou heures)",
+            "de": "Verbleibend (% oder Stunden)",
+            "es": "Restante (% u horas)"
           }
         }
       ]
@@ -348,11 +440,15 @@
       "key": "connection_changed",
       "label": {
         "en": "Connection changed",
-        "fr": "Connexion modifiée"
+        "fr": "Connexion modifiée",
+        "de": "Verbindung geändert",
+        "es": "Conexión modificada"
       },
       "description": {
         "en": "A Dyson device switched to local, to the cloud, or became unreachable.",
-        "fr": "Un appareil Dyson est passé en local, en cloud, ou est devenu injoignable."
+        "fr": "Un appareil Dyson est passé en local, en cloud, ou est devenu injoignable.",
+        "de": "Ein Dyson-Gerät ist auf lokal oder Cloud gewechselt oder nicht mehr erreichbar.",
+        "es": "Un dispositivo Dyson ha pasado a local, a la nube o se ha vuelto inaccesible."
       },
       "fields": [
         {
@@ -361,7 +457,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           }
         },
         {
@@ -369,28 +467,36 @@
           "type": "multi_select",
           "label": {
             "en": "New connection",
-            "fr": "Nouvelle connexion"
+            "fr": "Nouvelle connexion",
+            "de": "Neue Verbindung",
+            "es": "Nueva conexión"
           },
           "options": [
             {
               "value": "local",
               "label": {
                 "en": "Local",
-                "fr": "Locale"
+                "fr": "Locale",
+                "de": "Lokal",
+                "es": "Local"
               }
             },
             {
               "value": "cloud",
               "label": {
                 "en": "Dyson cloud",
-                "fr": "Cloud Dyson"
+                "fr": "Cloud Dyson",
+                "de": "Dyson-Cloud",
+                "es": "Nube de Dyson"
               }
             },
             {
               "value": "unreachable",
               "label": {
                 "en": "Unreachable",
-                "fr": "Injoignable"
+                "fr": "Injoignable",
+                "de": "Nicht erreichbar",
+                "es": "Inaccesible"
               }
             }
           ]
@@ -402,7 +508,9 @@
           "type": "string",
           "label": {
             "en": "Connection",
-            "fr": "Connexion"
+            "fr": "Connexion",
+            "de": "Verbindung",
+            "es": "Conexión"
           }
         },
         {
@@ -410,7 +518,9 @@
           "type": "string",
           "label": {
             "en": "Previous connection",
-            "fr": "Connexion précédente"
+            "fr": "Connexion précédente",
+            "de": "Vorherige Verbindung",
+            "es": "Conexión anterior"
           }
         },
         {
@@ -418,7 +528,9 @@
           "type": "boolean",
           "label": {
             "en": "Fallback in use",
-            "fr": "Secours utilisé"
+            "fr": "Secours utilisé",
+            "de": "Ersatzweg verwendet",
+            "es": "Respaldo en uso"
           }
         }
       ]
@@ -429,11 +541,15 @@
       "key": "apply_settings",
       "label": {
         "en": "Apply Dyson settings",
-        "fr": "Appliquer des réglages Dyson"
+        "fr": "Appliquer des réglages Dyson",
+        "de": "Dyson-Einstellungen anwenden",
+        "es": "Aplicar ajustes de Dyson"
       },
       "description": {
         "en": "Power, mode, speed, oscillation and night mode in one order. Empty = unchanged.",
-        "fr": "Marche, mode, vitesse, oscillation et mode nuit en un seul ordre. Vide = inchangé."
+        "fr": "Marche, mode, vitesse, oscillation et mode nuit en un seul ordre. Vide = inchangé.",
+        "de": "Ein/Aus, Modus, Geschwindigkeit, Oszillation und Nachtmodus in einem Befehl. Leer = unverändert.",
+        "es": "Encendido, modo, velocidad, oscilación y modo nocturno en una sola orden. Vacío = sin cambios."
       },
       "timeout_seconds": 15,
       "fields": [
@@ -443,7 +559,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           },
           "required": true
         },
@@ -452,21 +570,27 @@
           "type": "select",
           "label": {
             "en": "Power",
-            "fr": "Marche"
+            "fr": "Marche",
+            "de": "Ein/Aus",
+            "es": "Encendido"
           },
           "options": [
             {
               "value": "on",
               "label": {
                 "en": "On",
-                "fr": "Allumé"
+                "fr": "Allumé",
+                "de": "Ein",
+                "es": "Encendido"
               }
             },
             {
               "value": "off",
               "label": {
                 "en": "Off",
-                "fr": "Éteint"
+                "fr": "Éteint",
+                "de": "Aus",
+                "es": "Apagado"
               }
             }
           ]
@@ -476,21 +600,27 @@
           "type": "select",
           "label": {
             "en": "Mode",
-            "fr": "Mode"
+            "fr": "Mode",
+            "de": "Modus",
+            "es": "Modo"
           },
           "options": [
             {
               "value": "auto",
               "label": {
                 "en": "Auto",
-                "fr": "Auto"
+                "fr": "Auto",
+                "de": "Auto",
+                "es": "Auto"
               }
             },
             {
               "value": "manual",
               "label": {
                 "en": "Manual",
-                "fr": "Manuel"
+                "fr": "Manuel",
+                "de": "Manuell",
+                "es": "Manual"
               }
             }
           ]
@@ -500,7 +630,9 @@
           "type": "number",
           "label": {
             "en": "Speed (1-10)",
-            "fr": "Vitesse (1-10)"
+            "fr": "Vitesse (1-10)",
+            "de": "Geschwindigkeit (1-10)",
+            "es": "Velocidad (1-10)"
           },
           "min": 1,
           "max": 10
@@ -510,21 +642,27 @@
           "type": "select",
           "label": {
             "en": "Oscillation",
-            "fr": "Oscillation"
+            "fr": "Oscillation",
+            "de": "Oszillation",
+            "es": "Oscilación"
           },
           "options": [
             {
               "value": "on",
               "label": {
                 "en": "On",
-                "fr": "Activé"
+                "fr": "Activé",
+                "de": "Ein",
+                "es": "Activado"
               }
             },
             {
               "value": "off",
               "label": {
                 "en": "Off",
-                "fr": "Désactivé"
+                "fr": "Désactivé",
+                "de": "Aus",
+                "es": "Desactivado"
               }
             }
           ]
@@ -534,21 +672,27 @@
           "type": "select",
           "label": {
             "en": "Night mode",
-            "fr": "Mode nuit"
+            "fr": "Mode nuit",
+            "de": "Nachtmodus",
+            "es": "Modo nocturno"
           },
           "options": [
             {
               "value": "on",
               "label": {
                 "en": "On",
-                "fr": "Activé"
+                "fr": "Activé",
+                "de": "Ein",
+                "es": "Activado"
               }
             },
             {
               "value": "off",
               "label": {
                 "en": "Off",
-                "fr": "Désactivé"
+                "fr": "Désactivé",
+                "de": "Aus",
+                "es": "Desactivado"
               }
             }
           ]
@@ -560,7 +704,9 @@
           "type": "boolean",
           "label": {
             "en": "Order sent",
-            "fr": "Ordre envoyé"
+            "fr": "Ordre envoyé",
+            "de": "Befehl gesendet",
+            "es": "Orden enviada"
           }
         },
         {
@@ -568,7 +714,9 @@
           "type": "string",
           "label": {
             "en": "Connection used",
-            "fr": "Connexion utilisée"
+            "fr": "Connexion utilisée",
+            "de": "Verwendete Verbindung",
+            "es": "Conexión utilizada"
           }
         }
       ]
@@ -577,11 +725,15 @@
       "key": "set_sleep_timer",
       "label": {
         "en": "Set the sleep timer",
-        "fr": "Régler la minuterie"
+        "fr": "Régler la minuterie",
+        "de": "Ausschalt-Timer einstellen",
+        "es": "Ajustar el temporizador de apagado"
       },
       "description": {
         "en": "The device turns itself off after this many minutes (0 cancels).",
-        "fr": "L'appareil s'éteint seul après ce nombre de minutes (0 annule)."
+        "fr": "L'appareil s'éteint seul après ce nombre de minutes (0 annule).",
+        "de": "Das Gerät schaltet sich nach dieser Anzahl Minuten selbst aus (0 bricht ab).",
+        "es": "El dispositivo se apaga solo tras este número de minutos (0 cancela)."
       },
       "timeout_seconds": 15,
       "fields": [
@@ -591,7 +743,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           },
           "required": true
         },
@@ -600,7 +754,9 @@
           "type": "number",
           "label": {
             "en": "Minutes (0-540)",
-            "fr": "Minutes (0-540)"
+            "fr": "Minutes (0-540)",
+            "de": "Minuten (0-540)",
+            "es": "Minutos (0-540)"
           },
           "min": 0,
           "max": 540,
@@ -614,7 +770,9 @@
           "type": "boolean",
           "label": {
             "en": "Order sent",
-            "fr": "Ordre envoyé"
+            "fr": "Ordre envoyé",
+            "de": "Befehl gesendet",
+            "es": "Orden enviada"
           }
         },
         {
@@ -622,7 +780,9 @@
           "type": "string",
           "label": {
             "en": "Connection used",
-            "fr": "Connexion utilisée"
+            "fr": "Connexion utilisée",
+            "de": "Verwendete Verbindung",
+            "es": "Conexión utilizada"
           }
         }
       ]
@@ -633,11 +793,15 @@
       "key": "dyson_air",
       "label": {
         "en": "Dyson air quality",
-        "fr": "Qualité de l'air Dyson"
+        "fr": "Qualité de l'air Dyson",
+        "de": "Dyson-Luftqualität",
+        "es": "Calidad del aire Dyson"
       },
       "description": {
         "en": "Live PM2.5, PM10, VOC, NO2, temperature and humidity of a Dyson device, coloured by level.",
-        "fr": "PM2.5, PM10, COV, NO2, température et humidité d'un appareil Dyson en direct, colorés par niveau."
+        "fr": "PM2.5, PM10, COV, NO2, température et humidité d'un appareil Dyson en direct, colorés par niveau.",
+        "de": "PM2.5, PM10, VOC, NO2, Temperatur und Feuchtigkeit eines Dyson-Geräts live, nach Stufe gefärbt.",
+        "es": "PM2.5, PM10, COV, NO2, temperatura y humedad en directo de un Dyson, coloreados por nivel."
       },
       "icon": "wind",
       "settings": [
@@ -647,7 +811,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           },
           "required": true
         }
@@ -658,11 +824,15 @@
       "key": "dyson_controls",
       "label": {
         "en": "Dyson controls",
-        "fr": "Commandes Dyson"
+        "fr": "Commandes Dyson",
+        "de": "Dyson-Steuerung",
+        "es": "Mandos Dyson"
       },
       "description": {
         "en": "A Dyson remote: fan, device drawing, settings, and on/off, speed, settings or sleep timer buttons.",
-        "fr": "Télécommande Dyson : ventilateur, dessin de l'appareil, réglages et boutons au choix."
+        "fr": "Télécommande Dyson : ventilateur, dessin de l'appareil, réglages et boutons au choix.",
+        "de": "Dyson-Fernbedienung: Ventilator, Gerätezeichnung, Einstellungen und Schaltflächen nach Wahl.",
+        "es": "Mando a distancia Dyson: ventilador, dibujo del aparato, ajustes y botones a elegir."
       },
       "icon": "sliders",
       "settings": [
@@ -672,7 +842,9 @@
           "source": "devices",
           "label": {
             "en": "Device",
-            "fr": "Appareil"
+            "fr": "Appareil",
+            "de": "Gerät",
+            "es": "Dispositivo"
           },
           "required": true
         },
@@ -681,28 +853,36 @@
           "type": "select",
           "label": {
             "en": "Buttons",
-            "fr": "Boutons"
+            "fr": "Boutons",
+            "de": "Schaltflächen",
+            "es": "Botones"
           },
           "options": [
             {
               "value": "speed",
               "label": {
                 "en": "On/off, auto, speed - and +",
-                "fr": "Marche, auto, vitesse - et +"
+                "fr": "Marche, auto, vitesse - et +",
+                "de": "Ein/Aus, Auto, Geschwindigkeit - und +",
+                "es": "Encendido, auto, velocidad - y +"
               }
             },
             {
               "value": "settings",
               "label": {
                 "en": "On/off, oscillation, night mode, airflow",
-                "fr": "Marche, oscillation, mode nuit, flux d'air"
+                "fr": "Marche, oscillation, mode nuit, flux d'air",
+                "de": "Ein/Aus, Oszillation, Nachtmodus, Luftstrom",
+                "es": "Encendido, oscilación, modo nocturno, flujo de aire"
               }
             },
             {
               "value": "night",
               "label": {
                 "en": "On/off, night mode, sleep timer",
-                "fr": "Marche, mode nuit, minuterie"
+                "fr": "Marche, mode nuit, minuterie",
+                "de": "Ein/Aus, Nachtmodus, Ausschalt-Timer",
+                "es": "Encendido, modo nocturno, temporizador de apagado"
               }
             }
           ],
@@ -714,7 +894,9 @@
           "type": "boolean",
           "label": {
             "en": "Show the device drawing",
-            "fr": "Afficher le dessin de l'appareil"
+            "fr": "Afficher le dessin de l'appareil",
+            "de": "Gerätezeichnung anzeigen",
+            "es": "Mostrar el dibujo del dispositivo"
           },
           "required": false,
           "default": true

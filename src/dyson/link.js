@@ -44,6 +44,8 @@ const REASONS = {
     message: {
       en: `Local address unknown: add ${serial}=<IP> to the Device addresses setting. Using the Dyson cloud.`,
       fr: `Adresse locale inconnue : ajoutez ${serial}=<IP> au réglage Adresses des appareils. Passage par le cloud Dyson.`,
+      de: `Lokale Adresse unbekannt: Füge ${serial}=<IP> zur Einstellung Geräteadressen hinzu. Verbindung über die Dyson-Cloud.`,
+      es: `Dirección local desconocida: añada ${serial}=<IP> al ajuste Direcciones de los dispositivos. Se usa la nube de Dyson.`,
     },
   }),
   localFailed: {
@@ -52,6 +54,8 @@ const REASONS = {
     message: {
       en: 'Local connection refused or unreachable: using the Dyson cloud.',
       fr: 'Connexion locale refusée ou injoignable : passage par le cloud Dyson.',
+      de: 'Lokale Verbindung abgelehnt oder nicht erreichbar: Verbindung über die Dyson-Cloud.',
+      es: 'Conexión local rechazada o inaccesible: se usa la nube de Dyson.',
     },
   },
   // A product without local credentials is a cloud-only product: the cloud is
@@ -62,6 +66,8 @@ const REASONS = {
     message: {
       en: 'No Dyson account session: using the local connection.',
       fr: 'Pas de session de compte Dyson : passage par la connexion locale.',
+      de: 'Keine Sitzung des Dyson-Kontos: Verbindung über das lokale Netzwerk.',
+      es: 'No hay sesión de la cuenta Dyson: se usa la conexión local.',
     },
   },
   cloudFailed: {
@@ -70,6 +76,8 @@ const REASONS = {
     message: {
       en: 'Dyson cloud unreachable: using the local connection.',
       fr: 'Cloud Dyson injoignable : passage par la connexion locale.',
+      de: 'Dyson-Cloud nicht erreichbar: Verbindung über das lokale Netzwerk.',
+      es: 'Nube de Dyson inaccesible: se usa la conexión local.',
     },
   },
 };
