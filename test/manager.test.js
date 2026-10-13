@@ -84,7 +84,7 @@ test('sign-in: code requested, validated, token saved, devices discovered', asyn
   assert.equal(gladys.lastStatus().connected, true);
 });
 
-test('a wrong code is said in both languages, nothing saved', async () => {
+test('a wrong code is said in every language, nothing saved', async () => {
   const { store, manager } = setup();
   await manager.start(ACCOUNT_CONFIG);
   await manager.requestCode();
@@ -93,6 +93,8 @@ test('a wrong code is said in both languages, nothing saved', async () => {
 
   assert.match(message.en, /refused the code or the password/);
   assert.match(message.fr, /refusé le code ou le mot de passe/);
+  assert.match(message.de, /Code oder das Passwort abgelehnt/);
+  assert.match(message.es, /rechazado el código o la contraseña/);
   assert.equal(store.data.token, undefined);
 });
 
@@ -374,6 +376,8 @@ test('test the connection: one line per device', async () => {
 
   assert.equal(message.en, 'Bedroom: local · Pure Hot+Cool Link: not added in Gladys');
   assert.equal(message.fr, 'Bedroom : local · Pure Hot+Cool Link : pas ajouté dans Gladys');
+  assert.equal(message.de, 'Bedroom: lokal · Pure Hot+Cool Link: nicht in Gladys hinzugefügt');
+  assert.equal(message.es, 'Bedroom: local · Pure Hot+Cool Link: no añadido en Gladys');
 });
 
 test('sign out: links closed, saved data deleted', async () => {

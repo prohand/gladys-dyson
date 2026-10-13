@@ -10,6 +10,13 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- German and Spanish translations (configuration screen, messages, widgets,
+  documentation). Feature names of new devices are in German for an account in
+  Germany, Austria or Liechtenstein, in Spanish for Spain and Spanish-speaking
+  Latin America, and the Dyson code e-mail is asked in that language.
+
 ### Changed
 
 - Documentation: the "Dyson controls" widget shows speed - and + only while the device

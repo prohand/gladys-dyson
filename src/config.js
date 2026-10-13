@@ -20,9 +20,27 @@ export const DEFAULT_CONFIG = {
 export const REFRESH_INTERVAL_MIN = 15;
 export const REFRESH_INTERVAL_MAX = 3600;
 
-// French-speaking countries get the one-time code e-mail in French, the
-// others in English: the Dyson API only uses the culture for that e-mail.
-const FRENCH_COUNTRIES = new Set(['FR', 'BE', 'CH', 'LU', 'MC']);
+// French-, German- and Spanish-speaking countries get the one-time code
+// e-mail in their language, the others in English: the Dyson API only uses the
+// culture for that e-mail. A multilingual country keeps the language it always
+// had (Switzerland: French), so existing installs see no change.
+const COUNTRY_LANGUAGES = [
+  ['fr', ['FR', 'BE', 'CH', 'LU', 'MC']],
+  ['de', ['DE', 'AT', 'LI']],
+  [
+    'es',
+    ['ES', 'MX', 'AR', 'CL', 'CO', 'PE', 'UY', 'PY', 'BO', 'EC', 'VE', 'CR', 'PA', 'GT', 'HN'],
+  ],
+];
+
+/**
+ * The language of an account country: fr, de, es, or en for any other.
+ * @param {string} country two-letter code, upper case
+ * @returns {'en'|'fr'|'de'|'es'}
+ */
+export function languageOfCountry(country) {
+  return COUNTRY_LANGUAGES.find(([, countries]) => countries.includes(country))?.[0] ?? 'en';
+}
 
 /**
  * Normalize the configuration received from Gladys.
@@ -38,7 +56,7 @@ export function normalizeConfig(raw = {}) {
   const deviceHosts = String(source.device_hosts ?? '');
   // Also the language of the feature names of new devices: Gladys does not
   // tell an integration the user's language when it publishes devices.
-  const language = FRENCH_COUNTRIES.has(validCountry) ? 'fr' : 'en';
+  const language = languageOfCountry(validCountry);
 
   return {
     email: String(source.email ?? '')

@@ -65,8 +65,11 @@ test('feature names in the language of the account country, English by default',
   assert.equal(fr['oscillation-angle'], "Angle d'oscillation");
   assert.equal(fr['hepa-filter'], 'Durée de vie filtre HEPA');
   assert.equal(names()['night-mode'], 'Night mode');
-  assert.equal(names('de')['night-mode'], 'Night mode');
-  for (const [key, name] of [...Object.entries(fr), ...Object.entries(names('en'))]) {
+  assert.equal(names('de')['night-mode'], 'Nachtmodus');
+  assert.equal(names('es')['night-mode'], 'Modo nocturno');
+  assert.equal(names('it')['night-mode'], 'Night mode', 'any other language: English');
+  const all = ['en', 'fr', 'de', 'es'].flatMap((language) => Object.entries(names(language)));
+  for (const [key, name] of all) {
     assert.equal(typeof name, 'string', key);
     assert.ok(name.length > 0, key);
   }

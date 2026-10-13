@@ -86,43 +86,82 @@ export const PICTURE_KEYS = PICTURES.flatMap((picture) =>
 // formaldehyde reading that finds no tile goes to the status list.
 const MAX_TILES = 6;
 const TILES = [
-  { key: FEATURES.PM25, label: { en: 'PM2.5', fr: 'PM2.5' }, icon: 'wind' },
-  { key: FEATURES.PM10, label: { en: 'PM10', fr: 'PM10' }, icon: 'wind' },
-  { key: FEATURES.VOC, label: { en: 'VOC', fr: 'COV' }, icon: 'cloud' },
-  { key: FEATURES.NO2, label: { en: 'NO2', fr: 'NO2' }, icon: 'cloud' },
+  {
+    key: FEATURES.PM25,
+    label: { en: 'PM2.5', fr: 'PM2.5', de: 'PM2.5', es: 'PM2.5' },
+    icon: 'wind',
+  },
+  { key: FEATURES.PM10, label: { en: 'PM10', fr: 'PM10', de: 'PM10', es: 'PM10' }, icon: 'wind' },
+  { key: FEATURES.VOC, label: { en: 'VOC', fr: 'COV', de: 'VOC', es: 'COV' }, icon: 'cloud' },
+  { key: FEATURES.NO2, label: { en: 'NO2', fr: 'NO2', de: 'NO2', es: 'NO2' }, icon: 'cloud' },
   {
     key: FEATURES.TEMPERATURE,
-    label: { en: 'Temperature', fr: 'Température' },
+    label: { en: 'Temperature', fr: 'Température', de: 'Temperatur', es: 'Temperatura' },
     icon: 'thermometer',
   },
-  { key: FEATURES.HUMIDITY, label: { en: 'Humidity', fr: 'Humidité' }, icon: 'droplet' },
-  { key: FEATURES.FORMALDEHYDE, label: { en: 'Formaldehyde', fr: 'Formaldéhyde' }, icon: 'cloud' },
+  {
+    key: FEATURES.HUMIDITY,
+    label: { en: 'Humidity', fr: 'Humidité', de: 'Luftfeuchtigkeit', es: 'Humedad' },
+    icon: 'droplet',
+  },
+  {
+    key: FEATURES.FORMALDEHYDE,
+    label: { en: 'Formaldehyde', fr: 'Formaldéhyde', de: 'Formaldehyd', es: 'Formaldehído' },
+    icon: 'cloud',
+  },
 ];
 
 const LEVELS = {
-  good: { value: { en: 'Good', fr: 'Bonne' }, color: WIDGET_COLORS.SUCCESS },
-  fair: { value: { en: 'Fair', fr: 'Moyenne' }, color: WIDGET_COLORS.INFO },
-  poor: { value: { en: 'Poor', fr: 'Mauvaise' }, color: WIDGET_COLORS.WARNING },
-  very_poor: { value: { en: 'Very poor', fr: 'Très mauvaise' }, color: WIDGET_COLORS.DANGER },
+  good: {
+    value: { en: 'Good', fr: 'Bonne', de: 'Gut', es: 'Buena' },
+    color: WIDGET_COLORS.SUCCESS,
+  },
+  fair: {
+    value: { en: 'Fair', fr: 'Moyenne', de: 'Mäßig', es: 'Aceptable' },
+    color: WIDGET_COLORS.INFO,
+  },
+  poor: {
+    value: { en: 'Poor', fr: 'Mauvaise', de: 'Schlecht', es: 'Mala' },
+    color: WIDGET_COLORS.WARNING,
+  },
+  very_poor: {
+    value: { en: 'Very poor', fr: 'Très mauvaise', de: 'Sehr schlecht', es: 'Muy mala' },
+    color: WIDGET_COLORS.DANGER,
+  },
 };
 
 const TRANSPORTS = {
-  local: { value: { en: 'Local', fr: 'Locale' }, color: WIDGET_COLORS.SUCCESS },
-  cloud: { value: { en: 'Dyson cloud', fr: 'Cloud Dyson' }, color: WIDGET_COLORS.INFO },
-  unreachable: { value: { en: 'Unreachable', fr: 'Injoignable' }, color: WIDGET_COLORS.DANGER },
+  local: {
+    value: { en: 'Local', fr: 'Locale', de: 'Lokal', es: 'Local' },
+    color: WIDGET_COLORS.SUCCESS,
+  },
+  cloud: {
+    value: { en: 'Dyson cloud', fr: 'Cloud Dyson', de: 'Dyson-Cloud', es: 'Nube de Dyson' },
+    color: WIDGET_COLORS.INFO,
+  },
+  unreachable: {
+    value: { en: 'Unreachable', fr: 'Injoignable', de: 'Nicht erreichbar', es: 'Inaccesible' },
+    color: WIDGET_COLORS.DANGER,
+  },
 };
 
-const ON = { value: { en: 'On', fr: 'Activé' }, color: WIDGET_COLORS.PRIMARY };
-const OFF = { value: { en: 'Off', fr: 'Désactivé' }, color: WIDGET_COLORS.NEUTRAL };
+const ON = {
+  value: { en: 'On', fr: 'Activé', de: 'Ein', es: 'Activado' },
+  color: WIDGET_COLORS.PRIMARY,
+};
+const OFF = {
+  value: { en: 'Off', fr: 'Désactivé', de: 'Aus', es: 'Desactivado' },
+  color: WIDGET_COLORS.NEUTRAL,
+};
 
-const message = (en, fr) => ({
+const message = (text) => ({
   ttl_seconds: 300,
-  components: [{ type: 'text', variant: 'body', text: { en, fr } }],
+  components: [{ type: 'text', variant: 'body', text }],
 });
 
 const refreshButton = (device) => ({
   type: 'button',
-  label: { en: 'Refresh', fr: 'Actualiser' },
+  label: { en: 'Refresh', fr: 'Actualiser', de: 'Aktualisieren', es: 'Actualizar' },
   icon: 'refresh-cw',
   style: 'secondary',
   action: { key: WIDGET_ACTIONS.REFRESH, params: { device } },
@@ -140,9 +179,9 @@ function isAuto(model, state) {
 
 // The names Gladys gives the entries of the fan mode list.
 const MODE_NAMES = {
-  [FAN_MODES.LOW]: { en: 'Low', fr: 'Faible' },
-  [FAN_MODES.MEDIUM]: { en: 'Medium', fr: 'Moyen' },
-  [FAN_MODES.HIGH]: { en: 'High', fr: 'Fort' },
+  [FAN_MODES.LOW]: { en: 'Low', fr: 'Faible', de: 'Niedrig', es: 'Baja' },
+  [FAN_MODES.MEDIUM]: { en: 'Medium', fr: 'Moyen', de: 'Mittel', es: 'Media' },
+  [FAN_MODES.HIGH]: { en: 'High', fr: 'Fort', de: 'Hoch', es: 'Alta' },
 };
 
 /**
@@ -154,13 +193,17 @@ function fanTile(model, state, features) {
   const mode = fanModeOf(model, state);
   const word = (value, icon, color) => ({
     type: 'value',
-    label: { en: 'Fan', fr: 'Ventilateur' },
+    label: { en: 'Fan', fr: 'Ventilateur', de: 'Ventilator', es: 'Ventilador' },
     icon,
     value,
     color,
   });
   if (mode === FAN_MODES.OFF) {
-    return word({ en: 'Off', fr: 'Éteint' }, 'power', WIDGET_COLORS.NEUTRAL);
+    return word(
+      { en: 'Off', fr: 'Éteint', de: 'Aus', es: 'Apagado' },
+      'power',
+      WIDGET_COLORS.NEUTRAL,
+    );
   }
   if (mode === FAN_MODES.AUTO) {
     return word('Auto', 'zap', WIDGET_COLORS.PRIMARY);
@@ -168,7 +211,7 @@ function fanTile(model, state, features) {
   if (MODE_NAMES[mode] && features[FEATURES.SPEED]) {
     return {
       type: 'gauge',
-      label: { en: 'Fan speed', fr: 'Vitesse' },
+      label: { en: 'Fan speed', fr: 'Vitesse', de: 'Geschwindigkeit', es: 'Velocidad' },
       device_feature: features[FEATURES.SPEED],
     };
   }
@@ -225,7 +268,7 @@ function settingItems(model, state, withSwitches = true) {
   const items = [];
   if (withSwitches) {
     const oscillation = switchItem(
-      { en: 'Oscillation', fr: 'Oscillation' },
+      { en: 'Oscillation', fr: 'Oscillation', de: 'Oszillation', es: 'Oscilación' },
       'refresh-cw',
       state.oson,
       ['ON', 'OION'],
@@ -235,26 +278,40 @@ function settingItems(model, state, withSwitches = true) {
     if (oscillation.length > 0 && oscillation[0].color === ON.color && angle !== null) {
       oscillation[0] = {
         ...oscillation[0],
-        value: { en: `On · ${angle}°`, fr: `Activé · ${angle}°` },
+        value: {
+          en: `On · ${angle}°`,
+          fr: `Activé · ${angle}°`,
+          de: `Ein · ${angle}°`,
+          es: `Activado · ${angle}°`,
+        },
       };
     }
     items.push(
       ...oscillation,
-      ...switchItem({ en: 'Night mode', fr: 'Mode nuit' }, 'moon', state.nmod, ['ON'], ['OFF']),
+      ...switchItem(
+        { en: 'Night mode', fr: 'Mode nuit', de: 'Nachtmodus', es: 'Modo nocturno' },
+        'moon',
+        state.nmod,
+        ['ON'],
+        ['OFF'],
+      ),
     );
   }
   if (model.airflow && (state.fdir === 'ON' || state.fdir === 'OFF')) {
     items.push({
-      label: { en: 'Airflow', fr: "Flux d'air" },
+      label: { en: 'Airflow', fr: "Flux d'air", de: 'Luftstrom', es: 'Flujo de aire' },
       icon: 'repeat',
-      value: state.fdir === 'ON' ? { en: 'Front', fr: 'Avant' } : { en: 'Back', fr: 'Arrière' },
+      value:
+        state.fdir === 'ON'
+          ? { en: 'Front', fr: 'Avant', de: 'Vorne', es: 'Delante' }
+          : { en: 'Back', fr: 'Arrière', de: 'Hinten', es: 'Atrás' },
       color: WIDGET_COLORS.NEUTRAL,
     });
   }
   if (model.heater) {
     const target = kelvinTenthsToCelsius(state.hmax);
     const heating = switchItem(
-      { en: 'Heating', fr: 'Chauffage' },
+      { en: 'Heating', fr: 'Chauffage', de: 'Heizung', es: 'Calefacción' },
       'thermometer',
       state.hmod,
       ['HEAT'],
@@ -268,7 +325,7 @@ function settingItems(model, state, withSwitches = true) {
   if (model.humidifier) {
     items.push(
       ...switchItem(
-        { en: 'Humidification', fr: 'Humidification' },
+        { en: 'Humidification', fr: 'Humidification', de: 'Befeuchtung', es: 'Humidificación' },
         'droplet',
         state.hume,
         ['HUMD'],
@@ -282,11 +339,16 @@ function settingItems(model, state, withSwitches = true) {
 function connectionItem(status) {
   const transport = TRANSPORTS[status.transport];
   return {
-    label: { en: 'Connection', fr: 'Connexion' },
+    label: { en: 'Connection', fr: 'Connexion', de: 'Verbindung', es: 'Conexión' },
     icon: 'wifi',
     ...(status.degraded
       ? {
-          value: { en: `${transport.value.en} (fallback)`, fr: `${transport.value.fr} (secours)` },
+          value: {
+            en: `${transport.value.en} (fallback)`,
+            fr: `${transport.value.fr} (secours)`,
+            de: `${transport.value.de} (Ersatzweg)`,
+            es: `${transport.value.es} (respaldo)`,
+          },
           color: WIDGET_COLORS.WARNING,
         }
       : transport),
@@ -295,11 +357,11 @@ function connectionItem(status) {
 
 function filterItems(model, state) {
   const items = [];
-  const percent = (key, en, fr) => {
+  const percent = (key, label) => {
     const value = readNumber(state[key]);
     if (value !== null) {
       items.push({
-        label: { en, fr },
+        label,
         icon: 'filter',
         value: `${value} %`,
         color: value <= 10 ? WIDGET_COLORS.WARNING : WIDGET_COLORS.NEUTRAL,
@@ -310,15 +372,20 @@ function filterItems(model, state) {
     const hours = readNumber(state.filf);
     if (hours !== null) {
       items.push({
-        label: { en: 'Filter', fr: 'Filtre' },
+        label: { en: 'Filter', fr: 'Filtre', de: 'Filter', es: 'Filtro' },
         icon: 'filter',
         value: `${hours} h`,
         color: hours <= 400 ? WIDGET_COLORS.WARNING : WIDGET_COLORS.NEUTRAL,
       });
     }
   } else {
-    percent('hflr', 'HEPA filter', 'Filtre HEPA');
-    percent('cflr', 'Carbon filter', 'Filtre charbon');
+    percent('hflr', { en: 'HEPA filter', fr: 'Filtre HEPA', de: 'HEPA-Filter', es: 'Filtro HEPA' });
+    percent('cflr', {
+      en: 'Carbon filter',
+      fr: 'Filtre charbon',
+      de: 'Aktivkohlefilter',
+      es: 'Filtro de carbón',
+    });
   }
   return items;
 }
@@ -330,7 +397,12 @@ function timerItems(state) {
   }
   return [
     {
-      label: { en: 'Sleep timer', fr: 'Minuterie' },
+      label: {
+        en: 'Sleep timer',
+        fr: 'Minuterie',
+        de: 'Ausschalt-Timer',
+        es: 'Temporizador de apagado',
+      },
       icon: 'clock',
       value: `${timer} min`,
       color: WIDGET_COLORS.NEUTRAL,
@@ -342,19 +414,23 @@ function timerItems(state) {
 function deviceOf(dyson, settings) {
   if (!settings?.device) {
     return {
-      content: message(
-        'Choose a Dyson device in the widget settings.',
-        'Choisissez un appareil Dyson dans les réglages du widget.',
-      ),
+      content: message({
+        en: 'Choose a Dyson device in the widget settings.',
+        fr: 'Choisissez un appareil Dyson dans les réglages du widget.',
+        de: 'Wählen Sie in den Widget-Einstellungen ein Dyson-Gerät aus.',
+        es: 'Elija un dispositivo Dyson en la configuración del widget.',
+      }),
     };
   }
   const device = dyson.deviceInfo(settings.device);
   if (!device) {
     return {
-      content: message(
-        'This Dyson device is not available: is it still in the account?',
-        "Cet appareil Dyson n'est pas disponible : est-il toujours dans le compte ?",
-      ),
+      content: message({
+        en: 'This Dyson device is not available: is it still in the account?',
+        fr: "Cet appareil Dyson n'est pas disponible : est-il toujours dans le compte ?",
+        de: 'Dieses Dyson-Gerät ist nicht verfügbar: Ist es noch im Konto?',
+        es: 'Este dispositivo Dyson no está disponible: ¿sigue estando en la cuenta?',
+      }),
     };
   }
   return { device };
@@ -388,7 +464,12 @@ export function buildAirContent(dyson, { settings }) {
   const items = [];
   if (level) {
     items.push({
-      label: { en: 'Air quality', fr: "Qualité de l'air" },
+      label: {
+        en: 'Air quality',
+        fr: "Qualité de l'air",
+        de: 'Luftqualität',
+        es: 'Calidad del aire',
+      },
       icon: 'wind',
       ...LEVELS[level],
     });
@@ -400,7 +481,7 @@ export function buildAirContent(dyson, { settings }) {
     typeof formaldehyde === 'number'
   ) {
     items.push({
-      label: { en: 'Formaldehyde', fr: 'Formaldéhyde' },
+      label: { en: 'Formaldehyde', fr: 'Formaldéhyde', de: 'Formaldehyd', es: 'Formaldehído' },
       icon: 'cloud',
       value: `${formaldehyde} mg/m³`,
       color: WIDGET_COLORS.NEUTRAL,
@@ -430,7 +511,7 @@ const powerButton = (model, state, device) =>
     ? actionButton(
         device,
         WIDGET_ACTIONS.POWER,
-        { en: 'Turn on', fr: 'Allumer' },
+        { en: 'Turn on', fr: 'Allumer', de: 'Einschalten', es: 'Encender' },
         'power',
         'primary',
         1,
@@ -438,7 +519,7 @@ const powerButton = (model, state, device) =>
     : actionButton(
         device,
         WIDGET_ACTIONS.POWER,
-        { en: 'Turn off', fr: 'Éteindre' },
+        { en: 'Turn off', fr: 'Éteindre', de: 'Ausschalten', es: 'Apagar' },
         'power',
         'secondary',
         0,
@@ -449,7 +530,7 @@ const autoButton = (device, value) =>
     ? actionButton(
         device,
         WIDGET_ACTIONS.AUTO,
-        { en: 'Auto mode', fr: 'Mode auto' },
+        { en: 'Auto mode', fr: 'Mode auto', de: 'Automatikmodus', es: 'Modo automático' },
         'zap',
         'secondary',
         1,
@@ -457,7 +538,7 @@ const autoButton = (device, value) =>
     : actionButton(
         device,
         WIDGET_ACTIONS.AUTO,
-        { en: 'Manual mode', fr: 'Mode manuel' },
+        { en: 'Manual mode', fr: 'Mode manuel', de: 'Manueller Modus', es: 'Modo manual' },
         'sliders',
         'secondary',
         0,
@@ -479,7 +560,7 @@ function speedButtons(model, state, device) {
       actionButton(
         device,
         WIDGET_ACTIONS.SPEED_DOWN,
-        { en: 'Speed -', fr: 'Vitesse -' },
+        { en: 'Speed -', fr: 'Vitesse -', de: 'Geschwindigkeit -', es: 'Velocidad -' },
         'minus',
         'secondary',
       ),
@@ -490,7 +571,7 @@ function speedButtons(model, state, device) {
       actionButton(
         device,
         WIDGET_ACTIONS.SPEED_UP,
-        { en: 'Speed +', fr: 'Vitesse +' },
+        { en: 'Speed +', fr: 'Vitesse +', de: 'Geschwindigkeit +', es: 'Velocidad +' },
         'plus',
         'secondary',
       ),
@@ -510,13 +591,13 @@ function settingButtons(model, state, device) {
     powerButton(model, state, device),
     toggle(
       WIDGET_ACTIONS.OSCILLATION,
-      { en: 'Oscillation', fr: 'Oscillation' },
+      { en: 'Oscillation', fr: 'Oscillation', de: 'Oszillation', es: 'Oscilación' },
       'refresh-cw',
       state.oson === 'ON' || state.oson === 'OION',
     ),
     toggle(
       WIDGET_ACTIONS.NIGHT_MODE,
-      { en: 'Night mode', fr: 'Mode nuit' },
+      { en: 'Night mode', fr: 'Mode nuit', de: 'Nachtmodus', es: 'Modo nocturno' },
       'moon',
       state.nmod === 'ON',
     ),
@@ -529,8 +610,18 @@ function settingButtons(model, state, device) {
         device,
         WIDGET_ACTIONS.AIRFLOW,
         front
-          ? { en: 'Airflow to back', fr: "Flux vers l'arrière" }
-          : { en: 'Airflow to front', fr: "Flux vers l'avant" },
+          ? {
+              en: 'Airflow to back',
+              fr: "Flux vers l'arrière",
+              de: 'Luftstrom nach hinten',
+              es: 'Flujo hacia atrás',
+            }
+          : {
+              en: 'Airflow to front',
+              fr: "Flux vers l'avant",
+              de: 'Luftstrom nach vorne',
+              es: 'Flujo hacia delante',
+            },
         'repeat',
         'secondary',
         front ? AIRFLOW.REVERSE : AIRFLOW.FORWARD,
@@ -540,7 +631,7 @@ function settingButtons(model, state, device) {
     buttons.push(
       toggle(
         WIDGET_ACTIONS.AUTO,
-        { en: 'Auto mode', fr: 'Mode auto' },
+        { en: 'Auto mode', fr: 'Mode auto', de: 'Automatikmodus', es: 'Modo automático' },
         'zap',
         isAuto(model, state),
       ),
@@ -559,7 +650,12 @@ function sleepTimerButton(state, device) {
   const running = timer !== null && timer > 0;
   return {
     type: 'button',
-    label: { en: 'Sleep timer', fr: 'Minuterie' },
+    label: {
+      en: 'Sleep timer',
+      fr: 'Minuterie',
+      de: 'Ausschalt-Timer',
+      es: 'Temporizador de apagado',
+    },
     icon: 'clock',
     style: running ? 'primary' : 'secondary',
     action: {
@@ -569,7 +665,12 @@ function sleepTimerButton(state, device) {
         {
           key: SLEEP_TIMER_FIELD,
           type: 'number',
-          label: { en: 'Minutes (0 cancels)', fr: 'Minutes (0 annule)' },
+          label: {
+            en: 'Minutes (0 cancels)',
+            fr: 'Minutes (0 annule)',
+            de: 'Minuten (0 bricht ab)',
+            es: 'Minutos (0 cancela)',
+          },
           required: true,
           min: 0,
           max: SLEEP_TIMER_MAX_MINUTES,
@@ -588,7 +689,7 @@ function nightButtons(model, state, device) {
     actionButton(
       device,
       WIDGET_ACTIONS.NIGHT_MODE,
-      { en: 'Night mode', fr: 'Mode nuit' },
+      { en: 'Night mode', fr: 'Mode nuit', de: 'Nachtmodus', es: 'Modo nocturno' },
       'moon',
       nightOn ? 'primary' : 'secondary',
       nightOn ? 0 : 1,
@@ -717,13 +818,20 @@ export const WIDGET_CONTENT = {
   [CONTROLS_WIDGET]: buildControlsContent,
 };
 
-const UNREACHABLE = { en: 'The device is unreachable.', fr: "L'appareil est injoignable." };
+const UNREACHABLE = {
+  en: 'The device is unreachable.',
+  fr: "L'appareil est injoignable.",
+  de: 'Das Gerät ist nicht erreichbar.',
+  es: 'El dispositivo está inaccesible.',
+};
 
 // A core older than 5.2 drops the form of a button and runs its action
 // without `values`: no minutes were typed, nothing is sent.
 const NEEDS_FORM = {
   en: 'This button needs Gladys 5.2 or later. Use the "Set the sleep timer" scene action meanwhile.',
   fr: "Ce bouton demande Gladys 5.2 ou plus. Utilisez l'action de scène « Régler la minuterie » d'ici là.",
+  de: 'Diese Schaltfläche erfordert Gladys 5.2 oder neuer. Verwenden Sie bis dahin die Szenenaktion „Ausschalt-Timer einstellen“.',
+  es: 'Este botón requiere Gladys 5.2 o posterior. Mientras tanto, utilice la acción de escena «Ajustar el temporizador de apagado».',
 };
 
 /**
@@ -747,8 +855,18 @@ async function setSleepTimer(dyson, params, values) {
   }
   const set = Math.min(SLEEP_TIMER_MAX_MINUTES, Math.round(Number(minutes)));
   return set > 0
-    ? { en: `Sleep timer: ${set} min.`, fr: `Minuterie : ${set} min.` }
-    : { en: 'Sleep timer cancelled.', fr: 'Minuterie annulée.' };
+    ? {
+        en: `Sleep timer: ${set} min.`,
+        fr: `Minuterie : ${set} min.`,
+        de: `Ausschalt-Timer: ${set} Min.`,
+        es: `Temporizador de apagado: ${set} min.`,
+      }
+    : {
+        en: 'Sleep timer cancelled.',
+        fr: 'Minuterie annulée.',
+        de: 'Ausschalt-Timer abgebrochen.',
+        es: 'Temporizador de apagado cancelado.',
+      };
 }
 
 // The value a declared 0 / 1 param stands for, whatever its type on the way.
@@ -784,7 +902,14 @@ export async function handleWidgetAction(dyson, { actionKey, params, values }) {
   }
   if (actionKey === WIDGET_ACTIONS.REFRESH) {
     const refreshed = await dyson.refreshDevice(params?.device);
-    return refreshed ? { en: 'Readings requested.', fr: 'Relevés demandés.' } : UNREACHABLE;
+    return refreshed
+      ? {
+          en: 'Readings requested.',
+          fr: 'Relevés demandés.',
+          de: 'Messwerte angefordert.',
+          es: 'Lecturas solicitadas.',
+        }
+      : UNREACHABLE;
   }
   const command = ACTION_COMMANDS[actionKey];
   if (!command) {

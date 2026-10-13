@@ -34,14 +34,20 @@ const STATUS_MESSAGES = {
   noAccount: {
     en: 'Enter the e-mail and password of your Dyson account, save, then use "Receive a code".',
     fr: "Renseignez l'e-mail et le mot de passe de votre compte Dyson, enregistrez, puis utilisez « Recevoir un code ».",
+    de: 'Geben Sie die E-Mail-Adresse und das Passwort Ihres Dyson-Kontos ein, speichern Sie und verwenden Sie dann „Code erhalten“.',
+    es: 'Introduzca el correo electrónico y la contraseña de su cuenta Dyson, guarde y luego use «Recibir un código».',
   },
   noToken: {
     en: 'Not signed in yet: use "Receive a code", then "Validate the code".',
     fr: 'Pas encore connecté : utilisez « Recevoir un code », puis « Valider le code ».',
+    de: 'Noch nicht angemeldet: Verwenden Sie „Code erhalten“ und dann „Code bestätigen“.',
+    es: 'Aún no ha iniciado sesión: use «Recibir un código» y luego «Validar el código».',
   },
   tokenRejected: {
     en: 'The Dyson session has expired: sign in again with a new code.',
     fr: 'La session Dyson a expiré : reconnectez-vous avec un nouveau code.',
+    de: 'Die Dyson-Sitzung ist abgelaufen: Melden Sie sich mit einem neuen Code erneut an.',
+    es: 'La sesión de Dyson ha caducado: vuelva a iniciar sesión con un código nuevo.',
   },
 };
 
@@ -408,6 +414,8 @@ export function createDysonManager({
       return {
         en: `A code was sent to ${config.email}. Type it in "Validate the code" within a few minutes.`,
         fr: `Un code a été envoyé à ${config.email}. Saisissez-le dans « Valider le code » dans les minutes qui suivent.`,
+        de: `Ein Code wurde an ${config.email} gesendet. Geben Sie ihn innerhalb weniger Minuten unter „Code bestätigen“ ein.`,
+        es: `Se ha enviado un código a ${config.email}. Introdúzcalo en «Validar el código» en los próximos minutos.`,
       };
     },
 
@@ -423,6 +431,8 @@ export function createDysonManager({
         return {
           en: 'No code pending for this e-mail: use "Receive a code" first.',
           fr: "Aucun code en attente pour cet e-mail : utilisez d'abord « Recevoir un code ».",
+          de: 'Für diese E-Mail-Adresse steht kein Code aus: Verwenden Sie zuerst „Code erhalten“.',
+          es: 'No hay ningún código pendiente para este correo electrónico: use primero «Recibir un código».',
         };
       }
       if (!config.password) {
@@ -442,6 +452,8 @@ export function createDysonManager({
           return {
             en: 'Dyson refused the code or the password. Check them, or ask for a new code.',
             fr: 'Dyson a refusé le code ou le mot de passe. Vérifiez-les, ou demandez un nouveau code.',
+            de: 'Dyson hat den Code oder das Passwort abgelehnt. Prüfen Sie beides oder fordern Sie einen neuen Code an.',
+            es: 'Dyson ha rechazado el código o la contraseña. Compruébelos o solicite un código nuevo.',
           };
         }
         throw err;
@@ -461,6 +473,8 @@ export function createDysonManager({
       return {
         en: `Signed in: ${count} Dyson device(s) found. Add them from the Discover tab.`,
         fr: `Connecté : ${count} appareil(s) Dyson trouvé(s). Ajoutez-les depuis l'onglet Découverte.`,
+        de: `Angemeldet: ${count} Dyson-Gerät(e) gefunden. Fügen Sie sie im Tab „Entdecken“ hinzu.`,
+        es: `Sesión iniciada: ${count} dispositivo(s) Dyson encontrado(s). Añádalos desde la pestaña «Descubrir».`,
       };
     },
 
@@ -474,6 +488,8 @@ export function createDysonManager({
       return {
         en: 'Signed out: the Dyson token and device list were deleted.',
         fr: 'Déconnecté : le jeton et la liste des appareils Dyson ont été supprimés.',
+        de: 'Abgemeldet: Das Dyson-Token und die Geräteliste wurden gelöscht.',
+        es: 'Sesión cerrada: se han eliminado el token de Dyson y la lista de dispositivos.',
       };
     },
 
@@ -495,29 +511,42 @@ export function createDysonManager({
         return {
           en: 'Signed in, but the account has no supported Dyson fan or purifier.',
           fr: 'Connecté, mais le compte ne contient aucun ventilateur ou purificateur Dyson pris en charge.',
+          de: 'Angemeldet, aber das Konto enthält keinen unterstützten Dyson-Ventilator oder -Luftreiniger.',
+          es: 'Sesión iniciada, pero la cuenta no contiene ningún ventilador o purificador Dyson compatible.',
         };
       }
-      const lines = { en: [], fr: [] };
+      const lines = { en: [], fr: [], de: [], es: [] };
       for (const { dysonDevice, model } of devices) {
         const name = dysonDevice.name ?? model.name;
         const entry = links.get(dysonDevice.serial);
         if (!entry) {
           lines.en.push(`${name}: not added in Gladys`);
           lines.fr.push(`${name} : pas ajouté dans Gladys`);
+          lines.de.push(`${name}: nicht in Gladys hinzugefügt`);
+          lines.es.push(`${name}: no añadido en Gladys`);
           continue;
         }
         const { transport, degraded } = entry.link.status;
         const label = {
-          local: { en: 'local', fr: 'local' },
-          cloud: { en: 'Dyson cloud', fr: 'cloud Dyson' },
-          unreachable: { en: 'unreachable', fr: 'injoignable' },
+          local: { en: 'local', fr: 'local', de: 'lokal', es: 'local' },
+          cloud: { en: 'Dyson cloud', fr: 'cloud Dyson', de: 'Dyson-Cloud', es: 'nube de Dyson' },
+          unreachable: {
+            en: 'unreachable',
+            fr: 'injoignable',
+            de: 'nicht erreichbar',
+            es: 'inaccesible',
+          },
         }[transport];
         // The reason says what to fix (the address to type, a refused session).
         const { message } = entry.link.status;
         lines.en.push(`${name}: ${label.en}${degraded ? ` (fallback). ${message.en}` : ''}`);
         lines.fr.push(`${name} : ${label.fr}${degraded ? ` (secours). ${message.fr}` : ''}`);
+        lines.de.push(`${name}: ${label.de}${degraded ? ` (Ersatzweg). ${message.de}` : ''}`);
+        lines.es.push(`${name}: ${label.es}${degraded ? ` (respaldo). ${message.es}` : ''}`);
       }
-      return { en: lines.en.join(' · '), fr: lines.fr.join(' · ') };
+      return Object.fromEntries(
+        Object.entries(lines).map(([language, entries]) => [language, entries.join(' · ')]),
+      );
     },
 
     /** Gladys asks for the device list (Discover tab). */

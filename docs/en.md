@@ -75,8 +75,10 @@ Depending on the model:
 | Formaldehyde (mg/m³)                  | "Formaldehyde" models (K suffix)          |
 | Filter life                           | % (HEPA, carbon), hours on Link models    |
 
-The feature names are in French when the account country is French-speaking
-(France, Belgium, Switzerland, Luxembourg, Monaco), in English otherwise. A
+The feature names follow the account country: French for France, Belgium,
+Switzerland, Luxembourg and Monaco; German for Germany, Austria and
+Liechtenstein; Spanish for Spain and the Spanish-speaking countries of Latin
+America; English otherwise. A
 device already added keeps its names: rename a feature in the device page
 (Integrations → Dyson → Devices). In a "Devices" box, Gladys names a feature
 that is the only one of its kind after its type ("Selection" for the

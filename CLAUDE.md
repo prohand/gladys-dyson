@@ -48,7 +48,7 @@ src/capabilities/scenes.js    scene actions: apply_settings, set_sleep_timer
 src/capabilities/widget.js    dashboard widgets dyson_air, dyson_controls (content, actions, pictures)
 assets/devices/           drawings of the products (controls widget), copied into the image
 gladys-assistant-integration.json  manifest: config_schema, actions, transports
-docs/en.md, docs/fr.md    user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md     user documentation, re-hosted by Gladys (en, fr mandatory)
 test/                     node --test; helpers fake Gladys, MQTT, timers and the Dyson API
 .github/scripts/changelog-release.mjs  rolls CHANGELOG.md at release, tested in test/
 .github/scripts/device-pictures.mjs    draws assets/devices (needs playwright, --no-save)
@@ -115,13 +115,14 @@ test/                     node --test; helpers fake Gladys, MQTT, timers and the
 - **Changelog.** Every user-visible change adds a line under `## [Unreleased]`
   in `CHANGELOG.md` (`### Added`, `Changed`, `Fixed`, `Removed`, `Security`).
   Never write a version heading: the Release workflow moves the section.
-- **Manifest.** Texts are `{ "en": ..., "fr": ... }` objects (label,
+- **Manifest.** Texts are `{ "en", "fr", "de", "es" }` objects (label,
   description, placeholder). Catalog `description`: 10 to 100 characters per
   language. `transports` stays `["local", "cloud"]`. `test/manifest.test.js`
   ties the manifest to the code (defaults, action, scene and widget handlers).
-- **User-facing text** is bilingual (English and French): action messages,
-  connection status, transport reasons, manifest texts, `docs/en.md` /
-  `docs/fr.md` kept in sync.
+- **User-facing text** is `{ en, fr, de, es }` (English, French, German,
+  Spanish): action messages, connection status, transport reasons, widget
+  texts, manifest texts, feature names. `docs/en.md`, `docs/fr.md`,
+  `docs/de.md`, `docs/es.md` stay in sync.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why, in
   English. Tests never touch the network: inject `fetchImpl`, `mqttConnect`,
   `timers`, `cloudFactory`, `store`.

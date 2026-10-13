@@ -93,7 +93,36 @@ test('field placeholders are multi-language objects, on text and number fields o
   }
 });
 
-test('every text is in English and French', () => {
+// Every language of the Gladys interface: the core shows `value[userLanguage]`,
+// else English, so a missing language falls back without failing.
+const LANGUAGES = ['en', 'fr', 'de', 'es'];
+
+/** Every multi-language object of the manifest, with its path. */
+function multiLanguageTexts(node, path = '') {
+  if (Array.isArray(node)) {
+    return node.flatMap((item, index) => multiLanguageTexts(item, `${path}[${index}]`));
+  }
+  if (node && typeof node === 'object') {
+    if (typeof node.en === 'string') {
+      return [{ path, text: node }];
+    }
+    return Object.entries(node).flatMap(([key, value]) =>
+      multiLanguageTexts(value, path ? `${path}.${key}` : key),
+    );
+  }
+  return [];
+}
+
+test('every text is in English, French, German and Spanish', () => {
+  const texts = multiLanguageTexts(manifest);
+  assert.ok(texts.length > 50, 'the walk finds the texts');
+  for (const { path, text } of texts) {
+    assert.deepEqual(Object.keys(text), LANGUAGES, `${path}: languages`);
+    for (const language of LANGUAGES) {
+      assert.ok(text[language].trim().length > 0, `${path}.${language} is empty`);
+    }
+  }
+  // The fields the store reads as texts are all multi-language objects.
   const declarations = [
     ...allFields,
     ...(manifest.actions ?? []),
@@ -106,15 +135,31 @@ test('every text is in English and French', () => {
   for (const field of declarations) {
     for (const text of ['label', 'description', 'placeholder']) {
       if (field[text] !== undefined) {
-        assert.ok(field[text].en && field[text].fr, `"${field.key}".${text} needs en and fr`);
+        assert.equal(typeof field[text].en, 'string', `"${field.key}".${text} is multi-language`);
       }
     }
   }
 });
 
+test('every language fits the store length limits', () => {
+  const within = (text, min, max, path) => {
+    for (const language of LANGUAGES) {
+      const { length } = text[language];
+      assert.ok(length >= min && length <= max, `${path}.${language}: ${length} characters`);
+    }
+  };
+  for (const field of manifest.config_schema.filter((f) => f.type === 'section')) {
+    within(field.description, 1, 1000, `section ${field.key}`);
+  }
+  for (const widget of manifest.widgets ?? []) {
+    within(widget.label, 3, 30, `widget ${widget.key} label`);
+    within(widget.description, 1, 100, `widget ${widget.key} description`);
+  }
+});
+
 test('the catalog name and description fit what the store allows', () => {
   assert.ok(manifest.name.length >= 3 && manifest.name.length <= 30);
-  assert.ok(manifest.description.en && manifest.description.fr);
+  assert.deepEqual(Object.keys(manifest.description), LANGUAGES);
   for (const [language, text] of Object.entries(manifest.description)) {
     assert.ok(
       text.length >= 10 && text.length <= 100,

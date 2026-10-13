@@ -9,7 +9,8 @@ Built on the official
 and the SDK
 [`@gladysassistant/integration-sdk`](https://github.com/GladysAssistant/integration-sdk-js).
 
-User documentation: [English](./docs/en.md) · [Français](./docs/fr.md).
+User documentation: [English](./docs/en.md) · [Français](./docs/fr.md) ·
+[Deutsch](./docs/de.md) · [Español](./docs/es.md).
 
 ## What it does
 
@@ -69,7 +70,7 @@ local MQTT password. Sign-in uses the one-time code Dyson e-mails.
 │  │  └─ store.js                 # /data/dyson-account.json
 │  ├─ devices/fan.js              # Gladys device + features, value mapping
 │  └─ capabilities/               # Gladys 5.1: scene triggers, scene actions, widget
-├─ docs/en.md, docs/fr.md         # user documentation (re-hosted by Gladys)
+├─ docs/{en,fr,de,es}.md         # user documentation (re-hosted by Gladys)
 ├─ test/                          # unit tests (`node --test`), no network
 ├─ gladys-assistant-integration.json # manifest
 ├─ Dockerfile                     # Node 24 Alpine, read-only rootfs ready

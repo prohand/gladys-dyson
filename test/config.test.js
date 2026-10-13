@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_CONFIG,
+  languageOfCountry,
   normalizeConfig,
   parseBareHosts,
   parseDeviceHosts,
@@ -32,6 +33,8 @@ test('the country is a two-letter code, upper-cased, FR when unreadable', () => 
   assert.equal(normalizeConfig({ country: 'be' }).culture, 'fr-BE');
   assert.equal(normalizeConfig({ country: 'be' }).language, 'fr');
   assert.equal(normalizeConfig({ country: 'gb' }).language, 'en');
+  assert.equal(normalizeConfig({ country: 'de' }).culture, 'de-DE');
+  assert.equal(normalizeConfig({ country: 'es' }).culture, 'es-ES');
   assert.equal(normalizeConfig({ country: 'France' }).country, 'FR');
   assert.equal(normalizeConfig({ country: '' }).country, 'FR');
 });
@@ -73,4 +76,21 @@ test('addresses typed without a serial are kept apart', () => {
   assert.deepEqual(parseBareHosts('$(rm) 1.2.3.4;x'), ['1.2.3.4']);
   assert.deepEqual(normalizeConfig({ device_hosts: '10.0.0.5' }).bareHosts, ['10.0.0.5']);
   assert.equal(normalizeConfig({ device_hosts: '10.0.0.5' }).hosts.size, 0);
+});
+
+test('the language of the account country: French, German, Spanish, else English', () => {
+  for (const country of ['FR', 'BE', 'CH', 'LU', 'MC']) {
+    assert.equal(languageOfCountry(country), 'fr', country);
+  }
+  for (const country of ['DE', 'AT', 'LI']) {
+    assert.equal(languageOfCountry(country), 'de', country);
+  }
+  for (const country of ['ES', 'MX', 'AR', 'CO']) {
+    assert.equal(languageOfCountry(country), 'es', country);
+  }
+  for (const country of ['GB', 'US', 'IT', 'NL', 'JP']) {
+    assert.equal(languageOfCountry(country), 'en', country);
+  }
+  assert.equal(normalizeConfig({ country: 'at' }).language, 'de');
+  assert.equal(normalizeConfig({ country: 'mx' }).language, 'es');
 });
