@@ -10,6 +10,11 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation: the "Dyson controls" widget shows speed - and + only while the device
+  is on and in manual mode.
+
 ## [1.6.0] - 2026-10-12
 
 ### Changed

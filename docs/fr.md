@@ -178,7 +178,11 @@ des quatre polluants.
   oscillation et mode nuit sont retirées : les boutons les montrent ;
 - jusqu'à quatre boutons, au choix dans le réglage **Boutons** du widget :
   - **Marche, auto, vitesse - et +** (par défaut) : allumer / éteindre, mode
-    auto (ou retour en manuel), vitesse - et vitesse + ;
+    auto (ou retour en manuel), vitesse - et vitesse +. Vitesse - et + ne
+    s'affichent que si l'appareil est allumé et en mode manuel : éteint, on
+    voit seulement **Allumer** et **Mode auto** ; en auto, **Éteindre** et
+    **Mode manuel**. Au plus bas (1), vitesse - disparaît ; au plus haut
+    (10), vitesse + disparaît ;
   - **Marche, oscillation, mode nuit, flux d'air** : un réglage actif est un
     bouton plein, un clic l'inverse. Sur les modèles qui soufflent dans un
     seul sens, le mode auto remplace le flux d'air ;
