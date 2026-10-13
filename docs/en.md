@@ -169,7 +169,10 @@ pollutants.
   oscillation and night mode rows are left out: the buttons show them;
 - up to four buttons, chosen in the widget's **Buttons** setting:
   - **On/off, auto, speed - and +** (default): turn on / off, auto mode (or
-    back to manual), speed - and speed +;
+    back to manual), speed - and speed +. Speed - and + only show while the
+    device is on and in manual mode: off, you only see **Turn on** and
+    **Auto mode**; in auto, **Turn off** and **Manual mode**. At the lowest
+    speed (1), speed - is hidden; at the highest (10), speed + is hidden;
   - **On/off, oscillation, night mode, airflow**: a setting that is on is a
     filled button, a click switches it. On the models that blow one way, the
     auto mode takes the place of the airflow;
