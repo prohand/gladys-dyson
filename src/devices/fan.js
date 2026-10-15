@@ -537,6 +537,15 @@ export function statesFromProductState(model, values, state = values) {
 // presence: "INIT" in the new field is no reading, not a reason to fall back.
 const pick = (values, key, legacy) => (values[key] !== undefined ? values[key] : values[legacy]);
 
+/**
+ * Whether sensor data carries a formaldehyde reading. The product type does not
+ * say it for every model (a TP09 reports as 438E, like the TP07 without the
+ * sensor): the data does.
+ */
+export function hasFormaldehydeReading(values) {
+  return readNumber(pick(values, 'hchr', 'hcho')) !== null;
+}
+
 // VOC / NO2: the device sends ten times the index, the app shows it truncated.
 function appIndex(raw) {
   const value = readNumber(raw);

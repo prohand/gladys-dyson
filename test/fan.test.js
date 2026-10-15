@@ -8,6 +8,7 @@ import {
   commandFor,
   featureKeyOf,
   featureKeys,
+  hasFormaldehydeReading,
   statesFromEnvironment,
   statesFromProductState,
 } from '../src/devices/fan.js';
@@ -449,4 +450,12 @@ test('a sensor, or a control the model lacks, cannot be commanded', () => {
   assert.throws(() => commandFor(PURE, FEATURES.HEATING, 1), /cannot be controlled/);
   assert.throws(() => commandFor(PURE, FEATURES.TEMPERATURE, 1), /cannot be controlled/);
   assert.throws(() => commandFor(PURE, null, 1), /cannot be controlled/);
+});
+
+test('a formaldehyde reading is a number in hchr or hcho, not INIT or NONE', () => {
+  assert.equal(hasFormaldehydeReading({ hchr: '0005' }), true);
+  assert.equal(hasFormaldehydeReading({ hcho: '0002' }), true);
+  assert.equal(hasFormaldehydeReading({ hchr: 'INIT' }), false);
+  assert.equal(hasFormaldehydeReading({ hchr: 'NONE', hcho: 'NONE' }), false);
+  assert.equal(hasFormaldehydeReading({ p25r: '0004' }), false);
 });

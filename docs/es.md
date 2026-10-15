@@ -75,8 +75,13 @@ Según el modelo:
 | Temperatura, humedad                           | todos                                          |
 | PM2.5, PM10 (µg/m³)                            | modelos de 2018 en adelante                    |
 | Índice COV, índice NO2                         | modelos de 2018 en adelante (solo COV en Link) |
-| Formaldehído (mg/m³)                           | modelos «Formaldehyde» (sufijo K)              |
+| Formaldehído (mg/m³)                           | modelos «Formaldehyde» (ver abajo)             |
 | Vida del filtro                                | % (HEPA, carbón), horas en los modelos Link    |
+
+Formaldehído: la cuenta no indica qué modelos tienen el sensor (un TP09 se
+presenta como un TP07). La función aparece con la primera lectura: abra la
+pestaña **Descubrir** y haga clic en **Actualizar** en el dispositivo, unos
+minutos después de añadirlo. Se conservan el historial y las escenas.
 
 Los nombres de las funciones siguen el país de la cuenta: francés para
 Francia, Bélgica, Suiza, Luxemburgo y Mónaco; alemán para Alemania, Austria y
@@ -163,7 +168,7 @@ Cada widget muestra un dispositivo, elegido en su configuración.
   verde (buena), azul (aceptable), naranja (mala), rojo (muy mala), con los
   umbrales de las escenas de arriba;
 - el estado: calidad del aire global (el peor contaminante), formaldehído en
-  los modelos K, conexión, vida de los filtros (los filtros son los que limpian
+  los modelos «Formaldehyde», conexión, vida de los filtros (los filtros son los que limpian
   el aire);
 - un botón para actualizar las lecturas.
 

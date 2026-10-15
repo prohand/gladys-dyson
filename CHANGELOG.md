@@ -10,6 +10,13 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Fixed
+
+- Formaldehyde sensor missing on the models whose product type does not tell it
+  (Purifier Cool Formaldehyde TP09 seen as 438E, some PH04, Big+Quiet BP03): the
+  feature is now added after the first reading. Use **Update** on the device in
+  the Discover tab to get it.
+
 ## [1.7.0] - 2026-10-13
 
 ### Added

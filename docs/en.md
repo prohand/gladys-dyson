@@ -72,8 +72,13 @@ Depending on the model:
 | Temperature, humidity                 | all                                       |
 | PM2.5, PM10 (µg/m³)                   | 2018 and later models                     |
 | VOC index, NO2 index                  | 2018 and later models (VOC only on Link)  |
-| Formaldehyde (mg/m³)                  | "Formaldehyde" models (K suffix)          |
+| Formaldehyde (mg/m³)                  | "Formaldehyde" models (see below)         |
 | Filter life                           | % (HEPA, carbon), hours on Link models    |
+
+Formaldehyde: the account does not say which models have the sensor (a TP09
+reports as a TP07). The feature appears with the first reading: open the
+**Discover** tab and click **Update** on the device, a few minutes after
+adding it. History and scenes are kept.
 
 The feature names follow the account country: French for France, Belgium,
 Switzerland, Luxembourg and Monaco; German for Germany, Austria and
@@ -151,8 +156,8 @@ Each widget shows one device, chosen in its settings.
   on the model). Each pollutant tile takes the colour of its level: green
   (good), blue (fair), orange (poor), red (very poor), with the thresholds of
   the scenes below;
-- the status: overall air quality (the worst pollutant), formaldehyde on the K
-  models, connection, filter life (the filters are what cleans the air);
+- the status: overall air quality (the worst pollutant), formaldehyde on the
+  "Formaldehyde" models, connection, filter life (the filters are what cleans the air);
 - a button to refresh the readings.
 
 Dyson gives no single AQI number: the overall level is computed from the four
