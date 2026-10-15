@@ -75,8 +75,13 @@ Je nach Modell:
 | Temperatur, Luftfeuchtigkeit               | alle                                     |
 | PM2.5, PM10 (µg/m³)                        | Modelle ab 2018                          |
 | VOC-Index, NO2-Index                       | Modelle ab 2018 (nur VOC bei Link)       |
-| Formaldehyd (mg/m³)                        | „Formaldehyde“-Modelle (Endung K)        |
+| Formaldehyd (mg/m³)                        | „Formaldehyde“-Modelle (siehe unten)     |
 | Filterlebensdauer                          | % (HEPA, Aktivkohle), Stunden bei Link   |
+
+Formaldehyd: Das Konto sagt nicht, welche Modelle den Sensor haben (ein TP09
+meldet sich wie ein TP07). Die Funktion erscheint mit dem ersten Messwert:
+Öffne den Tab **Entdecken** und klicke beim Gerät auf **Aktualisieren**,
+ein paar Minuten nach dem Hinzufügen. Verlauf und Szenen bleiben erhalten.
 
 Die Namen der Funktionen richten sich nach dem Land des Kontos: Französisch für
 Frankreich, Belgien, die Schweiz, Luxemburg und Monaco; Deutsch für
@@ -164,7 +169,7 @@ Jedes Widget zeigt ein Gerät, das in seinen Einstellungen gewählt wird.
   (gut), blau (mäßig), orange (schlecht), rot (sehr schlecht), mit den
   Schwellenwerten der Szenen oben;
 - der Status: allgemeine Luftqualität (der schlechteste Schadstoff),
-  Formaldehyd bei den K-Modellen, Verbindung, Filterlebensdauer (die Filter
+  Formaldehyd bei den „Formaldehyde“-Modellen, Verbindung, Filterlebensdauer (die Filter
   reinigen die Luft);
 - eine Schaltfläche, um die Messwerte zu aktualisieren.
 

@@ -74,8 +74,14 @@ Selon le modèle :
 | Température, humidité                   | tous                                        |
 | PM2.5, PM10 (µg/m³)                     | modèles depuis 2018                         |
 | Indice COV, indice NO2                  | modèles depuis 2018 (COV seul sur « Link ») |
-| Formaldéhyde (mg/m³)                    | modèles « Formaldehyde » (suffixe K)        |
+| Formaldéhyde (mg/m³)                    | modèles « Formaldehyde » (voir dessous)     |
 | Usure des filtres                       | % (HEPA, charbon), heures sur « Link »      |
+
+Formaldéhyde : le compte ne dit pas quels modèles ont le capteur (un TP09
+se présente comme un TP07). La fonction apparaît avec la première mesure :
+ouvrez l'onglet **Découverte** et cliquez sur **Mettre à jour** sur
+l'appareil, quelques minutes après l'avoir ajouté. L'historique et les
+scènes sont gardés.
 
 Les noms des fonctions suivent le pays du compte : français pour la France,
 la Belgique, la Suisse, le Luxembourg et Monaco ; allemand pour l'Allemagne,
@@ -160,7 +166,7 @@ Chaque widget affiche un appareil, choisi dans ses réglages.
   vert (bonne), bleu (moyenne), orange (mauvaise), rouge (très mauvaise), avec
   les seuils des scènes ci-dessus ;
 - l'état : qualité de l'air globale (le pire polluant), formaldéhyde sur les
-  modèles K, connexion, usure des filtres (ce sont eux qui nettoient l'air) ;
+  modèles « Formaldehyde », connexion, usure des filtres (ce sont eux qui nettoient l'air) ;
 - un bouton pour actualiser les relevés.
 
 Dyson ne donne pas d'indice AQI unique : le niveau global est calculé à partir

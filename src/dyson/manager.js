@@ -18,6 +18,7 @@ import {
   commandFor,
   deviceIds,
   featureKeyOf,
+  hasFormaldehydeReading,
   statesFromEnvironment,
   statesFromProductState,
 } from '../devices/fan.js';
@@ -99,8 +100,28 @@ export function createDysonManager({
 
   function supportedDevices() {
     return (account.devices ?? [])
-      .map((dysonDevice) => ({ dysonDevice, model: describeModel(dysonDevice.productType) }))
+      .map((dysonDevice) => ({ dysonDevice, model: modelOf(dysonDevice) }))
       .filter(({ model }) => model !== null);
+  }
+
+  // The product type misses some formaldehyde sensors (models.js): a device
+  // whose data carried a reading keeps the sensor, saved with the account.
+  function modelOf(dysonDevice) {
+    const model = describeModel(dysonDevice.productType);
+    if (model?.protocol === 'pure' && (account.formaldehyde ?? []).includes(dysonDevice.serial)) {
+      model.formaldehyde = true;
+    }
+    return model;
+  }
+
+  /** First formaldehyde reading of a device whose product type did not tell. */
+  async function learnFormaldehyde(serial, model) {
+    model.formaldehyde = true;
+    account.formaldehyde = [...new Set([...(account.formaldehyde ?? []), serial])];
+    logger.info(`${serial} has a formaldehyde sensor: use "Update" in the Discover tab`);
+    await save();
+    // The Discover tab shows the new feature, with an "Update" button.
+    await publishDiscovered();
   }
 
   /** Refresh the device list from the account; keep the cached one when the cloud is down. */
@@ -263,6 +284,9 @@ export function createDysonManager({
       await triggers.onProductState(device, values);
     });
     link.on('environment', async (values) => {
+      if (model.protocol === 'pure' && !model.formaldehyde && hasFormaldehydeReading(values)) {
+        await learnFormaldehyde(serial, model);
+      }
       await publish(serial, statesFromEnvironment(model, values));
       await triggers.onEnvironment(device, model, values);
     });

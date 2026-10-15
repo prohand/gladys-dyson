@@ -538,3 +538,53 @@ test('a widget command waits for the device answer, from the state known at the 
   assert.equal(await context.manager.command(id, FEATURES.POWER, () => 1), false);
   assert.equal(await context.manager.command('nope', FEATURES.POWER, () => 1), false);
 });
+
+// A TP09 (Purifier Cool Formaldehyde) reports as 438E, like the TP07 without
+// the sensor: its first reading adds the feature.
+const PURIFIER_COOL_E = { ...PURE_COOL, productType: '438E' };
+const formaldehydeId = `ext:dyson:fan:NK6-EU-MHA0000A:${FEATURES.FORMALDEHYDE}`;
+const hasFormaldehyde = (device) => device.features.some((f) => f.external_id === formaldehydeId);
+
+test('a 438E sending formaldehyde readings gets the feature, kept across restarts', async () => {
+  const context = setup({ devices: [PURIFIER_COOL_E] });
+  await signIn(context);
+  assert.equal(hasFormaldehyde(context.gladys.discovered[0]), false);
+  const client = context.mqtt.clients[0];
+
+  client.receive({ msg: 'ENVIRONMENTAL-CURRENT-SENSOR-DATA', data: { hchr: '0005' } });
+  await flush();
+  assert.equal(hasFormaldehyde(context.gladys.discovered[0]), true, 'offered for "Update"');
+  assert.deepEqual(context.store.data.formaldehyde, ['NK6-EU-MHA0000A']);
+  assert.deepEqual(
+    context.gladys.published.filter((s) => s.featureExternalId === formaldehydeId),
+    [],
+    'not on the Gladys device until updated',
+  );
+
+  // The user clicks "Update" in the Discover tab.
+  context.gladys.createDiscovered();
+  client.receive({ msg: 'ENVIRONMENTAL-CURRENT-SENSOR-DATA', data: { hchr: '0007' } });
+  await flush();
+  assert.deepEqual(
+    context.gladys.published.filter((s) => s.featureExternalId === formaldehydeId),
+    [{ featureExternalId: formaldehydeId, state: 0.007 }],
+  );
+
+  const restarted = setup({ store: context.store, devices: [PURIFIER_COOL_E] });
+  await restarted.manager.start(ACCOUNT_CONFIG);
+  assert.equal(hasFormaldehyde(restarted.gladys.discovered[0]), true);
+});
+
+test('a 438E without formaldehyde readings keeps its features', async () => {
+  const context = setup({ devices: [PURIFIER_COOL_E] });
+  await signIn(context);
+  const saves = context.store.saves;
+  context.mqtt.clients[0].receive({
+    msg: 'ENVIRONMENTAL-CURRENT-SENSOR-DATA',
+    data: { p25r: '0004', hchr: 'NONE' },
+  });
+  await flush();
+
+  assert.equal(hasFormaldehyde(context.gladys.discovered[0]), false);
+  assert.equal(context.store.saves, saves);
+});

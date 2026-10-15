@@ -9,7 +9,9 @@
 //   - "pure" (everything since 2018): `fpwr` for power, `auto` for auto mode,
 //     and the particulate / NO2 / VOC sensors.
 // The letter suffix is the hardware revision: `E` for the 2021 refresh, `K` for
-// the models with a formaldehyde sensor.
+// models with a formaldehyde sensor. Not every one: the TP09 reports as 438E
+// (like the TP07, without the sensor), some PH04 as 358E, the BP03 as 664. The
+// manager adds the sensor to those once their data carries a reading.
 //
 // `airflow`: the front / back airflow switch (`fdir`) of the Pure Cool and
 // Hot+Cool towers and desk fans. The Link models, the humidifiers and the
