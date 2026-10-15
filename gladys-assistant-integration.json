@@ -8,8 +8,8 @@
     "de": "Steuere Dyson-Luftreiniger, -Ventilatoren und -Heizlüfter und lies die Luftqualität aus.",
     "es": "Controle purificadores, ventiladores y calefactores Dyson, y lea sus sensores de calidad del aire."
   },
-  "version": "1.7.0",
-  "docker_image": "ghcr.io/prohand/gladys-dyson:1.7.0",
+  "version": "1.7.1",
+  "docker_image": "ghcr.io/prohand/gladys-dyson:1.7.1",
   "gladys_version": ">=5.2.0",
   "cover_image": "https://raw.githubusercontent.com/prohand/gladys-dyson/main/cover.png",
   "categories": ["climate", "environment", "appliances"],

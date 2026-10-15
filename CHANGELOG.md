@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-10-15
+
 ### Fixed
 
 - Formaldehyde sensor missing on the models whose product type does not tell it
@@ -201,7 +203,8 @@ Devices added before: click "Update" in the Discover tab.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/prohand/gladys-dyson/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/prohand/gladys-dyson/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/prohand/gladys-dyson/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/prohand/gladys-dyson/compare/v1.4.0...v1.5.0
