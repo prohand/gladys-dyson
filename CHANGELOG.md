@@ -10,6 +10,11 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Security
+
+- `mqtt` 5.16.1, and `ip-address` 10.7.4 (used through `mqtt`): fixes a
+  denial of service on a long IPv6 zone identifier (GHSA-rxp7-6hxx-x8q5, moderate).
+
 ## [1.7.1] - 2026-10-15
 
 ### Fixed
