@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-10-23
+
 ### Security
 
 - `mqtt` 5.16.1, and `ip-address` 10.7.4 (used through `mqtt`): fixes a
@@ -208,7 +210,8 @@ Devices added before: click "Update" in the Discover tab.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/prohand/gladys-dyson/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/prohand/gladys-dyson/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/prohand/gladys-dyson/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/prohand/gladys-dyson/compare/v1.5.0...v1.6.0
