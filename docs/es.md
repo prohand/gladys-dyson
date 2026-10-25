@@ -8,7 +8,7 @@ calefacción, y siga la calidad del aire que miden.
 
 ## Lo que necesita
 
-- Gladys **5.2** o posterior.
+- Gladys **5.3** o posterior.
 - Una cuenta **MyDyson** (la aplicación móvil de Dyson), con sus dispositivos
   ya añadidos y conectados al wifi.
 - El correo electrónico y la contraseña de esa cuenta.

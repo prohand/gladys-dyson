@@ -10,6 +10,15 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- Gladys 5.3.0 or later is now required.
+- `@gladysassistant/integration-sdk` 0.16.
+- Store listing: search keywords (Pure Cool, Hot+Cool, Humidify+Cool, Big+Quiet,
+  formaldehyde, air purifier, MyDyson…), so a model name finds the integration.
+- The Release workflow runs the store admission checks in full (image included)
+  once the image is published; pull requests keep `--skip-image-check`.
+
 ## [1.7.2] - 2026-10-23
 
 ### Security

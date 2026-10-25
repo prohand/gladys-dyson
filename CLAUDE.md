@@ -117,8 +117,11 @@ test/                     node --test; helpers fake Gladys, MQTT, timers and the
   Never write a version heading: the Release workflow moves the section.
 - **Manifest.** Texts are `{ "en", "fr", "de", "es" }` objects (label,
   description, placeholder). Catalog `description`: 10 to 100 characters per
-  language. `transports` stays `["local", "cloud"]`. `test/manifest.test.js`
-  ties the manifest to the code (defaults, action, scene and widget handlers).
+  language. `transports` stays `["local", "cloud"]`. `gladys_version` is
+  `>=5.3.0` (`keywords`: 1-10 unique search terms of 2-30 characters, model
+  names the catalog search should find); no `countries` (sold worldwide).
+  `test/manifest.test.js` ties the manifest to the code (defaults, action, scene
+  and widget handlers).
 - **User-facing text** is `{ en, fr, de, es }` (English, French, German,
   Spanish): action messages, connection status, transport reasons, widget
   texts, manifest texts, feature names. `docs/en.md`, `docs/fr.md`,
