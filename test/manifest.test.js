@@ -58,6 +58,10 @@ const CATEGORIES = [
   'notifications',
   'assistants',
   'services',
+  'transport',
+  'vehicles',
+  'servers',
+  'leisure',
 ];
 
 test('every manifest action is registered in index.js, and only those', () => {
@@ -201,14 +205,34 @@ test('the categories stay inside the vocabulary the store indexes', () => {
   }
 });
 
+test('the search keywords follow the store rules', () => {
+  const { keywords } = manifest;
+  assert.ok(Array.isArray(keywords) && keywords.length >= 1 && keywords.length <= 10);
+  const normalized = keywords.map((keyword) => keyword.trim().toLowerCase());
+  assert.equal(new Set(normalized).size, keywords.length, 'keywords must be unique');
+  for (const keyword of keywords) {
+    assert.equal(typeof keyword, 'string');
+    const { length } = keyword.trim();
+    assert.ok(length >= 2 && length <= 30, `keyword "${keyword}": ${length} characters`);
+  }
+});
+
+test('Dyson sells worldwide: no country restriction', () => {
+  assert.equal(manifest.countries, undefined);
+});
+
 test('the Gladys floor covers every field the manifest declares', () => {
   // Older cores reject a manifest field they do not know: `categories` needs
   // 4.86, the widgets and scenes 5.1; the sleep timer FORM of the controls
   // widget needs 5.2 (an older core drops it and runs the action without
-  // `values`).
+  // `values`); `keywords`, `countries` and `music` need 5.3.
   assert.ok(WIDGET_ACTIONS.SLEEP_TIMER);
   const [major, minor] = manifest.gladys_version.replace(/^>=/, '').split('.').map(Number);
   assert.ok(major > 5 || (major === 5 && minor >= 2), `got ${manifest.gladys_version}`);
+  if (manifest.keywords || manifest.countries || manifest.music) {
+    assert.ok(major > 5 || (major === 5 && minor >= 3), `got ${manifest.gladys_version}`);
+  }
+  assert.equal(manifest.gladys_version, '>=5.3.0');
   assert.match(indexSource, /\{ actionKey, params, values \}/, 'index.js relays the form');
 });
 

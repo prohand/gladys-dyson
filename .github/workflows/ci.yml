@@ -59,8 +59,8 @@ jobs:
   store:
     # The store indexer's own admission checks (manifest schema, version
     # couplings, docs, cover). Pull requests only. The registry check of the
-    # image is skipped: until the first release, the manifest names a tag that
-    # build.yml has not pushed yet, and the check refuses a missing image.
+    # image is skipped: the manifest names a tag build.yml has not pushed yet.
+    # The Release workflow runs the full check once the image is published.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: Store admission checks

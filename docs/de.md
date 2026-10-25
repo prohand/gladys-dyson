@@ -8,7 +8,7 @@ und verfolge die Luftqualität, die sie messen.
 
 ## Was du benötigst
 
-- Gladys **5.2** oder neuer.
+- Gladys **5.3** oder neuer.
 - Ein **MyDyson**-Konto (die mobile Dyson-App), in dem deine Geräte bereits
   hinzugefügt und mit dem WLAN verbunden sind.
 - Die E-Mail-Adresse und das Passwort dieses Kontos.

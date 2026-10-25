@@ -7,7 +7,7 @@ night mode and heating, and follow the air quality they measure.
 
 ## What you need
 
-- Gladys **5.2** or later.
+- Gladys **5.3** or later.
 - A **MyDyson** account (the Dyson mobile app), with your devices already
   added and connected to Wi-Fi.
 - The e-mail address and password of that account.
