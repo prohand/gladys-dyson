@@ -1,6 +1,6 @@
 {
   "name": "gladys-dyson",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "private": true,
   "description": "Gladys Assistant external integration for Dyson purifiers and fans (local MQTT and Dyson cloud).",
   "type": "module",
