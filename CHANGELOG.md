@@ -10,6 +10,10 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-11-16
+
+- Maintenance release, no functional change.
+
 ## [1.8.0] - 2026-10-25
 
 ### Changed
@@ -221,7 +225,8 @@ Devices added before: click "Update" in the Discover tab.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/prohand/gladys-dyson/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/prohand/gladys-dyson/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/prohand/gladys-dyson/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/prohand/gladys-dyson/compare/v1.7.0...v1.7.1
