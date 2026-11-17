@@ -50,6 +50,9 @@ export function createFakeCloud({ devices = [PURE_COOL] } = {}) {
       },
       async verifyCode(params) {
         calls.push({ method: 'verifyCode', ...params });
+        if (cloud.verifyError) {
+          throw cloud.verifyError;
+        }
         if (params.otpCode !== cloud.validCode || params.challengeId !== 'challenge-1') {
           throw new DysonCloudError('HTTP 400', { status: 400, code: 'rejected' });
         }

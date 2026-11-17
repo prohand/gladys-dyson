@@ -10,6 +10,12 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Changed
+
+- "Validate the code" says why Dyson refused: too many attempts, an
+  unexpected answer, or a saved password that starts or ends with a space. The
+  log now shows what Dyson answered (HTTP status), never the code or password.
+
 ## [1.8.3] - 2026-11-16
 
 - Maintenance release, no functional change.
