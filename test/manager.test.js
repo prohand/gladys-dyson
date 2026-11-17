@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ANSWER_TIMEOUT_MS, createDysonManager } from '../src/dyson/manager.js';
+import { DysonCloudError } from '../src/dyson/cloud.js';
 import { FEATURES } from '../src/devices/fan.js';
 import { createFakeGladys } from './helpers/fakeGladys.js';
 import { createFakeMqtt, createFakeTimers, flush } from './helpers/fakeMqtt.js';
@@ -96,6 +97,48 @@ test('a wrong code is said in every language, nothing saved', async () => {
   assert.match(message.de, /Code oder das Passwort abgelehnt/);
   assert.match(message.es, /rechazado el código o la contraseña/);
   assert.equal(store.data.token, undefined);
+});
+
+test('too many attempts say to wait, in every language', async () => {
+  const { cloud, manager } = setup();
+  await manager.start(ACCOUNT_CONFIG);
+  await manager.requestCode();
+  cloud.verifyError = new DysonCloudError('HTTP 429', { status: 429, code: 'rejected' });
+
+  const message = await manager.verifyCode('123456');
+
+  assert.match(message.en, /too many attempts/);
+  assert.match(message.fr, /trop de tentatives/);
+  assert.match(message.de, /zu viele Versuche/);
+  assert.match(message.es, /demasiados intentos/);
+});
+
+test('an answer without a token is not blamed on the password', async () => {
+  const { cloud, manager } = setup();
+  await manager.start(ACCOUNT_CONFIG);
+  await manager.requestCode();
+  cloud.verifyError = new DysonCloudError('Dyson cloud did not return a token');
+
+  const message = await manager.verifyCode('123456');
+
+  assert.match(message.en, /unexpected answer/);
+  assert.doesNotMatch(message.en, /password/);
+});
+
+test('a refused password with a space at an edge says so, without showing it', async () => {
+  const { manager } = setup();
+  await manager.start({ ...ACCOUNT_CONFIG, password: 'secret-pw ' });
+  await manager.requestCode();
+
+  const message = await manager.verifyCode('000000');
+
+  assert.match(message.en, /starts or ends with a space/);
+  assert.match(message.fr, /commence ou finit par un espace/);
+  assert.match(message.de, /Leerzeichen/);
+  assert.match(message.es, /empieza o termina con un espacio/);
+  for (const text of Object.values(message)) {
+    assert.doesNotMatch(text, /secret-pw/);
+  }
 });
 
 test('validating without a pending code asks for one first', async () => {

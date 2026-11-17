@@ -27,6 +27,47 @@ const logger = createLogger({ name: 'dyson' });
 
 // A code e-mailed by Dyson is valid for a short while only.
 const CHALLENGE_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * What to tell the user when Dyson turns the code down.
+ * @param {DysonCloudError} err
+ * @param {string} password never logged nor shown: only its edges are looked at
+ * @returns {{en: string, fr: string, de: string, es: string}}
+ */
+function refusedSignInMessage(err, password) {
+  if (err.status === 429) {
+    return {
+      en: 'Dyson refused: too many attempts. Wait a few minutes, then ask for a new code.',
+      fr: 'Dyson a refusé : trop de tentatives. Attendez quelques minutes, puis demandez un nouveau code.',
+      de: 'Dyson hat abgelehnt: zu viele Versuche. Warte ein paar Minuten und fordere dann einen neuen Code an.',
+      es: 'Dyson ha rechazado: demasiados intentos. Espere unos minutos y solicite un código nuevo.',
+    };
+  }
+  if (!err.status) {
+    return {
+      en: 'Dyson gave an unexpected answer to the code. Ask for a new code and try again.',
+      fr: 'Dyson a donné une réponse inattendue au code. Demandez un nouveau code et réessayez.',
+      de: 'Dyson hat unerwartet auf den Code geantwortet. Fordere einen neuen Code an und versuche es erneut.',
+      es: 'Dyson ha dado una respuesta inesperada al código. Solicite un código nuevo e inténtelo de nuevo.',
+    };
+  }
+  // A password pasted from a manager often carries a space or a line break
+  // at an edge; Dyson then refuses it, and nothing else would say why.
+  if (password !== password.trim()) {
+    return {
+      en: 'Dyson refused the code or the password. The saved password starts or ends with a space: remove it, save, then ask for a new code.',
+      fr: 'Dyson a refusé le code ou le mot de passe. Le mot de passe enregistré commence ou finit par un espace : retirez-le, enregistrez, puis demandez un nouveau code.',
+      de: 'Dyson hat den Code oder das Passwort abgelehnt. Das gespeicherte Passwort beginnt oder endet mit einem Leerzeichen: Entferne es, speichere und fordere dann einen neuen Code an.',
+      es: 'Dyson ha rechazado el código o la contraseña. La contraseña guardada empieza o termina con un espacio: elimínelo, guarde y solicite un código nuevo.',
+    };
+  }
+  return {
+    en: 'Dyson refused the code or the password. Check them, or ask for a new code.',
+    fr: 'Dyson a refusé le code ou le mot de passe. Vérifiez-les, ou demandez un nouveau code.',
+    de: 'Dyson hat den Code oder das Passwort abgelehnt. Prüfe beides oder fordere einen neuen Code an.',
+    es: 'Dyson ha rechazado el código o la contraseña. Compruébelos o solicite un código nuevo.',
+  };
+}
 // How long a widget button waits for the device's answer: the core refetches
 // the widget when the action returns, and it should show the new state.
 export const ANSWER_TIMEOUT_MS = 4000;
@@ -435,6 +476,7 @@ export function createDysonManager({
       account.challengeId = challengeId;
       account.challengeAt = now();
       await save();
+      logger.info('One-time code requested from Dyson');
       return {
         en: `A code was sent to ${config.email}. Type it in "Validate the code" within a few minutes.`,
         fr: `Un code a été envoyé à ${config.email}. Saisissez-le dans « Valider le code » dans les minutes qui suivent.`,
@@ -473,12 +515,10 @@ export function createDysonManager({
         });
       } catch (err) {
         if (err instanceof DysonCloudError && err.code !== 'unreachable') {
-          return {
-            en: 'Dyson refused the code or the password. Check them, or ask for a new code.',
-            fr: 'Dyson a refusé le code ou le mot de passe. Vérifiez-les, ou demandez un nouveau code.',
-            de: 'Dyson hat den Code oder das Passwort abgelehnt. Prüfe beides oder fordere einen neuen Code an.',
-            es: 'Dyson ha rechazado el código o la contraseña. Compruébelos o solicite un código nuevo.',
-          };
+          // The message only holds the HTTP status and the path: the one line
+          // that tells a support thread what Dyson answered.
+          logger.warn(`Sign-in refused: ${err.message}`);
+          return refusedSignInMessage(err, config.password);
         }
         throw err;
       }
