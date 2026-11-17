@@ -10,6 +10,8 @@ becomes the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.8.4] - 2026-11-17
+
 ### Changed
 
 - "Validate the code" says why Dyson refused: too many attempts, an
@@ -239,7 +241,8 @@ Devices added before: click "Update" in the Discover tab.
   pull requests), UI-driven Release workflow, multi-arch image build, GitHub
   Release per version, Dependabot.
 
-[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.8.3...HEAD
+[Unreleased]: https://github.com/prohand/gladys-dyson/compare/v1.8.4...HEAD
+[1.8.4]: https://github.com/prohand/gladys-dyson/compare/v1.8.3...v1.8.4
 [1.8.3]: https://github.com/prohand/gladys-dyson/compare/v1.8.2...v1.8.3
 [1.8.2]: https://github.com/prohand/gladys-dyson/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/prohand/gladys-dyson/compare/v1.8.0...v1.8.1
